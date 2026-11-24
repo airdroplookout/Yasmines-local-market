@@ -97,6 +97,15 @@ a{color:var(--accent)}
 .makers-cta h3{font-size:1.2rem;margin-bottom:6px}
 .makers-cta p{margin:0;color:var(--muted);font-size:.97rem}
 
+/* Share box (vendor page) */
+.share-box{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
+.share-box h3{font-size:1.2rem;margin-bottom:6px}
+.share-box p{margin:0 0 12px;color:var(--muted);font-size:.97rem}
+.copy-row{display:flex;gap:10px;flex-wrap:wrap}
+.copy-row input{flex:1;min-width:220px}
+.copy-row .btn{flex:none}
+.share-box .hint{margin:10px 0 0}
+
 /* Form view */
 .backlink{display:inline-flex;align-items:center;gap:6px;font-weight:800;padding:14px 0 4px;background:none;border:0;color:var(--accent);cursor:pointer;font-size:1rem}
 .form-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:20px;margin-top:14px;align-items:start}
