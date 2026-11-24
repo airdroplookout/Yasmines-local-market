@@ -20,6 +20,10 @@ directly when they meet: cash, e-transfer, or tap.
 Plain static site: HTML/CSS/JS only. No backend, no functions, no secrets,
 no affiliate links, no tracking.
 
+## Makers on the site
+
+- **Mary Stones — Mary's Pottery (first real maker, added 2026-11-24):** 10 pottery pieces, her own shop page `mary-stones.html`, and a "Featured maker" section on the front page. Her products are also in the main grid, tagged maker "Mary Stones". **Her email and prices are placeholders until she confirms them** — the page shows mary.stones@example.com with an "Email to be confirmed" note, and a "Prices are examples for now" notice. When she confirms, update the email in `mary-stones.html` and the prices in `app.js` (the `mary-*` entries), then remove the example notices for her pieces.
+
 ## Example listings — important
 
 All makers, shops, prices and photos currently on the site are **examples
