@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Yasmine's Local Market — a friendly community boutique in Brantford, Ontario, where local makers share handmade crafts and jewelry. Browse, reserve what you love, and the maker contacts you directly. No online checkout." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E" />
+<title>Yasmine's Local Market — Handmade in Brantford</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#" onclick="showView(1);return false;">Yasmine's <span>Local Market</span></a>
+    <span class="topbar-tag">Handmade in Brantford, Ontario</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ PAGE 1 : SHOP FRONT ============ -->
+  <section class="view active" id="view-1" aria-label="Shop front page">
+    <div class="hero">
+      <span class="hero-badge">✿ Made by neighbours, right here in Brantford</span>
+      <h1>Yasmine's Local Market</h1>
+      <p class="lead">A friendly little market run by Yasmine, where local makers share the beautiful things they make by hand — pottery, knitting, candles, jewelry, honey and more. There’s no checkout and no card payment on this site. You reserve what you love, and the maker contacts you directly to arrange everything, person to person.</p>
+    </div>
+
+    <section class="how-it-works" aria-label="How it works">
+      <h2>How it works</h2>
+      <p class="lede">Reserving something is simple — there is no checkout and no card payment on this site. You reserve, and the maker contacts you directly.</p>
+      <div class="how">
+        <div class="how-step"><b><span class="how-num">1</span> Browse the makers’ pieces</b><p>Look through the pieces below and find a favourite. Every item shows who made it and the price.</p></div>
+        <div class="how-step"><b><span class="how-num">2</span> Click “Reserve this item”</b><p>Fill in a short form with your email, an optional phone number, and a note about what you’d like.</p></div>
+        <div class="how-step"><b><span class="how-num">3</span> The maker replies to you</b><p>The maker replies by email to confirm availability and arrange the meeting and payment with you.</p></div>
+      </div>
+    </section>
+
+    <div class="example-notice" role="note">
+      <b>✦ Example listings for now</b>
+      <p>The pieces below are examples to show how the market works — they are not real listings yet. Real local makers from Brantford are joining soon, and their pieces will take the place of these examples.</p>
+    </div>
+
+    <!-- Spotlight: one featured product -->
+    <article class="spotlight">
+      <img src="images/mug.webp" alt="Hand-thrown stoneware mugs in a soft sea-glass blue glaze" />
+      <div class="spotlight-body">
+        <span class="tag">Featured this week</span><span class="example-tag">Example listing</span>
+        <h2>Sea-Glass Stoneware Mug</h2>
+        <p class="maker">by Rosa M. — Rosa’s Pottery Corner</p>
+        <p class="price">$28 <small>each · made to order in small batches</small></p>
+        <p class="desc">Hand-thrown on Rosa’s wheel, glazed in a soft blue-green that’s a little different on every mug — no two are exactly alike. Holds a generous cup of tea or coffee, and goes in the dishwasher.</p>
+        <button class="btn btn-primary" onclick="selectProduct('mug')">Reserve this item →</button>
+        <p class="hint" style="margin-top:10px">No payment now — the maker will email you first to confirm one is ready.</p>
+      </div>
+    </article>
+
+    <div class="section-head">
+      <div>
+        <h2>More from our makers</h2>
+        <p>Click any item to reserve it — the form is already filled in with that product.</p>
+      </div>
+    </div>
+
+    <div class="grid" id="product-grid"></div>
+
+    <div class="note-strip">
+      <div><h3>How the exchange happens</h3><p>You and the maker agree together — meet at the local market, at the library, or another spot you both like. Simple and in person.</p></div>
+      <div><h3>How you pay</h3><p>Directly to the maker, the way you both prefer: cash when you meet, an e-transfer, or a tap payment on their phone. Nothing is paid through this website.</p></div>
+      <div><h3>Why reserve first?</h3><p>Most pieces are one-of-a-kind or made in tiny batches. Reserving lets the maker confirm it’s still available before you make the trip.</p></div>
+    </div>
+
+    <div class="makers-cta">
+      <h3>Are you a local maker?</h3>
+      <p>Do you make crafts, jewelry or something beautiful at home in Brantford? Ask Yasmine about a spot in the market — she would love to show your work here.</p>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 2 : RESERVE FORM ============ -->
+  <section class="view" id="view-2" aria-label="Reserve form page">
+    <button class="backlink" onclick="showView(1)">← Back to the shop</button>
+    <div class="form-layout">
+      <div>
+        <div class="product-summary">
+          <img id="ps-img" src="images/mug.webp" alt="" />
+          <div class="ps-body">
+            <span class="tag">You are reserving</span><span class="example-tag">Example listing</span>
+            <h2 id="ps-name">Sea-Glass Stoneware Mug</h2>
+            <p class="maker" id="ps-maker">by Rosa M. — Rosa’s Pottery Corner</p>
+            <p class="price" id="ps-price" style="font-size:1.25rem;margin:8px 0 0">$28</p>
+          </div>
+        </div>
+        <div class="email-preview">
+          <b>✉️ Where does this form go?</b>
+          <p>By email to Yasmine’s Local Market, who passes it straight to <span id="ep-maker">Rosa</span> — with this product’s photo, its name, and everything you write below. The maker replies to your email address, so please double-check it.</p>
+        </div>
+      </div>
+
+      <form class="reserve" id="reserve-form" action="https://formsubmit.co/taradil@gmail.com" method="POST" novalidate>
+        <h2>Reserve this item</h2>
+        <p class="sub">Tell the maker what you’d like. They’ll get back to you shortly — usually within a day.</p>
+        <div class="error" id="form-error" role="alert"></div>
+
+        <div class="field">
+          <label for="f-name">Your name <span class="req">*</span></label>
+          <input type="text" id="f-name" name="name" placeholder="e.g. Sarah L." autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="f-email">Your email <span class="req">*</span></label>
+          <input type="email" id="f-email" name="email" placeholder="you@example.com" autocomplete="email" required />
+          <p class="hint">The maker will reply to this address.</p>
+        </div>
+        <div class="field">
+          <label for="f-phone">Phone number <span class="opt">(optional)</span></label>
+          <input type="tel" id="f-phone" name="phone" placeholder="Only if you’d like a call or text" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label for="f-qty">How many?</label>
+          <select id="f-qty" name="quantity">
+            <option>1</option><option>2</option><option>3</option><option>4 or more — I’ll explain in my message</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-delivery">How would you like to get your item?</label>
+          <select id="f-delivery" name="delivery_method">
+            <option>Pickup</option>
+            <option>Delivery by mail</option>
+          </select>
+          <p class="delivery-note" id="delivery-note">📦 Please note: delivery charges may apply. The maker will confirm the delivery amount with you before sending your item.</p>
+        </div>
+        <div class="field">
+          <label for="f-msg">Your message to the maker <span class="req">*</span></label>
+          <textarea id="f-msg" name="message" placeholder="Tell them exactly what you’d like — for example: “I’d love one mug in the blue glaze, please. I can meet at the farmers’ market on Saturday morning.”" required></textarea>
+          <p class="hint">Mention colour, size, quantity, or when you could meet — anything that helps.</p>
+        </div>
+
+        <!-- Product details sent with the form -->
+        <input type="hidden" name="product" id="h-product" value="Sea-Glass Stoneware Mug" />
+        <input type="hidden" name="maker" id="h-maker" value="Rosa M. — Rosa’s Pottery Corner" />
+        <input type="hidden" name="price" id="h-price" value="$28" />
+        <input type="hidden" name="_subject" id="h-subject" value="New reservation — Sea-Glass Stoneware Mug ($28)" />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_replyto" id="h-replyto" value="" />
+        <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Send my reservation to the maker →</button>
+        <p class="hint" style="text-align:center;margin-top:10px">No payment is taken here. You’ll pay the maker directly when you meet.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3 : CONFIRMATION ============ -->
+  <section class="view" id="view-3" aria-label="Confirmation page">
+    <div class="confirm">
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Thank you — your message has been sent!</h2>
+      <p class="lead">Your reservation has been passed on to <strong id="c-maker">Rosa M.</strong>, the maker of this item. She will be contacting you shortly at <strong id="c-email">your email</strong> with everything you need to know.</p>
+
+      <div class="next-steps">
+        <h3>What happens next</h3>
+        <div class="step"><span class="how-num">1</span><div><b>Availability</b><p>The maker will confirm whether the item is still available — or when the next one will be ready, if it’s made to order.</p></div></div>
+        <div class="step"><span class="how-num">2</span><div><b>How the exchange will happen</b><p>Together you’ll agree on a time and place to meet — for example at the local market, the library, or another spot that suits you both — so you can see the item and take it home.</p></div></div>
+        <div class="step"><span class="how-num">3</span><div><b>How the money will be handled</b><p>You pay the maker directly when you meet: cash, an e-transfer, or a tap payment on their phone — whichever you both prefer. No money goes through this website, and you don’t pay anything until the maker has confirmed your item.</p></div></div>
+      </div>
+
+      <div class="summary">
+        <h3>A copy of what was sent</h3>
+        <dl>
+          <dt>Product</dt><dd id="s-product">Sea-Glass Stoneware Mug — $28</dd>
+          <dt>Maker</dt><dd id="s-maker">Rosa M. — Rosa’s Pottery Corner</dd>
+          <dt>Your name</dt><dd id="s-name">—</dd>
+          <dt>Your email</dt><dd id="s-email">—</dd>
+          <dt>Phone</dt><dd id="s-phone">Not provided</dd>
+          <dt>Quantity</dt><dd id="s-qty">1</dd>
+          <dt>Delivery or pickup</dt><dd id="s-delivery">Pickup</dd>
+          <dt>Your message</dt><dd id="s-msg">—</dd>
+        </dl>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn btn-primary" onclick="showView(1)">← Back to the shop</button>
+        <button class="btn btn-ghost" onclick="showView(2)">Reserve another item</button>
+      </div>
+      <p class="hint" style="margin-top:14px">Didn’t get a reply within a day or two? Check your spam folder — the maker’s reply comes from their own email.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span><strong>Yasmine’s Local Market</strong> — a community boutique in Brantford, Ontario.</span>
+    <span>Browse → Reserve → The maker contacts you. No online checkout.</span>
+  </footer>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
