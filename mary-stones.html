@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Mary Stones — Handmade Pottery at Yasmine's Local Market in Brantford, Ontario. Hand-thrown mugs, bowls, vases and more. Reserve what you love, and Mary will be in touch. No online checkout." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E" />
+<title>Mary Stones — Handmade Pottery | Yasmine's Local Market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">Yasmine's <span>Local Market</span></a>
+    <span class="topbar-tag">Handmade in Brantford, Ontario</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ PAGE 1 : MARY'S SHOP ============ -->
+  <section class="view active" id="view-1" aria-label="Mary Stones shop page">
+    <div class="hero">
+      <span class="hero-badge">✿ Featured maker — Handmade Pottery</span>
+      <h1>Mary Stones</h1>
+      <p class="lead">Mary is a local potter from Brantford who throws every piece by hand on her wheel. Each mug, bowl and vase is a little different — that’s the charm of handmade.</p>
+    </div>
+
+    <div class="example-notice" role="note">
+      <b>✦ Prices are examples for now</b>
+      <p>The prices on Mary’s pieces are examples until she confirms them — the pieces and photos show what her shop will look like. Reserve what you love and Mary will confirm the price when she replies.</p>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h2>Mary’s pottery</h2>
+        <p>Click any item to reserve it — the form is already filled in with that product.</p>
+      </div>
+    </div>
+
+    <div class="grid" id="product-grid"></div>
+
+    <section class="makers-cta" aria-label="About Mary">
+      <h3>About Mary</h3>
+      <p>Mary is a local potter from Brantford who makes her pottery by hand, one piece at a time, in small batches. She loves earthy glazes and simple, useful shapes — the kind of pieces you reach for every day.</p>
+    </section>
+
+    <section class="share-box" aria-label="Share this shop">
+      <h3>Share this shop</h3>
+      <p>Mary — share this link anywhere to show off your shop:</p>
+      <div class="copy-row">
+        <input type="text" id="shop-link" value="https://yasmines-local-market.netlify.app/mary-stones.html" readonly aria-label="Link to Mary's shop" />
+        <button class="btn btn-primary" id="copy-link-btn" type="button" onclick="copyShopLink()">Copy link</button>
+      </div>
+      <p class="hint" id="copy-hint">Tap “Copy link”, then paste it into a message, a post, or your own page.</p>
+    </section>
+
+    <section class="makers-cta" aria-label="Contact Mary">
+      <h3>Contact Mary</h3>
+      <p>Questions about a piece? You can reach Mary at <a href="mailto:mary.stones@example.com">mary.stones@example.com</a> <span class="example-tag">Email to be confirmed</span></p>
+      <p style="margin-top:8px">Or simply reserve a piece above — Mary will reply to your email to arrange everything.</p>
+    </section>
+
+    <div class="confirm-actions" style="margin-top:28px">
+      <a class="btn btn-ghost" href="index.html">← Back to the whole market</a>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 2 : RESERVE FORM ============ -->
+  <section class="view" id="view-2" aria-label="Reserve form page">
+    <button class="backlink" onclick="showView(1)">← Back to Mary’s shop</button>
+    <div class="form-layout">
+      <div>
+        <div class="product-summary">
+          <img id="ps-img" src="images/mary-mug.webp" alt="" />
+          <div class="ps-body">
+            <span class="tag">You are reserving</span><span class="example-tag">Example listing</span>
+            <h2 id="ps-name">Speckled Stoneware Mug</h2>
+            <p class="maker" id="ps-maker">by Mary Stones — Mary’s Pottery</p>
+            <p class="price" id="ps-price" style="font-size:1.25rem;margin:8px 0 0">$32</p>
+          </div>
+        </div>
+        <div class="email-preview">
+          <b>✉️ Where does this form go?</b>
+          <p>By email to Yasmine’s Local Market, who passes it straight to <span id="ep-maker">Mary</span> — with this product’s photo, its name, and everything you write below. The maker replies to your email address, so please double-check it.</p>
+        </div>
+      </div>
+
+      <form class="reserve" id="reserve-form" action="https://formsubmit.co/taradil@gmail.com" method="POST" novalidate>
+        <h2>Reserve this item</h2>
+        <p class="sub">Tell the maker what you’d like. They’ll get back to you shortly — usually within a day.</p>
+        <div class="error" id="form-error" role="alert"></div>
+
+        <div class="field">
+          <label for="f-name">Your name <span class="req">*</span></label>
+          <input type="text" id="f-name" name="name" placeholder="e.g. Sarah L." autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="f-email">Your email <span class="req">*</span></label>
+          <input type="email" id="f-email" name="email" placeholder="you@example.com" autocomplete="email" required />
+          <p class="hint">The maker will reply to this address.</p>
+        </div>
+        <div class="field">
+          <label for="f-phone">Phone number <span class="opt">(optional)</span></label>
+          <input type="tel" id="f-phone" name="phone" placeholder="Only if you’d like a call or text" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label for="f-qty">How many?</label>
+          <select id="f-qty" name="quantity">
+            <option>1</option><option>2</option><option>3</option><option>4 or more — I’ll explain in my message</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-delivery">How would you like to get your item?</label>
+          <select id="f-delivery" name="delivery_method">
+            <option>Pickup</option>
+            <option>Delivery by mail</option>
+          </select>
+          <p class="delivery-note" id="delivery-note">📦 Please note: delivery charges may apply. The maker will confirm the delivery amount with you before sending your item.</p>
+        </div>
+        <div class="field">
+          <label for="f-msg">Your message to the maker <span class="req">*</span></label>
+          <textarea id="f-msg" name="message" placeholder="Tell them exactly what you’d like — for example: “I’d love one mug in the blue glaze, please. I can meet at the farmers’ market on Saturday morning.”" required></textarea>
+          <p class="hint">Mention colour, size, quantity, or when you could meet — anything that helps.</p>
+        </div>
+
+        <!-- Product details sent with the form -->
+        <input type="hidden" name="product" id="h-product" value="Speckled Stoneware Mug" />
+        <input type="hidden" name="maker" id="h-maker" value="Mary Stones — Mary’s Pottery" />
+        <input type="hidden" name="price" id="h-price" value="$32" />
+        <input type="hidden" name="_subject" id="h-subject" value="New reservation — Speckled Stoneware Mug ($32)" />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_replyto" id="h-replyto" value="" />
+        <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Send my reservation to the maker →</button>
+        <p class="hint" style="text-align:center;margin-top:10px">No payment is taken here. You’ll pay the maker directly when you meet.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ PAGE 3 : CONFIRMATION ============ -->
+  <section class="view" id="view-3" aria-label="Confirmation page">
+    <div class="confirm">
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h2>Thank you — your message has been sent!</h2>
+      <p class="lead">Your reservation has been passed on to <strong id="c-maker">Mary Stones</strong>, the maker of this item. She will be contacting you shortly at <strong id="c-email">your email</strong> with everything you need to know.</p>
+
+      <div class="next-steps">
+        <h3>What happens next</h3>
+        <div class="step"><span class="how-num">1</span><div><b>Availability</b><p>The maker will confirm whether the item is still available — or when the next one will be ready, if it’s made to order.</p></div></div>
+        <div class="step"><span class="how-num">2</span><div><b>How the exchange will happen</b><p>Together you’ll agree on a time and place to meet — for example at the local market, the library, or another spot that suits you both — so you can see the item and take it home.</p></div></div>
+        <div class="step"><span class="how-num">3</span><div><b>How the money will be handled</b><p>You pay the maker directly when you meet: cash, an e-transfer, or a tap payment on their phone — whichever you both prefer. No money goes through this website, and you don’t pay anything until the maker has confirmed your item.</p></div></div>
+      </div>
+
+      <div class="summary">
+        <h3>A copy of what was sent</h3>
+        <dl>
+          <dt>Product</dt><dd id="s-product">Speckled Stoneware Mug — $32</dd>
+          <dt>Maker</dt><dd id="s-maker">Mary Stones — Mary’s Pottery</dd>
+          <dt>Your name</dt><dd id="s-name">—</dd>
+          <dt>Your email</dt><dd id="s-email">—</dd>
+          <dt>Phone</dt><dd id="s-phone">Not provided</dd>
+          <dt>Quantity</dt><dd id="s-qty">1</dd>
+          <dt>Delivery or pickup</dt><dd id="s-delivery">Pickup</dd>
+          <dt>Your message</dt><dd id="s-msg">—</dd>
+        </dl>
+      </div>
+
+      <div class="confirm-actions">
+        <button class="btn btn-primary" onclick="showView(1)">← Back to Mary’s shop</button>
+        <a class="btn btn-ghost" href="index.html">Browse the whole market</a>
+      </div>
+      <p class="hint" style="margin-top:14px">Didn’t get a reply within a day or two? Check your spam folder — the maker’s reply comes from their own email.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span><strong>Yasmine’s Local Market</strong> — a community boutique in Brantford, Ontario.</span>
+    <span>Browse → Reserve → The maker contacts you. No online checkout.</span>
+  </footer>
+</div>
+
+<script>
+/* Only Mary's 10 products on this page */
+window.PAGE_PRODUCTS = ["mary-mug", "mary-bowl", "mary-vase", "mary-plate", "mary-planter",
+  "mary-teapot", "mary-butter", "mary-spoon", "mary-candle", "mary-platter"];
+
+function copyShopLink() {
+  var input = document.getElementById("shop-link");
+  var hint = document.getElementById("copy-hint");
+  var btn = document.getElementById("copy-link-btn");
+  function done() {
+    hint.textContent = "✓ Link copied — paste it anywhere to share Mary’s shop.";
+    btn.textContent = "Copied!";
+    setTimeout(function () { btn.textContent = "Copy link"; }, 2500);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(input.value).then(done, function () { input.select(); document.execCommand("copy"); done(); });
+  } else {
+    input.select();
+    document.execCommand("copy");
+    done();
+  }
+}
+</script>
+<script src="app.js"></script>
+</body>
+</html>
