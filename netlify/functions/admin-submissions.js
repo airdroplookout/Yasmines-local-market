@@ -46,8 +46,11 @@ async function onPost(context) {
     }
 
     // Approve: find-or-create the maker by email (email is unique in
-    // makers), then create the listing as live.
+    // makers), then create the listing as live. The maker's business
+    // name becomes their shop name on the site (older submissions
+    // without one fall back to the maker's own name).
     const email = String(sub.maker_email || "").trim().toLowerCase();
+    const shopName = String(sub.business_name || sub.maker_name || "").trim();
     let maker = null;
     const existing = await sbJson(context, `makers?email=eq.${encodeURIComponent(email)}&limit=1`);
     if (existing[0]) {
@@ -58,7 +61,7 @@ async function onPost(context) {
       const created = await sbJson(context, "makers", {
         method: "POST",
         body: JSON.stringify({
-          name: sub.maker_name, shop_name: sub.maker_name, email,
+          name: sub.maker_name, shop_name: shopName, email,
           bio: null, phone: null, status: "live", position: nextPos,
         }),
       });
