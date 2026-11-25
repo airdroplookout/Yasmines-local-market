@@ -326,9 +326,24 @@ function applySoldCounts() {
     });
 })();
 
+/* Safe element setters — a missing element must never kill Reserve.
+   ROOT CAUSE, Nov 25 2026: Audit #3 removed the old FormSubmit
+   _subject hidden input (id="h-subject") from index.html and
+   mary-stones.html, but app.js still wrote to it in selectProduct()
+   and selectProductDefaults(). Every Reserve click then died with
+   "Cannot set properties of null (setting 'value')" at the h-subject
+   line, before showView(2) — so the form never opened and the click
+   did nothing, silently. These helpers make any future missing
+   element a no-op instead of a crash. */
+function setText(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+function setVal(id, val) { var el = document.getElementById(id); if (el) el.value = val; }
+function setSrc(id, val) { var el = document.getElementById(id); if (el) el.src = val; }
+function setAlt(id, val) { var el = document.getElementById(id); if (el) el.alt = val; }
+
 function showView(n) {
   [1, 2, 3].forEach(function (i) {
-    document.getElementById("view-" + i).classList.toggle("active", i === n);
+    var v = document.getElementById("view-" + i);
+    if (v) v.classList.toggle("active", i === n);
   });
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -337,11 +352,11 @@ function selectProduct(id) {
   current = id;
   var p = productById(id);
   if (!p) return;
-  document.getElementById("ps-img").src = id === "mug" ? "images/mug.webp" : (p.img || photoPlaceholder(initialsFor(p.maker)));
-  document.getElementById("ps-img").alt = p.alt;
-  document.getElementById("ps-name").textContent = p.name;
-  document.getElementById("ps-maker").textContent = "by " + p.maker + " — " + p.shop;
-  document.getElementById("ps-price").textContent = p.price;
+  setSrc("ps-img", id === "mug" ? "images/mug.webp" : (p.img || photoPlaceholder(initialsFor(p.maker))));
+  setAlt("ps-img", p.alt);
+  setText("ps-name", p.name);
+  setText("ps-maker", "by " + p.maker + " — " + p.shop);
+  setText("ps-price", p.price);
   var soldEl = document.getElementById("ps-sold");
   if (soldEl) {
     var soldN = soldCountFor(p);
@@ -352,10 +367,12 @@ function selectProduct(id) {
       soldEl.hidden = true;
     }
   }
-  document.getElementById("h-product").value = p.name;
-  document.getElementById("h-maker").value = p.maker + " — " + p.shop;
-  document.getElementById("h-price").value = p.price;
-  document.getElementById("h-subject").value = "New reservation — " + p.name + " (" + p.price + ")";
+  setVal("h-product", p.name);
+  setVal("h-maker", p.maker + " — " + p.shop);
+  setVal("h-price", p.price);
+  /* NOTE: do NOT write to h-subject here — the old FormSubmit _subject
+     hidden input was removed from the pages in Audit #3, and the
+     server-side /api/reserve takes no subject, so nothing is lost. */
   showView(2);
 }
 
@@ -386,6 +403,7 @@ document.querySelectorAll("img[data-remove-on-error]").forEach(function (img) {
 
 function showError(msg) {
   var err = document.getElementById("form-error");
+  if (!err) return;
   err.textContent = msg;
   err.classList.add("show");
   err.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -422,11 +440,15 @@ REQUIRED_FIELDS.forEach(function (id) {
 /* Show the delivery-charges note only when delivery by mail is chosen */
 function syncDeliveryNote() {
   var sel = document.getElementById("f-delivery");
-  document.getElementById("delivery-note").classList.toggle("show", sel.value === "Delivery by mail");
+  var note = document.getElementById("delivery-note");
+  if (!sel || !note) return;
+  note.classList.toggle("show", sel.value === "Delivery by mail");
 }
-document.getElementById("f-delivery").addEventListener("change", syncDeliveryNote);
+var fDelivery = document.getElementById("f-delivery");
+if (fDelivery) fDelivery.addEventListener("change", syncDeliveryNote);
 
-document.getElementById("reserve-form").addEventListener("submit", function (e) {
+var reserveForm = document.getElementById("reserve-form");
+if (reserveForm) reserveForm.addEventListener("submit", function (e) {
   e.preventDefault();
   var name = document.getElementById("f-name").value.trim();
   var email = document.getElementById("f-email").value.trim();
@@ -541,23 +563,24 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
 
 function showConfirmation(name, email, phone, qty, delivery, msg, p, emailFailed) {
   var reservedId = current;
-  document.getElementById("c-maker").textContent = p.maker;
-  document.getElementById("c-email").textContent = email;
+  setText("c-maker", p.maker);
+  setText("c-email", email);
   /* Saved but the owner email failed (emailed:false): say so plainly —
      the reservation is in Manage, only the notification missed, so the
      buyer allows extra time for a reply instead of re-submitting. */
   if (emailFailed) {
-    document.getElementById("c-maker").parentNode.textContent = "Your reservation is saved — the market owner will see it in Manage and " + p.maker + " will be in touch at " + email + ". The email notification did not go through, so please allow a little extra time for a reply.";
+    var cMaker = document.getElementById("c-maker");
+    if (cMaker && cMaker.parentNode) cMaker.parentNode.textContent = "Your reservation is saved — the market owner will see it in Manage and " + p.maker + " will be in touch at " + email + ". The email notification did not go through, so please allow a little extra time for a reply.";
   }
-  document.getElementById("s-product").textContent = p.name + " — " + p.price;
-  document.getElementById("s-maker").textContent = p.maker + " — " + p.shop;
-  document.getElementById("s-name").textContent = name;
-  document.getElementById("s-email").textContent = email;
-  document.getElementById("s-phone").textContent = phone || "Not provided";
-  document.getElementById("s-qty").textContent = qty;
-  document.getElementById("s-delivery").textContent = delivery;
-  document.getElementById("s-msg").textContent = msg;
-  document.getElementById("reserve-form").reset();
+  setText("s-product", p.name + " — " + p.price);
+  setText("s-maker", p.maker + " — " + p.shop);
+  setText("s-name", name);
+  setText("s-email", email);
+  setText("s-phone", phone || "Not provided");
+  setText("s-qty", qty);
+  setText("s-delivery", delivery);
+  setText("s-msg", msg);
+  if (reserveForm) reserveForm.reset();
   syncDeliveryNote();
   selectProductDefaults();
   renderMoreFrom(reservedId, p);
@@ -662,10 +685,11 @@ function renderMoreFrom(reservedId, p) {
 function selectProductDefaults() {
   var p = productById(current);
   if (!p) return;
-  document.getElementById("h-product").value = p.name;
-  document.getElementById("h-maker").value = p.maker + " — " + p.shop;
-  document.getElementById("h-price").value = p.price;
-  document.getElementById("h-subject").value = "New reservation — " + p.name + " (" + p.price + ")";
+  setVal("h-product", p.name);
+  setVal("h-maker", p.maker + " — " + p.shop);
+  setVal("h-price", p.price);
+  /* NOTE: no h-subject write here either — that input was removed in
+     Audit #3 and /api/reserve takes no subject. */
 }
 
 /* December launch promo pop-up — shows once per visitor (localStorage).
