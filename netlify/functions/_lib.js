@@ -371,12 +371,13 @@ export async function sbJson(context, path, opts = {}) {
 }
 // Listing categories — the owner's words for the market.
 // Fixed list (Nov 25, 2026): makers pick one of these, no free text.
-export const LISTING_CATEGORIES = ["pottery", "jewelry", "textiles", "woodwork", "other"];
+export const LISTING_CATEGORIES = ["pottery", "jewelry", "homeware", "textiles", "art", "other"];
 export const LISTING_CATEGORY_LABELS = {
   pottery: "Pottery",
   jewelry: "Jewelry",
+  homeware: "Homeware",
   textiles: "Textiles",
-  woodwork: "Woodwork",
+  art: "Art",
   other: "Other",
 };
 // Send one email via the Resend Send Email API. Used only by the
