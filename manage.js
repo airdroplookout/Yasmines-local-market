@@ -304,7 +304,7 @@ document.getElementById('makersBody').addEventListener('click', function(e){
 // --- Listings ---
 // Search / filter / sort. Default sort ("oldest") keeps the order the
 // API returns (position, then creation date) — exactly as before.
-var listingFilter = { q: '', maker: '', sort: 'oldest' };
+var listingFilter = { q: '', maker: '', cat: '', sort: 'oldest' };
 var makerFilterSearch = '';
 function fillMakerFilter(makers){
   var sel = document.getElementById('liFilterMaker');
@@ -325,6 +325,7 @@ function applyListingFilter(list){
   var q = listingFilter.q.trim().toLowerCase();
   var out = (list || []).filter(function(l){
     if(listingFilter.maker && String(l.maker_id) !== String(listingFilter.maker)) return false;
+    if(listingFilter.cat && String(l.category || '') !== listingFilter.cat) return false;
     if(q && String(l.name || '').toLowerCase().indexOf(q) === -1) return false;
     return true;
   });
@@ -346,6 +347,10 @@ document.getElementById('liFilterMaker').addEventListener('change', function(){
   listingFilter.maker = this.value;
   rerenderListings();
 });
+document.getElementById('liFilterCat').addEventListener('change', function(){
+  listingFilter.cat = this.value;
+  rerenderListings();
+});
 document.getElementById('liSort').addEventListener('change', function(){
   listingFilter.sort = this.value;
   rerenderListings();
@@ -355,11 +360,11 @@ function renderListings(list, makers){
   var body = document.getElementById('listingsBody');
   var rows = applyListingFilter(list);
   if(!rows.length){
-    var filtering = listingFilter.q || listingFilter.maker;
+    var filtering = listingFilter.q || listingFilter.maker || listingFilter.cat;
     body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">' + (filtering ? 'No listings match that search.' : 'No listings yet.') + '</td></tr>';
     return;
   }
-  var labels = {pottery: 'Pottery', knitting: 'Knitting', jewelry: 'Jewelry', candles: 'Candles', food: 'Food & Honey', sewing: 'Sewing', other: 'Other crafts'};
+  var labels = {pottery: 'Pottery', jewelry: 'Jewelry', textiles: 'Textiles', woodwork: 'Woodwork', other: 'Other'};
   body.innerHTML = rows.map(function(l){
     var pill = l.status === 'live' ? '<span class="pill">Live</span>' : '<span class="pill arch">Archived</span>';
     var archBtn = l.status === 'live'
@@ -473,7 +478,10 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
     document.getElementById('liMaker').value = l.maker_id || '';
     document.getElementById('liName').value = l.name || '';
     document.getElementById('liPrice').value = l.price || '';
-    document.getElementById('liCat').value = l.category || 'pottery';
+    /* Old category names (knitting/candles/food/sewing) map onto the new
+       fixed list so an older listing still opens with a valid choice. */
+    var catMap = {knitting: 'textiles', candles: 'other', food: 'other', sewing: 'textiles'};
+    document.getElementById('liCat').value = catMap[l.category] || l.category || 'pottery';
     document.getElementById('liDesc').value = l.description || '';
     document.getElementById('liPhoto').value = l.photo || '';
     showPhotoPreview(l.photo || '');
