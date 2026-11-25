@@ -255,7 +255,6 @@ function selectProduct(id) {
   document.getElementById("ps-name").textContent = p.name;
   document.getElementById("ps-maker").textContent = "by " + p.maker + " — " + p.shop;
   document.getElementById("ps-price").textContent = p.price;
-  document.getElementById("ep-maker").textContent = p.maker.split(" ")[0];
   document.getElementById("h-product").value = p.name;
   document.getElementById("h-maker").value = p.maker + " — " + p.shop;
   document.getElementById("h-price").value = p.price;
@@ -295,6 +294,34 @@ function showError(msg) {
   err.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+/* Mandatory reservation fields (name, email, short message). When one is
+   left empty we highlight exactly that field and show one short message —
+   never a list of field names — so the buyer sees at a glance what to fix. */
+var REQUIRED_FIELDS = ["f-name", "f-email", "f-msg"];
+
+function missingRequired(name, email, msg) {
+  var missing = [];
+  if (!name) missing.push("f-name");
+  if (!email) missing.push("f-email");
+  if (!msg) missing.push("f-msg");
+  return missing;
+}
+
+function markMissing(ids) {
+  REQUIRED_FIELDS.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.toggle("field-missing", ids.indexOf(id) !== -1);
+  });
+}
+
+/* Clear a field's highlight as soon as the buyer starts typing in it. */
+REQUIRED_FIELDS.forEach(function (id) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener("input", function () {
+    this.classList.remove("field-missing");
+  });
+});
+
 /* Show the delivery-charges note only when delivery by mail is chosen */
 function syncDeliveryNote() {
   var sel = document.getElementById("f-delivery");
@@ -330,14 +357,20 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
     return;
   }
 
-  if (!name || !email || !msg) {
-    showError("Please fill in your name, your email, and a short message to the maker — those three are needed so they can reply to you.");
+  var missing = missingRequired(name, email, msg);
+  if (missing.length) {
+    markMissing(missing);
+    showError(missing.length === 1
+      ? "Please fill in the highlighted field."
+      : "Please fill in the highlighted fields.");
     return;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById("f-email").classList.add("field-missing");
     showError("That email address doesn’t look quite right — please check it, since the maker will reply there.");
     return;
   }
+  markMissing([]);
   err.classList.remove("show");
 
   var p = productById(current);
