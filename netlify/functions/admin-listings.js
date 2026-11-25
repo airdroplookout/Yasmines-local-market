@@ -21,6 +21,10 @@ import { json, sbJson, requireAdmin, handlerFor, LISTING_CATEGORIES } from "./_l
 
 function cleanListing(b) {
   const patch = {};
+  // Defence in depth for H-1: markup must never be stored in a listing.
+  for (const k of ["name", "price", "description", "photo"]) {
+    if (b[k] !== undefined && b[k] !== null && /[<>]/.test(String(b[k]))) return { error: `${k} must not contain < or >` };
+  }
   if (b.maker_id !== undefined) patch.maker_id = String(b.maker_id).trim();
   if (b.name !== undefined) patch.name = String(b.name).trim().slice(0, 120);
   if (b.price !== undefined) patch.price = String(b.price).trim().slice(0, 20);
@@ -38,6 +42,8 @@ function cleanListing(b) {
     if (b.status !== "live" && b.status !== "archived") return { error: 'status must be "live" or "archived"' };
     patch.status = b.status;
   }
+  if (patch.name !== undefined && !patch.name) return { error: "name is required" };
+  if (patch.price !== undefined && !patch.price) return { error: "price is required" };
   return { patch };
 }
 
