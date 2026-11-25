@@ -17,14 +17,24 @@ function showToast(msg){
   clearTimeout(t._h);
   t._h = setTimeout(function(){ t.classList.remove('show'); }, 3200);
 }
-function esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function fmtDate(s){ if(!s) return '—'; try { return new Date(s).toLocaleDateString('en-CA', {year:'numeric', month:'short', day:'numeric'}); } catch(e){ return s; } }
 
 function api(path, method, body){
   var headers = {'Content-Type': 'application/json'};
   if(token) headers['x-admin-session'] = token;
   return fetch(path, {method: method || 'GET', headers: headers, body: body ? JSON.stringify(body) : undefined})
-    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); });
+    .then(function(r){ return r.json().then(function(j){
+      if(!r.ok){
+        // Carry the server's structured fields on the error so the
+        // approve handler can read existing_shop_name / status (409s).
+        var err = new Error(j.error || ('HTTP ' + r.status));
+        err.status = r.status;
+        if (j.existing_shop_name) err.existing_shop_name = j.existing_shop_name;
+        throw err;
+      }
+      return j;
+    }); });
 }
 
 function showLogin(){
@@ -598,10 +608,39 @@ document.getElementById('subBody').addEventListener('click', function(e){
   var rej = e.target.closest('[data-sub-reject]');
   var del = e.target.closest('[data-sub-del]');
   if(app){
+    // Double-click guard (audit N-L3): disable while the request is in
+    // flight, re-enable on error. The confirm dialog alone did not
+    // stop two parallel Approves from two tabs/clicks.
+    if(app.disabled) return;
     if(!window.confirm('Approve this product? It will go live on the public site right away.')) return;
-    api('/api/admin/submissions?id=' + encodeURIComponent(app.getAttribute('data-sub-approve')), 'POST', {action: 'approve'})
+    app.disabled = true;
+    var approveId = app.getAttribute('data-sub-approve');
+    var sendApprove = function (confirmAttach) {
+      var body = {action: 'approve'};
+      if (confirmAttach) body.confirm_attach = true;
+      return api('/api/admin/submissions?id=' + encodeURIComponent(approveId), 'POST', body);
+    };
+    sendApprove(false)
       .then(function(){ showToast('Approved — the product is live on the site.'); loadOverview(); })
-      .catch(function(ex){ showToast(ex.message); });
+      .catch(function(ex){
+        // Attach-to-existing-shop 409: the server names the shop. Ask
+        // the owner explicitly, and only re-send with confirm_attach
+        // when they agree. Every other 409 (email not verified /
+        // already handled / archived maker) is shown in plain words.
+        if(ex.status === 409 && ex.existing_shop_name){
+          if(window.confirm('This email belongs to the existing shop "' + ex.existing_shop_name + '". Attach this product to that shop?')){
+            sendApprove(true)
+              .then(function(){ showToast('Approved — the product is live on the site.'); loadOverview(); })
+              .catch(function(ex2){ app.disabled = false; showToast(ex2.message); });
+            return;
+          }
+          app.disabled = false;
+          showToast('Not approved — left pending.');
+          return;
+        }
+        app.disabled = false;
+        showToast(ex.message);
+      });
     return;
   }
   if(rej){
