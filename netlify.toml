@@ -67,6 +67,14 @@
   to = "/.netlify/functions/create-reservation"
   status = 200
 [[redirects]]
+  from = "/api/submit-product"
+  to = "/.netlify/functions/submit-product"
+  status = 200
+[[redirects]]
+  from = "/api/admin/submissions"
+  to = "/.netlify/functions/admin-submissions"
+  status = 200
+[[redirects]]
   from = "/api/admin/makers"
   to = "/.netlify/functions/admin-makers"
   status = 200
