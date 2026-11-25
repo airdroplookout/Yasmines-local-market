@@ -172,13 +172,34 @@ function listingName(listings, id){
 }
 
 // --- Makers ---
+// Searchable maker pickers: type letters and both maker dropdowns narrow
+// to matching makers (name or shop name, case-insensitive, anywhere in
+// the name — "ma" finds "Mary Stones"). The currently picked maker is
+// always kept in the list so an active choice is never lost.
+var makerSelectSearch = '';
+function makerMatches(m, q){
+  if(!q) return true;
+  q = q.trim().toLowerCase();
+  return ((m.shop_name || '') + ' ' + (m.name || '')).toLowerCase().indexOf(q) !== -1;
+}
 function fillMakerSelect(makers){
   var sel = document.getElementById('liMaker');
+  var keep = sel.value;
   var live = (makers || []).filter(function(m){ return m.status === 'live'; });
-  sel.innerHTML = live.length
-    ? live.map(function(m){ return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>'; }).join('')
-    : '<option value="">No live makers yet — add one first</option>';
+  var shown = live.filter(function(m){
+    return String(m.id) === String(keep) || makerMatches(m, makerSelectSearch);
+  });
+  sel.innerHTML = !live.length
+    ? '<option value="">No live makers yet — add one first</option>'
+    : shown.length
+      ? shown.map(function(m){ return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>'; }).join('')
+      : '<option value="">No makers match that search</option>';
+  if(shown.some(function(m){ return String(m.id) === String(keep); })) sel.value = keep;
 }
+document.getElementById('liMakerSearch').addEventListener('input', function(){
+  makerSelectSearch = this.value;
+  fillMakerSelect(overview ? overview.makers : []);
+});
 function renderMakers(list){
   var body = document.getElementById('makersBody');
   if(!list.length){
@@ -234,6 +255,9 @@ document.getElementById('makersBody').addEventListener('click', function(e){
   if(viewLi){
     var mkId = viewLi.getAttribute('data-view-li-mk');
     listingFilter.maker = mkId;
+    var fsearch = document.getElementById('liFilterMakerSearch');
+    if(fsearch){ fsearch.value = ''; makerFilterSearch = ''; }
+    fillMakerFilter(overview ? overview.makers : []);
     var fsel = document.getElementById('liFilterMaker');
     if(fsel) fsel.value = mkId;
     activateSection('secListings');
@@ -281,15 +305,22 @@ document.getElementById('makersBody').addEventListener('click', function(e){
 // Search / filter / sort. Default sort ("oldest") keeps the order the
 // API returns (position, then creation date) — exactly as before.
 var listingFilter = { q: '', maker: '', sort: 'oldest' };
+var makerFilterSearch = '';
 function fillMakerFilter(makers){
   var sel = document.getElementById('liFilterMaker');
   var keep = listingFilter.maker;
-  sel.innerHTML = '<option value="">All makers</option>' + (makers || []).map(function(m){
+  sel.innerHTML = '<option value="">All makers</option>' + (makers || []).filter(function(m){
+    return String(m.id) === String(keep) || makerMatches(m, makerFilterSearch);
+  }).map(function(m){
     return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>';
   }).join('');
   sel.value = (makers || []).some(function(m){ return String(m.id) === String(keep); }) ? keep : '';
   listingFilter.maker = sel.value;
 }
+document.getElementById('liFilterMakerSearch').addEventListener('input', function(){
+  makerFilterSearch = this.value;
+  fillMakerFilter(overview ? overview.makers : []);
+});
 function applyListingFilter(list){
   var q = listingFilter.q.trim().toLowerCase();
   var out = (list || []).filter(function(l){
@@ -376,6 +407,8 @@ function resetListingForm(){
   editingListingId = null;
   document.getElementById('liId').value = '';
   document.getElementById('listingForm').reset();
+  makerSelectSearch = '';
+  fillMakerSelect(overview ? overview.makers : []);
   document.getElementById('liPhoto').value = '';
   showPhotoPreview('');
   document.getElementById('liSubmit').textContent = 'Add listing';
@@ -435,6 +468,8 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
     if(!l) return;
     editingListingId = l.id;
     document.getElementById('liId').value = l.id;
+    var ms = document.getElementById('liMakerSearch');
+    if(ms){ ms.value = ''; makerSelectSearch = ''; fillMakerSelect(overview ? overview.makers : []); }
     document.getElementById('liMaker').value = l.maker_id || '';
     document.getElementById('liName').value = l.name || '';
     document.getElementById('liPrice').value = l.price || '';
