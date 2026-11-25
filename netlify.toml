@@ -67,12 +67,20 @@
   to = "/.netlify/functions/create-reservation"
   status = 200
 [[redirects]]
+  from = "/api/send-contact"
+  to = "/.netlify/functions/send-contact"
+  status = 200
+[[redirects]]
   from = "/api/reservation-counts"
   to = "/.netlify/functions/reservation-counts"
   status = 200
 [[redirects]]
   from = "/api/submit-product"
   to = "/.netlify/functions/submit-product"
+  status = 200
+[[redirects]]
+  from = "/api/verify-submission"
+  to = "/.netlify/functions/verify-submission"
   status = 200
 [[redirects]]
   from = "/api/admin/submissions"
@@ -115,5 +123,6 @@
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formsubmit.co"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
