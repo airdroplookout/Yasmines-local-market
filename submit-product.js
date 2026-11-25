@@ -108,6 +108,17 @@
     }
 
     err.classList.remove('show');
+    /* Honeypot (audit N-M1): bots fill the hidden _honey field. Show the
+       normal thank-you screen and send nothing — no save, no email. */
+    var honey = document.querySelector('#submit-form input[name="_honey"]');
+    if (honey && honey.value.trim()) {
+      document.getElementById('t-product').textContent = productName;
+      document.getElementById('t-email').textContent = makerEmail;
+      form.style.display = 'none';
+      document.getElementById('submit-thanks').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setBusy(true, 'Sending…');
 
     var fd = new FormData(form);
@@ -117,6 +128,18 @@
         if(!r.body || !r.body.ok){
           setBusy(false, 'Send my product for review →');
           showError('Sorry — that did not send. ' + (r.body && r.body.error ? r.body.error : 'Please try again.'));
+          return null;
+        }
+        if (r.body.honeypot) {
+          // Server caught a filled honeypot: pretend it worked (the
+          // normal thank-you screen) and send NO email — nothing was
+          // stored, so there is nothing to notify the owner about.
+          setBusy(false, 'Send my product for review →');
+          document.getElementById('t-product').textContent = productName;
+          document.getElementById('t-email').textContent = makerEmail;
+          form.style.display = 'none';
+          document.getElementById('submit-thanks').style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           return null;
         }
         return r.body;
