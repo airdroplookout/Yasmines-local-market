@@ -63,6 +63,10 @@
   to = "/.netlify/functions/track"
   status = 200
 [[redirects]]
+  from = "/api/reserve"
+  to = "/.netlify/functions/create-reservation"
+  status = 200
+[[redirects]]
   from = "/api/admin/makers"
   to = "/.netlify/functions/admin-makers"
   status = 200
