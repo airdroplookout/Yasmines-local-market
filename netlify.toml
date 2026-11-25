@@ -1,6 +1,9 @@
 # Yasmine's Local Market — Netlify config.
-# Hosting: Netlify. Static front-end in the market repo
-# (yasmines-local-market), server code in netlify/functions/. No build step.
+# Hosting: Netlify. Static front-end at the market repo ROOT (index.html
+# lives at repo root, not under public/) — so publish is "." here, NOT
+# "public". Do NOT change this back: publish="public" would point Netlify
+# at a directory that does not exist in the repo and break the live site.
+# Server code in netlify/functions/. No build step.
 # Env vars are set in the Netlify dashboard (Site settings -> Environment
 # variables), never in this file.
 # Deploy: merge this folder into the market repo (see README.md) and
@@ -66,6 +69,10 @@
 [[redirects]]
   from = "/api/admin/listings"
   to = "/.netlify/functions/admin-listings"
+  status = 200
+[[redirects]]
+  from = "/api/admin/upload-photo"
+  to = "/.netlify/functions/admin-upload-photo"
   status = 200
 [[redirects]]
   from = "/api/admin/reservations"
