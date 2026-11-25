@@ -155,18 +155,30 @@ export async function verifyAdminSession(context, token) {
   } catch { return false; }
 }
 // --- Manage login rate limiting ---
-// 5 wrong passwords inside 15 minutes locks the admin login out of
-// /api/admin/login for 15 minutes — GLOBAL, not per IP: one shared
-// budget for the single admin account, so rotating IPs cannot buy
-// fresh 5-try budgets. The per-IP limit stays as a second layer.
-// State lives in the settings table (key admin_login_lockout) so it
-// survives across lambda invocations. Only the IP is stored, hashed —
-// never the raw address. The lockout is checked before the password is
-// compared, so it cannot be bypassed by switching endpoints:
-// /api/admin/login is the only place a password is ever accepted.
+// Two budgets (audit H-3, Nov 25 2026):
+//  - PER-IP: 5 wrong passwords inside 15 minutes locks that IP out for
+//    15 minutes — the hard brake against guessing.
+//  - GLOBAL: 30 wrong passwords inside 15 minutes across ALL IPs —
+//    much looser than the old 5, so a single stranger can no longer lock
+//    the owner out with 5 empty POSTs.
+// Counting is ATOMIC: recordLoginAttemptRpc() bumps the counter inside
+// one Postgres transaction (SELECT ... FOR UPDATE in
+// record_login_attempt()), so parallel wrong passwords can no longer
+// undercount the way the old settings-table read-modify-write did.
+// Until the owner runs supabase/login-attempts.sql once, the RPC does
+// not exist and every function below falls back to the legacy
+// settings-table state, so login keeps working — the new path only
+// takes over once the table + function exist (no redeploy needed).
+// State lives in the settings table (key admin_login_lockout) in the
+// legacy path so it survives across lambda invocations. Only the IP is
+// stored, hashed — never the raw address. The lockout is checked before
+// the password is compared, so it cannot be bypassed by switching
+// endpoints: /api/admin/login is the only place a password is ever
+// accepted.
 // FAIL CLOSED: if the lockout state cannot be read or written, login is
 // refused instead of silently letting attempts continue unchecked.
 export const LOGIN_MAX_FAILS = 5;
+export const LOGIN_GLOBAL_MAX_FAILS = 30;
 export const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;
 const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_LOCKOUT_KEY = "admin_login_lockout";
@@ -177,6 +189,36 @@ function loginClientId(context) {
     || (h.get("x-forwarded-for") || "").split(",")[0].trim()
     || "unknown";
   return createHmac("sha256", context.env.ADMIN_API_KEY || "yasmines-local-market").update(ip).digest("hex").slice(0, 16);
+}
+// One atomic increment via the record_login_attempt() Postgres
+// function. Returns { fails, locked_until } or null when the function
+// does not exist yet (owner has not run login-attempts.sql) or the call
+// fails for any other reason — the caller then uses the legacy path.
+async function recordLoginAttemptRpc(context, clientId, maxFails) {
+  try {
+    const rows = await sbJson(context, "rpc/record_login_attempt", {
+      method: "POST",
+      body: JSON.stringify({ p_client_id: clientId, p_max_fails: maxFails, p_window_ms: LOGIN_WINDOW_MS, p_lockout_ms: LOGIN_LOCKOUT_MS }),
+    });
+    const row = Array.isArray(rows) ? rows[0] : null;
+    if (!row || typeof row.fails !== "number") return null;
+    return { fails: row.fails, locked_until: row.locked_until ? Date.parse(row.locked_until) : undefined };
+  } catch { return null; }
+}
+// Read both lockout rows from the new login_attempts table. Returns
+// null when the table does not exist yet — the caller uses the legacy
+// path instead. Only hashed client ids are stored, never raw IPs.
+async function readLoginAttempts(context) {
+  try {
+    const ids = `${loginClientId(context)},${GLOBAL_LOCKOUT_ID}`;
+    const rows = await sbJson(context, `login_attempts?select=client_id,fails,locked_until&client_id=in.(${ids})`);
+    if (!Array.isArray(rows)) return null;
+    const out = {};
+    for (const r of rows) {
+      out[r.client_id] = { fails: r.fails, locked_until: r.locked_until ? Date.parse(r.locked_until) : undefined };
+    }
+    return out;
+  } catch { return null; }
 }
 async function readLockoutState(context) {
   // Throws on read failure instead of returning an empty state: a
@@ -194,8 +236,19 @@ async function writeLockoutState(context, state) {
   });
 }
 export async function checkLoginAllowed(context) {
-  const state = await readLockoutState(context);
   const now = Date.now();
+  const attempts = await readLoginAttempts(context);
+  if (attempts) {
+    for (const id of [GLOBAL_LOCKOUT_ID, loginClientId(context)]) {
+      const entry = attempts[id];
+      if (entry && entry.locked_until && now < entry.locked_until) {
+        return { allowed: false, retry_after_ms: entry.locked_until - now };
+      }
+    }
+    return { allowed: true };
+  }
+  // Legacy fallback (login_attempts table not created yet).
+  const state = await readLockoutState(context);
   const global = state[GLOBAL_LOCKOUT_ID];
   if (global && global.locked_until && now < global.locked_until) {
     return { allowed: false, retry_after_ms: global.locked_until - now };
@@ -214,8 +267,19 @@ function bumpLockoutEntry(entry, now) {
   return e;
 }
 export async function recordFailedLogin(context) {
-  const state = await readLockoutState(context);
   const id = loginClientId(context);
+  // Atomic path: one RPC call per budget. Both must succeed, or the
+  // whole attempt falls back to the legacy path (never half-counted).
+  const ip = await recordLoginAttemptRpc(context, id, LOGIN_MAX_FAILS);
+  const global = await recordLoginAttemptRpc(context, GLOBAL_LOCKOUT_ID, LOGIN_GLOBAL_MAX_FAILS);
+  if (ip && global) {
+    const locked_until = Math.max(ip.locked_until || 0, global.locked_until || 0) || undefined;
+    return { fails: ip.fails, global_fails: global.fails, locked_until };
+  }
+  // Legacy fallback (RPC not available yet): settings-table
+  // read-modify-write. Still correct for one-at-a-time attempts; the
+  // atomic path replaces it as soon as login-attempts.sql is run.
+  const state = await readLockoutState(context);
   const now = Date.now();
   // Prune per-IP entries older than a day so the row does not grow
   // forever. The global entry is pruned by its own 15-minute window
@@ -225,16 +289,22 @@ export async function recordFailedLogin(context) {
     if (!v || now - (v.first_at || 0) > 24 * 60 * 60 * 1000) delete state[k];
   }
   state[id] = bumpLockoutEntry(state[id], now);
-  const global = bumpLockoutEntry(state[GLOBAL_LOCKOUT_ID], now);
-  state[GLOBAL_LOCKOUT_ID] = global;
+  const legacyGlobal = bumpLockoutEntry(state[GLOBAL_LOCKOUT_ID], now);
+  state[GLOBAL_LOCKOUT_ID] = legacyGlobal;
   await writeLockoutState(context, state);
   // Report the stricter of the two budgets, so the "attempts left"
   // message always reflects the global budget an attacker actually faces.
-  const fails = Math.max(state[id].fails, global.fails);
-  const locked_until = Math.max(state[id].locked_until || 0, global.locked_until || 0) || undefined;
-  return { fails, locked_until };
+  const fails = Math.max(state[id].fails, legacyGlobal.fails);
+  const locked_until = Math.max(state[id].locked_until || 0, legacyGlobal.locked_until || 0) || undefined;
+  return { fails, global_fails: legacyGlobal.fails, locked_until };
 }
 export async function clearLoginLockout(context) {
+  // New table: delete both rows (ignored when the table does not exist
+  // yet — the legacy delete below still runs).
+  try {
+    const ids = `${loginClientId(context)},${GLOBAL_LOCKOUT_ID}`;
+    await sbJson(context, `login_attempts?client_id=in.(${ids})`, { method: "DELETE" });
+  } catch { /* legacy path below still clears the old state */ }
   const state = await readLockoutState(context);
   delete state[loginClientId(context)];
   delete state[GLOBAL_LOCKOUT_ID];
