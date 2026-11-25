@@ -162,7 +162,7 @@
         </div>
         <div class="mrow">
           <div class="mfield"><label for="liPrice">Price</label><input id="liPrice" type="text" placeholder="e.g. $32" required></div>
-          <div class="mfield"><label for="liCat">Category</label><select id="liCat"><option value="pottery">Pottery</option><option value="knitting">Knitting</option><option value="jewelry">Jewelry</option><option value="candles">Candles</option><option value="food">Food &amp; Honey</option><option value="sewing">Sewing</option><option value="other">Other crafts</option></select></div>
+          <div class="mfield"><label for="liCat">Category</label><select id="liCat" required><option value="pottery">Pottery</option><option value="jewelry">Jewelry</option><option value="textiles">Textiles</option><option value="woodwork">Woodwork</option><option value="other">Other</option></select></div>
         </div>
         <div class="mfield"><label for="liDesc">Description</label><textarea id="liDesc" placeholder="One or two lines about the piece."></textarea></div>
         <div class="mfield"><label for="liPhotoFile">Photo — upload pictures</label>
@@ -183,7 +183,10 @@
           <div class="mrow"><input id="liFilterMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liFilterMaker" aria-label="Maker"><option value="">All makers</option></select></div>
         </div>
       </div>
-      <div class="mfield" style="max-width:280px"><label for="liSort">Sort</label><select id="liSort"><option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="name">Name A–Z</option></select></div>
+      <div class="mrow">
+        <div class="mfield"><label for="liFilterCat">Category</label><select id="liFilterCat"><option value="">All categories</option><option value="pottery">Pottery</option><option value="jewelry">Jewelry</option><option value="textiles">Textiles</option><option value="woodwork">Woodwork</option><option value="other">Other</option></select></div>
+        <div class="mfield"><label for="liSort">Sort</label><select id="liSort"><option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="name">Name A–Z</option></select></div>
+      </div>
       <div class="tablewrap"><table class="mtable">
         <thead><tr><th>Product</th><th>Maker</th><th>Price</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="listingsBody"></tbody>
