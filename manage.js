@@ -364,7 +364,7 @@ function renderListings(list, makers){
     body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">' + (filtering ? 'No listings match that search.' : 'No listings yet.') + '</td></tr>';
     return;
   }
-  var labels = {pottery: 'Pottery', jewelry: 'Jewelry', homeware: 'Homeware', textiles: 'Textiles', art: 'Art', other: 'Other'};
+  var labels = {pottery: 'Pottery', jewelry: 'Jewelry', homeware: 'Homeware', textiles: 'Textiles', art: 'Art', 'cards-stationery': 'Cards & Stationery', 'clothing-accessories': 'Clothing & Accessories', weddings: 'Weddings', other: 'Other'};
   body.innerHTML = rows.map(function(l){
     var pill = l.status === 'live' ? '<span class="pill">Live</span>' : '<span class="pill arch">Archived</span>';
     var archBtn = l.status === 'live'
