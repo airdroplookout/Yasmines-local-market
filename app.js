@@ -124,6 +124,89 @@ function mapListing(l) {
   };
 }
 
+/* "Sold: N" reservation counters — how many reservations each listing
+   has had, from the database via GET /api/reservation-counts (counts
+   keyed by database listing id, plus a name lookup for the built-in
+   fallback products, which have no database id). The counts arrive
+   after the grid renders, so cards carry a hidden placeholder that is
+   filled in when the counts load. A listing with no count, or zero
+   reservations, shows nothing — never a guessed number, never
+   "Sold: 0". */
+var SOLD_COUNTS = null; /* { counts: {...}, by_name: {...} } once loaded */
+
+function soldKeyFor(p) {
+  if (!p) return null;
+  if (p.listing_id) return "id:" + p.listing_id;
+  if (p.name) return "name:" + p.name;
+  return null;
+}
+
+function soldCountByKey(key) {
+  if (!SOLD_COUNTS || !key) return null;
+  var i = key.indexOf(":");
+  var kind = key.slice(0, i);
+  var val = key.slice(i + 1);
+  if (kind === "id") return SOLD_COUNTS.counts[val] || 0;
+  if (kind === "name") return SOLD_COUNTS.by_name[val] || 0;
+  return null;
+}
+
+function soldCountFor(p) {
+  return soldCountByKey(soldKeyFor(p));
+}
+
+/* Counter HTML for a listing card: the real "Sold: N" when the counts
+   are loaded and N is at least 1; a hidden placeholder (filled in by
+   applySoldCounts) while the counts are still loading; nothing at all
+   when the counts are loaded and this listing has none. */
+function soldHtml(p) {
+  var key = soldKeyFor(p);
+  if (!key) return "";
+  var n = soldCountByKey(key);
+  if (n === null) return '<p class="sold-count" data-sold-key="' + esc(key) + '" hidden></p>';
+  if (n >= 1) return '<p class="sold-count">Sold: ' + n + '</p>';
+  return "";
+}
+
+/* Fill in every counter placeholder once the counts have loaded. */
+function applySoldCounts() {
+  document.querySelectorAll("[data-sold-key]").forEach(function (el) {
+    var n = soldCountByKey(el.getAttribute("data-sold-key"));
+    if (n === null) return;
+    if (n >= 1) {
+      el.textContent = "Sold: " + n;
+      el.hidden = false;
+    } else {
+      el.remove();
+    }
+  });
+  /* The reserve-form summary shows the currently selected product. */
+  var summary = document.getElementById("ps-sold");
+  if (summary) {
+    var p = productById(current);
+    var n = soldCountFor(p);
+    if (n !== null && n >= 1) {
+      summary.textContent = "Sold: " + n;
+      summary.hidden = false;
+    } else {
+      summary.hidden = true;
+    }
+  }
+}
+
+/* Load the counts once per page view — best-effort, like the visits
+   counter: a failure just means no counters are shown. */
+(function loadSoldCounts() {
+  fetch("/api/reservation-counts")
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      if (!data || !data.ok) return;
+      SOLD_COUNTS = { counts: data.counts || {}, by_name: data.by_name || {} };
+      applySoldCounts();
+    })
+    .catch(function () { /* no counters — never break the shop */ });
+})();
+
 /* Build the product grid — a page may define window.PAGE_PRODUCTS to show only its own items.
    Front-page category pills (#cat-pills) filter whatever is loaded (live
    listings or the built-in fallback) by the listing's category slug. */
@@ -155,6 +238,7 @@ function mapListing(l) {
       '<div class="card-body">' +
         '<h3>' + title + '</h3>' +
         '<p class="maker">by ' + esc(p.maker) + ' — ' + esc(p.shop) + '</p>' +
+        soldHtml(p) +
         (vendorPage ? '<p class="vendor-link"><a href="' + esc(VENDORS[p.vendor].page) + '">See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
         '<p class="desc">' + esc(p.desc) + '</p>' +
         '<div class="card-row"><p class="price-sm">' + esc(p.price) + '</p>' +
@@ -255,6 +339,16 @@ function selectProduct(id) {
   document.getElementById("ps-name").textContent = p.name;
   document.getElementById("ps-maker").textContent = "by " + p.maker + " — " + p.shop;
   document.getElementById("ps-price").textContent = p.price;
+  var soldEl = document.getElementById("ps-sold");
+  if (soldEl) {
+    var soldN = soldCountFor(p);
+    if (soldN !== null && soldN >= 1) {
+      soldEl.textContent = "Sold: " + soldN;
+      soldEl.hidden = false;
+    } else {
+      soldEl.hidden = true;
+    }
+  }
   document.getElementById("h-product").value = p.name;
   document.getElementById("h-maker").value = p.maker + " — " + p.shop;
   document.getElementById("h-price").value = p.price;
@@ -534,11 +628,13 @@ function renderMoreFrom(reservedId, p) {
       '<div class="card-body">' +
         '<h3>' + esc(q.name) + '</h3>' +
         '<p class="maker">by ' + esc(q.maker) + '</p>' +
+        soldHtml(q) +
         '<div class="card-row"><p class="price-sm">' + esc(q.price) + '</p>' +
         '<button class="btn btn-primary" type="button" data-more-reserve="' + esc(it.id) + '">Reserve this item</button></div>' +
       '</div>';
     grid.appendChild(card);
   });
+  applySoldCounts();
   box.hidden = false;
 }
 
