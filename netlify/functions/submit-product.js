@@ -52,10 +52,12 @@ function magicOk(buf, type) {
 
 async function onPost(context) {
   // Honeypot (same as the other public forms): bots fill it, we smile
-  // and pretend it worked. No row, no photo, no email.
+  // and pretend it worked. No row, no photo, no email. The response
+  // carries honeypot:true (audit N-M1) so the browser can tell it apart
+  // from a real save and skip the FormSubmit email.
   let form;
   try { form = await context.request.formData(); } catch { return json({ ok: false, error: "Could not read the form." }, 400); }
-  if (String(form.get("_honey") || "").trim()) return json({ ok: true, stored: true, url: null });
+  if (String(form.get("_honey") || "").trim()) return json({ ok: true, honeypot: true, stored: false, url: null });
 
   const allowed = await checkPublicRateLimit(context, "submit", 5, 60 * 60 * 1000);
   if (!allowed) return json({ ok: false, error: "Too many submissions — please try again later." }, 429);
