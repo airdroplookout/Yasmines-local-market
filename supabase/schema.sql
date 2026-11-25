@@ -163,6 +163,10 @@ alter table public.listings enable row level security;
 alter table public.reservations enable row level security;
 alter table public.settings enable row level security;
 alter table public.page_views enable row level security;
+-- Audit #3 N-L7: product_submissions was missing from this list.
+-- Also in supabase/product-submissions-rls.sql — run it once in the
+-- Supabase SQL Editor on the live project (repo SQL does not auto-apply).
+alter table public.product_submissions enable row level security;
 
 drop policy if exists "public read live makers" on public.makers;
 create policy "public read live makers" on public.makers
@@ -208,6 +212,25 @@ create or replace function public.bump_visit(p_day date)
 returns int
 language sql
 security definer
+as $$
+  insert into public.page_views (day, views) values (p_day, 1)
+  on conflict (day) do update set views = page_views.views + 1
+  returning views;
+$$;
+
+-- Audit #3 N-L17 / I-6: bump_visit hardening — also in
+-- supabase/bump-visit-fix.sql, run once in the Supabase SQL Editor on
+-- the live project (repo SQL does not auto-apply). SECURITY DEFINER
+-- with no search_path pin and PUBLIC execute by default let any direct
+-- RPC caller inflate visits for any date. Revoke PUBLIC, grant only
+-- service_role, and pin search_path = public.
+revoke execute on function public.bump_visit(date) from public;
+grant execute on function public.bump_visit(date) to service_role;
+create or replace function public.bump_visit(p_day date)
+returns int
+language sql
+security definer
+set search_path = public
 as $$
   insert into public.page_views (day, views) values (p_day, 1)
   on conflict (day) do update set views = page_views.views + 1
@@ -289,3 +312,117 @@ end;
 $$;
 grant execute on function public.record_login_attempt(text, integer, bigint, bigint) to service_role;
 
+
+-- Single-RPC login-attempt counting (audit N-M3, Nov 25 2026) —
+-- same DDL as supabase/login-attempts-single-rpc.sql (run that file
+-- once on the live project; this copy keeps a fresh database build
+-- identical). One RPC bumps BOTH budgets in a single transaction.
+-- The old record_login_attempt() function is left in place (it is no
+-- longer called by the new code) so a rollback deploy keeps working;
+-- it can be dropped once the new path is verified live.
+create table if not exists public.login_attempts (
+  client_id text primary key,
+  fails integer not null default 0,
+  first_at timestamptz not null default now(),
+  locked_until timestamptz
+);
+alter table public.login_attempts enable row level security;
+-- No public policies: only the service role (Netlify Functions) touches
+-- this table. Service role bypasses RLS.
+grant select, insert, update, delete on public.login_attempts to service_role;
+
+create or replace function public.record_login_attempt_both(p_client_id text, p_ip_max_fails integer, p_global_max_fails integer, p_window_ms bigint, p_lockout_ms bigint)
+returns table (client_id text, fails integer, locked_until timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_now timestamptz := now();
+  v_global_id text := '__global__';
+  v_ip_fails integer;
+  v_ip_first timestamptz;
+  v_ip_locked timestamptz;
+  v_g_fails integer;
+  v_g_first timestamptz;
+  v_g_locked timestamptz;
+begin
+  -- Drop stale rows so the table stays tiny (a row is stale once its
+  -- window has passed and it is not locked). Never a row being counted.
+  delete from public.login_attempts
+    where login_attempts.first_at < v_now - p_window_ms * interval '1 millisecond'
+      and (login_attempts.locked_until is null or login_attempts.locked_until < v_now)
+      and login_attempts.client_id not in (p_client_id, v_global_id);
+  -- Per-IP budget: insert-if-absent, then lock this row — concurrent
+  -- calls for the same client serialize here, so the increment cannot
+  -- undercount.
+  insert into public.login_attempts (client_id, fails, first_at, locked_until)
+    values (p_client_id, 0, v_now, null)
+    on conflict (client_id) do nothing;
+  select la.fails, la.first_at, la.locked_until
+    into v_ip_fails, v_ip_first, v_ip_locked
+    from public.login_attempts la where la.client_id = p_client_id for update;
+  if v_now - v_ip_first > p_window_ms * interval '1 millisecond' then
+    v_ip_fails := 1;
+    v_ip_first := v_now;
+    v_ip_locked := null;
+  else
+    v_ip_fails := v_ip_fails + 1;
+    if v_ip_fails >= p_ip_max_fails then
+      v_ip_locked := v_now + p_lockout_ms * interval '1 millisecond';
+    end if;
+  end if;
+  update public.login_attempts
+    set fails = v_ip_fails, first_at = v_ip_first, locked_until = v_ip_locked
+    where login_attempts.client_id = p_client_id;
+  -- Global budget: same logic, looser cap, same transaction — either
+  -- both counters move or neither does.
+  insert into public.login_attempts (client_id, fails, first_at, locked_until)
+    values (v_global_id, 0, v_now, null)
+    on conflict (client_id) do nothing;
+  select la.fails, la.first_at, la.locked_until
+    into v_g_fails, v_g_first, v_g_locked
+    from public.login_attempts la where la.client_id = v_global_id for update;
+  if v_now - v_g_first > p_window_ms * interval '1 millisecond' then
+    v_g_fails := 1;
+    v_g_first := v_now;
+    v_g_locked := null;
+  else
+    v_g_fails := v_g_fails + 1;
+    if v_g_fails >= p_global_max_fails then
+      v_g_locked := v_now + p_lockout_ms * interval '1 millisecond';
+    end if;
+  end if;
+  update public.login_attempts
+    set fails = v_g_fails, first_at = v_g_first, locked_until = v_g_locked
+    where login_attempts.client_id = v_global_id;
+  return query select p_client_id, v_ip_fails, v_ip_locked
+    union all select v_global_id, v_g_fails, v_g_locked;
+end;
+$$;
+grant execute on function public.record_login_attempt_both(text, integer, integer, bigint, bigint) to service_role;
+
+
+-- Maker email verification at submit time (audit #3 N-M6) + shop-name
+-- uniqueness (N-L3). Same DDL as supabase/submission-verification.sql
+-- (run that file once on the live project; this copy keeps a fresh
+-- database build identical). A new submission starts email_verified =
+-- false; the submit function stores only the SHA-256 hash of a 256-bit
+-- token + a 48-hour expiry, and the maker confirms via a one-time link.
+-- MIGRATION: submissions made before this deploy have
+-- email_verified = false and approve refuses them (409) until the
+-- maker re-submits or the owner verifies them by hand — see
+-- submission-verification.sql for the exact steps.
+alter table public.product_submissions
+  add column if not exists email_verified boolean not null default false;
+alter table public.product_submissions
+  add column if not exists verify_token_hash text;
+alter table public.product_submissions
+  add column if not exists verify_expires_at timestamptz;
+create index if not exists idx_submissions_verify_token
+  on public.product_submissions (verify_token_hash);
+-- Fresh databases have only the one seeded maker, so no duplicate shop
+-- names can exist here; the live-run file uses a conditional-safe DO
+-- block instead, in case duplicates were created through Manage.
+create unique index if not exists idx_makers_shop_name_unique
+  on public.makers (lower(shop_name));
