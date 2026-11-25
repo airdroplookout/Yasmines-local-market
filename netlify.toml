@@ -92,13 +92,16 @@
   status = 200
 
 # Security headers on every page.
-# NOTE — no Content-Security-Policy here, deliberately. manage.html uses an
-# inline <style> block, so an enforced CSP with style-src 'self' would break
-# the Manage page. Do not add an enforced CSP until the inline styles are
-# moved into styles.css.
+# Content-Security-Policy (audit M-3, enforced Nov 25, 2026): inline
+# <script> blocks and onclick=/onerror= handlers were moved into external
+# JS first (app.js, mary.js, contact.js), and the Manage <style> block was
+# moved into styles.css, so script-src 'self' is safe. style-src keeps
+# 'unsafe-inline' because the pages still use a few style="..." attributes.
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://formsubmit.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://formsubmit.co"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
