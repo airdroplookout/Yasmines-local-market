@@ -578,12 +578,15 @@ function renderSubmissions(list){
       ? '<a href="' + esc(s.photo_url) + '" target="_blank" rel="noopener"><img src="' + esc(s.photo_url) + '" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>'
       : '—';
     var desc = s.description ? '<br><span style="color:var(--muted)">' + esc(String(s.description).slice(0, 120)) + (String(s.description).length > 120 ? '…' : '') + '</span>' : '';
+    var catLabel = s.category_label || s.category || '';
+    if (s.category === 'other' && s.other_category) catLabel += ' — ' + s.other_category;
+    var biz = s.business_name ? '<br>' + esc(s.business_name) : '';
     var actions = s.status === 'pending'
       ? '<button class="mini" data-sub-approve="' + s.id + '">Approve — put it live</button>' +
         '<button class="mini" data-sub-reject="' + s.id + '">Reject</button>'
       : '';
-    return '<tr><td><strong>' + esc(s.product_name) + '</strong><br><span style="color:var(--muted)">' + esc(s.category_label || s.category || '') + ' · ' + esc(s.price || '') + '</span>' + desc + '</td>' +
-      '<td><strong>' + esc(s.maker_name) + '</strong><br><span style="color:var(--muted)">' + esc(s.maker_email) + '</span></td>' +
+    return '<tr><td><strong>' + esc(s.product_name) + '</strong><br><span style="color:var(--muted)">' + esc(catLabel) + ' · ' + esc(s.price || '') + '</span>' + desc + '</td>' +
+      '<td><strong>' + esc(s.maker_name) + '</strong>' + biz + '<br><span style="color:var(--muted)">' + esc(s.maker_email) + '</span></td>' +
       '<td>' + photo + '</td>' +
       '<td>' + fmtDate(s.created_at) + '</td><td>' + pill + '</td><td>' + actions +
       '<button class="mini danger" data-sub-del="' + s.id + '">Delete</button></td></tr>';
