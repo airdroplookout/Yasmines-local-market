@@ -1,4 +1,4 @@
-/* Yasmine's Local Market — shop logic.
+/* Locally Crafted CA — shop logic.
    The reserve form posts to FormSubmit (https://formsubmit.co/ajax/taradil@gmail.com)
    — the email is the owner's notification — AND saves a copy to the
    database via POST /api/reserve, so the reservation also shows in
@@ -312,6 +312,23 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
   var msg = document.getElementById("f-msg").value.trim();
   var err = document.getElementById("form-error");
   var btn = document.getElementById("submit-btn");
+
+  /* Honeypot (audit N-M1): bots fill the hidden _honey field. Smile and
+     show the normal thank-you screen — no database row, no email. */
+  var honey = document.querySelector('#reserve-form input[name="_honey"]');
+  if (honey && honey.value.trim()) {
+    var hp = productById(current);
+    if (hp) showConfirmation(name, email, phone, qty, delivery, msg, hp);
+    else showView(3);
+    return;
+  }
+  /* Markup check (audit N-M2): the same < > rejection the server uses,
+     checked here BEFORE anything is sent — the FormSubmit email leg
+     had no check at all, so a marked-up message must never reach it. */
+  if (/[<>]/.test(name) || /[<>]/.test(phone) || /[<>]/.test(msg)) {
+    showError("Text fields must not contain < or >");
+    return;
+  }
 
   if (!name || !email || !msg) {
     showError("Please fill in your name, your email, and a short message to the maker — those three are needed so they can reply to you.");
