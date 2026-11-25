@@ -410,6 +410,7 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
 });
 
 function showConfirmation(name, email, phone, qty, delivery, msg, p) {
+  var reservedId = current;
   document.getElementById("c-maker").textContent = p.maker;
   document.getElementById("c-email").textContent = email;
   document.getElementById("s-product").textContent = p.name + " — " + p.price;
@@ -423,8 +424,101 @@ function showConfirmation(name, email, phone, qty, delivery, msg, p) {
   document.getElementById("reserve-form").reset();
   syncDeliveryNote();
   selectProductDefaults();
+  renderMoreFrom(reservedId, p);
   showView(3);
 }
+
+/* Category label for the "more in this category" fallback heading. */
+function categoryLabel(cat) {
+  var labels = {pottery: "Pottery", jewelry: "Jewelry", homeware: "Homeware", textiles: "Textiles", art: "Art", "cards-stationery": "Cards & Stationery", "clothing-accessories": "Clothing & Accessories", weddings: "Weddings", "craft-supplies": "Craft Supplies", "christmas-gifts": "Christmas Gifts", other: "Other"};
+  return labels[cat] || (cat ? cat.charAt(0).toUpperCase() + cat.slice(1) : "the market");
+}
+
+/* Two products are from the same maker when their database maker id
+   matches, or their maker names match, or their vendor slugs match. */
+function sameMaker(a, b) {
+  if (!a || !b) return false;
+  if (a.maker_id && b.maker_id) return a.maker_id === b.maker_id;
+  var an = (a.maker || "").trim().toLowerCase();
+  var bn = (b.maker || "").trim().toLowerCase();
+  if (an && an === bn) return true;
+  if (a.vendor && b.vendor && a.vendor === b.vendor) return true;
+  return false;
+}
+
+/* "More from this maker" on the confirmation screen (critic rec. 7):
+   after a reservation, show the same maker's other live products —
+   photo, name and price, each with a Reserve button that opens the
+   reserve form for that item — so the buyer can keep browsing instead
+   of hitting a dead end. The pool is whatever the shop is actually
+   showing: live database listings when loaded, the built-in list
+   otherwise. If the maker has nothing else, fall back to a few items
+   from the same category; if there is nothing at all, the section
+   stays hidden and the existing Back to the shop button stands. */
+function renderMoreFrom(reservedId, p) {
+  var box = document.getElementById("more-from");
+  var grid = document.getElementById("more-from-grid");
+  var title = document.getElementById("more-from-title");
+  if (!box || !grid || !title || !p) return;
+  var pool = {};
+  var id;
+  if (LIVE_PRODUCTS) {
+    for (id in LIVE_PRODUCTS) pool[id] = LIVE_PRODUCTS[id];
+  } else {
+    for (id in PRODUCTS) pool[id] = PRODUCTS[id];
+  }
+  var others = [];
+  var sameCat = [];
+  for (id in pool) {
+    if (id === reservedId) continue;
+    var q = pool[id];
+    if (sameMaker(p, q)) others.push({id: id, product: q});
+    else if (q.category && p.category && q.category === p.category) sameCat.push({id: id, product: q});
+  }
+  var items, heading;
+  if (others.length) {
+    items = others;
+    heading = "More from " + p.maker;
+  } else if (sameCat.length) {
+    items = sameCat;
+    heading = "More in " + categoryLabel(p.category);
+  } else {
+    grid.innerHTML = "";
+    box.hidden = true;
+    return;
+  }
+  items = items.slice(0, 3);
+  title.textContent = heading;
+  grid.innerHTML = "";
+  items.forEach(function (it) {
+    var q = it.product;
+    var card = document.createElement("article");
+    card.className = "card more-card";
+    var photo = q.img
+      ? '<img src="' + esc(q.img) + '" alt="' + esc(q.alt || q.name) + '" loading="lazy" />'
+      : '<div class="card-photo-ph" aria-hidden="true"><span>' + esc(initialsFor(q.maker)) + '</span></div>';
+    card.innerHTML = photo +
+      '<div class="card-body">' +
+        '<h3>' + esc(q.name) + '</h3>' +
+        '<p class="maker">by ' + esc(q.maker) + '</p>' +
+        '<div class="card-row"><p class="price-sm">' + esc(q.price) + '</p>' +
+        '<button class="btn btn-primary" type="button" data-more-reserve="' + esc(it.id) + '">Reserve this item</button></div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+  box.hidden = false;
+}
+
+/* A "More from this maker" Reserve button opens the reserve form for
+   that item, exactly like the Reserve button on a shop card. */
+(function bindMoreFrom() {
+  var grid = document.getElementById("more-from-grid");
+  if (!grid) return;
+  grid.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest("[data-more-reserve]") : null;
+    if (btn) selectProduct(btn.getAttribute("data-more-reserve"));
+  });
+})();
 
 /* Restore the form's default hidden product values after reset */
 function selectProductDefaults() {
