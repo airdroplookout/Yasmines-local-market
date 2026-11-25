@@ -1,0 +1,17 @@
+-- Locally Crafted CA — Row Level Security for product_submissions
+-- (Audit #3 N-L7).
+--
+-- RUN THIS ONCE in Supabase Dashboard → SQL Editor on the live project
+-- ("yasmines-local-market"). Repo SQL does NOT auto-apply — nothing
+-- changes on the live database until Adil runs it there.
+--
+-- What it does: turns RLS on for public.product_submissions, matching
+-- the other tables (makers, listings, reservations, settings,
+-- page_views, login_attempts). There is deliberately NO public policy
+-- and NO anon grant on this table: makers never read it directly, and
+-- the Netlify Functions use the service-role key, which bypasses RLS —
+-- so Manage > Submissions keeps working exactly as before.
+-- Defence-in-depth only today (no anon grant exists, so the table is
+-- unreachable from outside), but without this line a future anon grant
+-- would silently expose every pending submission.
+alter table public.product_submissions enable row level security;
