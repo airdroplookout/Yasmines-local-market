@@ -7,20 +7,37 @@
 // sent, so it never reveals whether a reset is possible.
 // One-time token, 30-minute expiry, stored only as a SHA-256 hash in
 // the settings table (see createAdminResetToken in _lib.js). Rate-limited
-// to 3 requests per hour per site, so the inbox cannot be spammed.
+// to 3 requests per hour per site and 1 per hour per IP (audit L-4),
+// so the inbox cannot be spammed and one stranger cannot burn the
+// owner's recovery budget. A live token is never overwritten: while
+// one is unexpired, further requests change nothing (audit H-2 /
+// N-L26). If the reset email fails to send, the just-created token is
+// deleted so it cannot strand the owner with a link he never got.
 // A reset request never touches the login lockout: it must work even
 // while the owner is locked out of /api/admin/login, and it must never
 // burn lockout attempts.
 // If RESEND_API_KEY is not set (no market domain has been bought or
 // verified in Resend yet), the email cannot be sent; the failure is
 // logged server-side and the generic answer is still returned.
-import { json, handlerFor, sendViaResend, siteBaseUrl, createAdminResetToken, checkResetRequestAllowed, OWNER_EMAIL, ADMIN_RESET_TTL_MS } from "./_lib.js";
+import { json, handlerFor, sendViaResend, siteBaseUrl, createAdminResetToken, getAdminResetTokenRecord, consumeAdminResetToken, checkResetRequestAllowed, OWNER_EMAIL, ADMIN_RESET_TTL_MS } from "./_lib.js";
 
 const SITE_NAME = "Yasmine's Local Market";
 const GENERIC = "If a reset email could be sent, check your inbox — the link works once and expires in 30 minutes.";
 
 async function onPost(context) {
   try {
+    // Do NOT overwrite a live (unexpired) token (audit H-2 / N-L26):
+    // an attacker burning forgot requests must not invalidate the
+    // reset link already in the owner's inbox. The raw token is
+    // stored only as a hash, so the same link cannot be re-sent from
+    // here — but the owner already received it when it was minted,
+    // and it stays valid until expiry. A request while a token is
+    // live is therefore a no-op: no new token, no new email, and no
+    // rate-limit budget burned.
+    const existing = await getAdminResetTokenRecord(context);
+    if (existing && existing.expires_at && Date.now() < existing.expires_at) {
+      return json({ ok: true, message: GENERIC });
+    }
     const allowed = await checkResetRequestAllowed(context);
     if (!allowed) return json({ ok: true, message: GENERIC });
     const token = await createAdminResetToken(context);
@@ -36,9 +53,18 @@ async function onPost(context) {
     try {
       await sendViaResend(context, { to: OWNER_EMAIL, subject: `Reset your Manage password — ${SITE_NAME}`, html });
     } catch (e) {
-      // Email could not be sent (e.g. RESEND_API_KEY not set yet).
-      // Logged server-side; the caller still gets the generic answer.
-      console.error("admin-forgot: reset email NOT sent:", String(e.message || e));
+      // The send failed but a live token now exists that the owner
+      // never received. Delete the just-created token so the next
+      // request mints a fresh one instead of leaving a dead link
+      // behind (audit N-L26). Logged with a marker so the failure is
+      // visible in Netlify logs; the caller still gets the generic
+      // answer.
+      console.error("admin-forgot: RESET EMAIL FAILED — just-created token deleted, owner must request a new link:", String(e.message || e));
+      try {
+        await consumeAdminResetToken(context);
+      } catch (delErr) {
+        console.error("admin-forgot: RESET EMAIL FAILED — could not delete unsent token:", String(delErr.message || delErr));
+      }
     }
   } catch (e) {
     console.error("admin-forgot:", String(e.message || e));
