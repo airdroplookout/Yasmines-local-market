@@ -208,3 +208,25 @@ function selectProductDefaults() {
   document.getElementById("h-price").value = p.price;
   document.getElementById("h-subject").value = "New reservation — " + p.name + " (" + p.price + ")";
 }
+
+/* December launch promo pop-up — shows once per visitor (localStorage).
+   Only runs on pages that include the #promo-overlay markup (index.html). */
+(function promoPopup() {
+  var overlay = document.getElementById("promo-overlay");
+  if (!overlay) return;
+  var KEY = "ylm-dec-promo-seen";
+  var seen = false;
+  try { seen = !!window.localStorage.getItem(KEY); } catch (e) { seen = false; }
+  function dismiss() {
+    overlay.hidden = true;
+    try { window.localStorage.setItem(KEY, "1"); } catch (e) {}
+  }
+  function open() { overlay.hidden = false; }
+  document.getElementById("promo-close").addEventListener("click", dismiss);
+  overlay.addEventListener("click", function (e) { if (e.target === overlay) dismiss(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !overlay.hidden) dismiss(); });
+  document.getElementById("promo-cta").addEventListener("click", function () {
+    try { window.localStorage.setItem(KEY, "1"); } catch (e) {}
+  });
+  if (!seen) setTimeout(open, 600);
+})();
