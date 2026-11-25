@@ -84,6 +84,10 @@ a{color:var(--accent)}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;position:relative}
 .card img{width:100%;aspect-ratio:4/3;object-fit:cover}
+/* Placeholder block for listings with no photo yet: same 4/3 shape as a
+   photo, warm cream, maker's initials in a large sage serif. */
+.card-photo-ph{width:100%;aspect-ratio:4/3;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.card-photo-ph span{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:3.2rem;color:var(--sage);line-height:1}
 
 /* Tiny vendor-logo badge on each listing card (top-right corner).
    32px circle; a real logo image fills it, otherwise the monogram
