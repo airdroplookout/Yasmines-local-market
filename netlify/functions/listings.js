@@ -15,10 +15,12 @@ async function onGet(context) {
       sbJson(context, "makers?status=eq.live&select=id,name,shop_name&limit=200"),
     ]);
     const byId = Object.fromEntries((makers || []).map(m => [m.id, m]));
-    const rows = (listings || []).map(l => ({
+    // Hide listings whose maker is not live (archived makers' products
+    // must not stay on the public site — audit M-6).
+    const rows = (listings || []).filter(l => byId[l.maker_id]).map(l => ({
       ...l,
-      maker_name: byId[l.maker_id]?.name || "",
-      shop_name: byId[l.maker_id]?.shop_name || "",
+      maker_name: byId[l.maker_id].name || "",
+      shop_name: byId[l.maker_id].shop_name || "",
     }));
     return json({ ok: true, listings: rows });
   } catch (e) {
