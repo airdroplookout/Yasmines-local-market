@@ -389,7 +389,7 @@ function selectProductDefaults() {
 (function promoPopup() {
   var overlay = document.getElementById("promo-overlay");
   if (!overlay) return;
-  var KEY = "ylm-dec-promo-seen";
+  var KEY = "ylm-dec-promo-seen-v2";
   var seen = false;
   try { seen = !!window.localStorage.getItem(KEY); } catch (e) { seen = false; }
   function dismiss() {
