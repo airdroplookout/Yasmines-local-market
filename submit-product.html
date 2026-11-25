@@ -41,6 +41,11 @@
         <input type="text" id="s-maker-name" name="maker_name" placeholder="e.g. Sarah L." autocomplete="name" maxlength="100" required />
       </div>
       <div class="field">
+        <label for="s-business-name">Business name <span class="req">*</span></label>
+        <input type="text" id="s-business-name" name="business_name" placeholder="e.g. Sarah's Pottery" autocomplete="organization" maxlength="100" required />
+        <p class="hint">The name of your shop or business — this is how shoppers will see you on the site.</p>
+      </div>
+      <div class="field">
         <label for="s-maker-email">Your email <span class="req">*</span></label>
         <input type="email" id="s-maker-email" name="maker_email" placeholder="you@example.com" autocomplete="email" maxlength="50" required />
         <p class="hint">We will reply to this address about your product.</p>
@@ -65,6 +70,11 @@
           <option value="craft-supplies">Craft Supplies</option>
           <option value="other">Other</option>
         </select>
+      </div>
+      <div class="field" id="s-other-wrap" style="display:none">
+        <label for="s-other-category">Specify <span class="req">*</span></label>
+        <input type="text" id="s-other-category" name="other_category" placeholder="Tell us what kind of product this is" maxlength="100" />
+        <p class="hint">You picked “Other” — tell us in your own words what kind of product this is.</p>
       </div>
       <div class="field">
         <label for="s-price">Price ($) <span class="req">*</span></label>
@@ -108,6 +118,7 @@
     <span><strong>Locally Crafted CA</strong> — a community boutique.</span>
     <span>Browse → Reserve → The maker contacts you. No online checkout.</span>
     <span><a href="contact.html">Contact us</a> — for makers who want a spot in the market.</span>
+    <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms of use</a></span>
   </footer>
 </div>
 
