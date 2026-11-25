@@ -4,9 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light dark" />
-<meta name="description" content="Contact Yasmine's Local Market — for local makers in Brantford who would like a spot in the market, or anyone with a question about the market." />
+<meta name="description" content="Contact Locally Crafted CA — for local makers in Brantford who would like a spot in the market, or anyone with a question about the market." />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E" />
-<title>Contact — Yasmine's Local Market</title>
+<title>Contact — Locally Crafted CA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
@@ -16,8 +16,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="index.html">Yasmine's <span>Local Market</span></a>
-    <span class="topbar-tag">Handmade in Brantford, Ontario</span>
+    <a class="brand" href="index.html">Locally <span>Crafted CA</span></a>
     <a class="topnav-link" href="contact.html">Contact</a>
   </div>
 </header>
@@ -44,7 +43,7 @@
       </div>
       <div class="email-preview" style="margin-top:14px">
         <b>✉️ Where does this form go?</b>
-        <p>By email to Yasmine&rsquo;s Local Market. We usually reply within a day or two.</p>
+        <p>By email to Locally Crafted CA. We usually reply within a day or two.</p>
       </div>
     </div>
 
@@ -72,7 +71,7 @@
         <textarea id="c-msg" name="message" placeholder="Tell us about your work, how many pieces you would like to list, or ask your question." required></textarea>
       </div>
 
-      <input type="hidden" name="_subject" value="New vendor enquiry — Yasmine's Local Market" />
+      <input type="hidden" name="_subject" value="New vendor enquiry — Locally Crafted CA" />
       <input type="hidden" name="_template" value="table" />
       <input type="hidden" name="_replyto" id="h-replyto" value="" />
       <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
@@ -93,7 +92,7 @@
   </div>
 
   <footer>
-    <span><strong>Yasmine&rsquo;s Local Market</strong> — a community boutique in Brantford, Ontario.</span>
+    <span><strong>Locally Crafted CA</strong> — a community boutique in Brantford, Ontario.</span>
     <span>Browse → Reserve → The maker contacts you. No online checkout.</span>
     <span><a href="contact.html">Contact us</a> — for makers who want a spot in the market.</span>
   </footer>
@@ -132,7 +131,7 @@
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
         name: name, email: email, what_you_make: makes, message: msg,
-        _subject: 'New vendor enquiry — Yasmine\'s Local Market',
+        _subject: 'New vendor enquiry — Locally Crafted CA',
         _template: 'table', _replyto: email
       })
     })
