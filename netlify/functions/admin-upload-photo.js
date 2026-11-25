@@ -21,6 +21,21 @@ const TYPE_TO_EXT = {
   "image/avif": "avif",
 };
 
+// Magic-byte check (Audit #3 L-3), same pattern as the public submit
+// path in netlify/functions/submit-product.js, extended for the two
+// extra types this endpoint allows (GIF, AVIF). MIME type alone can be
+// spoofed, so the file's first bytes must match its declared type:
+// JPEG FF D8 FF, PNG 89 50 4E 47, WebP "RIFF" + "WEBP" at offset 8,
+// GIF "GIF87a"/"GIF89a", AVIF "ftypavif" at offset 4.
+function magicOk(buf, type) {
+  if (type === "image/jpeg" || type === "image/jpg") return buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+  if (type === "image/png") return buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+  if (type === "image/webp") return buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46 && buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50;
+  if (type === "image/gif") return buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x38 && (buf[4] === 0x37 || buf[4] === 0x39) && buf[5] === 0x61;
+  if (type === "image/avif") return buf[4] === 0x66 && buf[5] === 0x74 && buf[6] === 0x79 && buf[7] === 0x70 && buf[8] === 0x61 && buf[9] === 0x76 && buf[10] === 0x69 && buf[11] === 0x66;
+  return false;
+}
+
 function slugify(s) {
   return String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "photo";
 }
@@ -62,11 +77,14 @@ async function onPost(context) {
     if (file.size > MAX_BYTES) {
       return json({ ok: false, error: "That picture is over 5 MB — pick a smaller one." }, 400);
     }
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (!magicOk(buf, file.type)) {
+      return json({ ok: false, error: "That file does not look like a real picture — please pick a JPG, PNG, WebP, GIF or AVIF photo." }, 400);
+    }
     const makerSlug = slugify(form.get("maker"));
     const listingSlug = slugify(form.get("listing"));
     const name = `${makerSlug}/${listingSlug ? listingSlug + "-" : ""}${Date.now()}.${ext}`;
     await ensureBucket(context);
-    const buf = Buffer.from(await file.arrayBuffer());
     const base = context.env.SUPABASE_URL;
     const up = await fetch(`${base}/storage/v1/object/${BUCKET}/${name}`, {
       method: "POST",
