@@ -89,6 +89,13 @@ a{color:var(--accent)}
 .cat-pill{border:1.5px solid var(--sage);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 20px;font-weight:800;font-size:.98rem;cursor:pointer}
 .cat-pill:hover{border-color:var(--accent);color:var(--accent)}
 .cat-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Festive decoration for the Christmas Gifts pill only: a small Santa hat
+   perched on the pill's top-right corner and a frost snowflake beside the
+   label. Inline SVG, small and tasteful; the hat hangs outside the pill,
+   so it never changes the pill's size or the row's wrapping. */
+.cat-pill.xmas{position:relative}
+.cat-pill .xmas-hat{position:absolute;top:-9px;right:-3px;width:20px;height:17px;transform:rotate(14deg);pointer-events:none}
+.cat-pill .xmas-snow{width:13px;height:13px;vertical-align:-2px;margin-left:5px}
 /* Shown in the grid when the picked category has no listings yet. */
 .grid-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:1.05rem;padding:34px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;position:relative}
