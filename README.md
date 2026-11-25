@@ -20,9 +20,33 @@ directly when they meet: cash, e-transfer, or tap.
 Plain static site: HTML/CSS/JS only. No backend, no functions, no secrets,
 no affiliate links, no tracking.
 
+## Vendor logos (tiny badge on each listing)
+
+Every listing card shows a small round vendor-logo badge (32px) in the
+top-right corner of the card. Clicking it takes the visitor to that
+vendor's own shop page on the site (e.g. Mary's badge → `mary-stones.html`).
+
+- **Convention:** each vendor's logo lives at `logos/<vendor-slug>.png`
+  (or `.webp`), e.g. `logos/mary-stones.png`.
+- **Registry:** vendors are listed in the `VENDORS` object at the top of
+  `app.js` — name, shop, initials, shop page, and logo path. Each product
+  in `PRODUCTS` carries a `vendor` key pointing at its vendor.
+- **Fallback:** if a vendor has no logo file yet, the badge shows the
+  vendor's initials as a monogram in a small circle — never a broken
+  image (the `<img>` removes itself on error and reveals the monogram).
+  Vendors with no shop page yet get a plain (unlinked) monogram badge.
+- **Mary Stones:** she has not sent a logo yet, so her badge currently
+  shows the "MS" monogram. When she sends her logo, save it as
+  `logos/mary-stones.png` — nothing else needs to change; the badge will
+  show her real logo automatically.
+- **To add a new vendor:** add a `VENDORS` entry (slug, initials, page,
+  logo path), add their products with `vendor: "<slug>"`, drop their logo
+  file into `logos/`, and create their shop page the same way
+  `mary-stones.html` was made.
+
 ## Makers on the site
 
-- **Mary Stones — Mary's Pottery (first real maker, added 2026-11-24):** 10 pottery pieces, her own shop page `mary-stones.html`, and a "Featured maker" section on the front page. Her products are also in the main grid, tagged maker "Mary Stones". **Her email and prices are placeholders until she confirms them** — the page shows mary.stones@example.com with an "Email to be confirmed" note, and a "Prices are examples for now" notice. When she confirms, update the email in `mary-stones.html` and the prices in `app.js` (the `mary-*` entries), then remove the example notices for her pieces.
+- **Mary Stones — Mary's Pottery (first real maker, added 2026-11-24):** 10 pottery pieces, her own shop page `mary-stones.html`, and a "Featured maker" section on the front page. Her products are also in the main grid, tagged maker "Mary Stones". **Her email is confirmed: mary@maryspottery.com (updated 2026-11-24). Prices are still examples** — the page carries a "Prices are examples for now" notice. When she confirms prices, update the `mary-*` entries in `app.js`, then remove the example notice for her pieces.
 
 ## Example listings — important
 
