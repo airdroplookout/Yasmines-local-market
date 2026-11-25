@@ -38,7 +38,7 @@ a{color:var(--accent)}
 /* Hero */
 .hero{padding:28px 0 8px;text-align:left}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--sage-soft);color:var(--sage);font-weight:800;font-size:.85rem;padding:7px 12px;border-radius:999px}
-.hero h1{font-size:clamp(2.1rem,5.5vw,3.4rem);margin:14px 0 10px;max-width:16ch}
+.hero h1{font-size:clamp(1.3rem,3vw,1.8rem);margin:10px 0 8px;max-width:26ch}
 .hero p.lead{font-size:1.12rem;color:var(--muted);max-width:62ch;margin:0}
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0 6px}
 .how-step{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
