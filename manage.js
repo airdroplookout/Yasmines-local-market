@@ -62,10 +62,11 @@ document.getElementById('loginForm').addEventListener('submit', function(e){
   });
 });
 document.getElementById('forgotLink').addEventListener('click', function(){
+  var sent = document.getElementById('forgotSent');
   api('/api/admin/forgot', 'POST', {}).then(function(j){
-    showToast(j.message || 'If a reset email could be sent, check your inbox.');
+    if(sent) sent.style.display = 'block';
   }).catch(function(){
-    showToast('If a reset email could be sent, check your inbox.');
+    if(sent) sent.style.display = 'block';
   });
 });
 
