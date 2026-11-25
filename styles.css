@@ -29,7 +29,7 @@ a{color:var(--accent)}
 /* Top bar */
 .topbar{border-bottom:1px solid var(--line);background:var(--surface)}
 .topbar-inner{max-width:1080px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.brand{font-family:"Quicksand","Nunito Sans",system-ui,sans-serif;font-size:1.35rem;font-weight:700;text-decoration:none;color:var(--ink);border-bottom:2px solid var(--sage);padding-bottom:1px}
+.brand{font-family:"Kalam","Nunito Sans",system-ui,sans-serif;font-size:1.6rem;font-weight:700;text-decoration:none;color:var(--ink);border-bottom:2px solid var(--sage);padding-bottom:1px}
 .brand svg{width:1.45em;height:1.45em;vertical-align:-0.28em;margin-right:.2em;color:var(--sage)}
 .brand span{color:var(--accent)}
 .topbar-tag{margin-left:auto;font-size:.88rem;color:var(--muted);font-weight:700}
