@@ -364,7 +364,7 @@ function renderListings(list, makers){
     body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">' + (filtering ? 'No listings match that search.' : 'No listings yet.') + '</td></tr>';
     return;
   }
-  var labels = {pottery: 'Pottery', jewelry: 'Jewelry', textiles: 'Textiles', woodwork: 'Woodwork', other: 'Other'};
+  var labels = {pottery: 'Pottery', jewelry: 'Jewelry', homeware: 'Homeware', textiles: 'Textiles', art: 'Art', other: 'Other'};
   body.innerHTML = rows.map(function(l){
     var pill = l.status === 'live' ? '<span class="pill">Live</span>' : '<span class="pill arch">Archived</span>';
     var archBtn = l.status === 'live'
@@ -478,9 +478,9 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
     document.getElementById('liMaker').value = l.maker_id || '';
     document.getElementById('liName').value = l.name || '';
     document.getElementById('liPrice').value = l.price || '';
-    /* Old category names (knitting/candles/food/sewing) map onto the new
+    /* Old category names (knitting/candles/food/sewing/woodwork) map onto the new
        fixed list so an older listing still opens with a valid choice. */
-    var catMap = {knitting: 'textiles', candles: 'other', food: 'other', sewing: 'textiles'};
+    var catMap = {knitting: 'textiles', candles: 'other', food: 'other', sewing: 'textiles', woodwork: 'other'};
     document.getElementById('liCat').value = catMap[l.category] || l.category || 'pottery';
     document.getElementById('liDesc').value = l.description || '';
     document.getElementById('liPhoto').value = l.photo || '';
