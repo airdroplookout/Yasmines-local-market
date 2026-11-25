@@ -20,7 +20,7 @@
   <!-- Login screen -->
   <div id="loginCard">
     <h1>Manage — Locally Crafted CA</h1>
-    <p class="sub">This area is for the market team only. Sign in to see makers, listings, reservations and visits.</p>
+    <p class="sub">This area is for the market team only. Sign in to see makers, listings, product submissions, reservations and visits.</p>
     <div class="card" style="max-width:480px">
       <form id="loginForm">
         <div class="mfield">
@@ -64,6 +64,7 @@
       <button class="chip active" data-sec="secVisits">Visits</button>
       <button class="chip" data-sec="secMakers">Makers</button>
       <button class="chip" data-sec="secListings">Listings</button>
+      <button class="chip" data-sec="secSubmissions">Submissions</button>
       <button class="chip" data-sec="secRes">Reservations</button>
       <button class="chip" data-sec="secSettings">Settings</button>
     </nav>
@@ -147,6 +148,16 @@
         <tbody id="listingsBody"></tbody>
       </table></div>
       <p class="note">Prices here are the prices shoppers see on the cards.</p>
+    </section>
+
+    <section class="card" id="secSubmissions" style="display:none">
+      <h2>Product submissions</h2>
+      <p class="sub">Products makers sent in through the “Submit a product” form. Nothing here is on the public site yet. Approve puts it live as a real listing (and adds the maker if they are new). Reject keeps it off the site for good.</p>
+      <div class="tablewrap"><table class="mtable">
+        <thead><tr><th>Product</th><th>Maker</th><th>Photo</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="subBody"></tbody>
+      </table></div>
+      <p class="note">If this list is empty and you know a submission was sent, the product_submissions table has not been created yet — run supabase/product-submissions.sql once in the Supabase SQL Editor. Submissions still arrive by email meanwhile.</p>
     </section>
 
     <section class="card" id="secRes" style="display:none">
