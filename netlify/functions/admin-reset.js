@@ -8,12 +8,15 @@
 // whether a token is valid: every bad, expired or already-used token
 // gets the same message. A too-short password is rejected without
 // consuming the token, so the owner can retry within the 30 minutes.
-import { json, handlerFor, verifyAdminResetToken, consumeAdminResetToken, setAdminPasswordHash, clearLoginLockout, bumpAdminSessionVersion, ADMIN_PASSWORD_MIN_LENGTH } from "./_lib.js";
+import { json, handlerFor, verifyAdminResetToken, consumeAdminResetToken, setAdminPasswordHash, clearLoginLockout, bumpAdminSessionVersion, checkPublicRateLimit, ADMIN_PASSWORD_MIN_LENGTH } from "./_lib.js";
 
 const BAD_TOKEN = "This reset link is invalid or has expired. Ask for a new one from the Manage sign-in page.";
 
 async function onPost(context) {
   const body = await context.request.json().catch(() => ({}));
+  // Rate limit: 10 reset attempts per hour per IP (audit M-1).
+  const allowed = await checkPublicRateLimit(context, "reset", 10, 60 * 60 * 1000);
+  if (!allowed) return json({ ok: false, error: "Too many attempts — please try again later." }, 429);
   const token = typeof body.token === "string" ? body.token : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!token) return json({ ok: false, error: BAD_TOKEN }, 400);
