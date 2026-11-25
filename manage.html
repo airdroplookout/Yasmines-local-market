@@ -163,10 +163,23 @@
           <div class="mfield"><label for="liCat">Category</label><select id="liCat"><option value="pottery">Pottery</option><option value="knitting">Knitting</option><option value="jewelry">Jewelry</option><option value="candles">Candles</option><option value="food">Food &amp; Honey</option><option value="sewing">Sewing</option><option value="other">Other crafts</option></select></div>
         </div>
         <div class="mfield"><label for="liDesc">Description</label><textarea id="liDesc" placeholder="One or two lines about the piece."></textarea></div>
-        <div class="mfield"><label for="liPhoto">Photo</label><input id="liPhoto" type="text" placeholder="images/mary-mug.webp"></div>
+        <div class="mfield"><label for="liPhotoFile">Photo — upload pictures</label>
+          <input id="liPhotoFile" type="file" accept="image/*">
+          <input type="hidden" id="liPhoto" value="">
+          <div id="liPhotoPreview" style="display:none;margin-top:10px">
+            <img id="liPhotoImg" src="" alt="Listing photo" style="max-width:220px;max-height:160px;border-radius:12px;border:1px solid var(--line)">
+            <p class="note" id="liPhotoPath" style="word-break:break-all"></p>
+          </div>
+          <p class="note" id="liPhotoNone">No photo yet — pick a picture above (JPG, PNG or WebP, up to 5 MB). It uploads when you save the listing.</p>
+        </div>
         <button class="mbtn" type="submit" id="liSubmit">Add listing</button>
         <button class="mbtn mbtn-ghost" type="button" id="liCancel" style="display:none">Cancel edit</button>
       </form>
+      <div class="mrow" style="margin-top:18px">
+        <div class="mfield"><label for="liSearch">Search listings</label><input id="liSearch" type="search" placeholder="Search by product name…" autocomplete="off"></div>
+        <div class="mfield"><label for="liFilterMaker">Maker</label><select id="liFilterMaker"><option value="">All makers</option></select></div>
+      </div>
+      <div class="mfield" style="max-width:280px"><label for="liSort">Sort</label><select id="liSort"><option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="name">Name A–Z</option></select></div>
       <div class="tablewrap"><table class="mtable">
         <thead><tr><th>Product</th><th>Maker</th><th>Price</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="listingsBody"></tbody>
