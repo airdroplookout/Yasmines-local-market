@@ -69,6 +69,30 @@ create table if not exists public.reservations (
 create index if not exists idx_reservations_status on public.reservations (status, created_at desc);
 create index if not exists idx_reservations_maker on public.reservations (maker_id);
 
+-- Product submissions (Submit a Product form, Nov 25 2026): one row per
+-- maker-submitted product. Rows stay 'pending' until the owner
+-- approves them in Manage > Submissions — approving creates the real
+-- maker (if new) and the live listing. Nothing here is ever read by
+-- the public listings feed.
+create table if not exists public.product_submissions (
+  id uuid primary key default gen_random_uuid(),
+  maker_name text not null,
+  maker_email text not null,
+  product_name text not null,
+  category text not null
+    check (category in ('pottery','jewelry','homeware','textiles','art','cards-stationery','clothing-accessories','weddings','craft-supplies','christmas-gifts','other')),
+  category_label text,
+  description text,
+  price text not null,
+  photo_url text,
+  status text not null default 'pending'
+    check (status in ('pending','approved','rejected')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists idx_submissions_status on public.product_submissions (status, created_at desc);
+create index if not exists idx_submissions_email on public.product_submissions (maker_email);
+
 -- Settings: key/value. No wallet, no Telegram, no payment keys.
 create table if not exists public.settings (
   key text primary key,
@@ -157,6 +181,12 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.listings TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.reservations TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.settings TO service_role;  -- DELETE added 2026-11-25: password-reset token consumption needs it (audit H-2).
 GRANT SELECT, INSERT, UPDATE ON public.page_views TO service_role;
+-- Product submissions (Submit a Product form, Nov 25 2026): rows stay
+-- 'pending' until the owner approves them in Manage > Submissions.
+-- No anon access — makers never read this table directly. Also run
+-- supabase/product-submissions.sql once on the live project to create
+-- the table there.
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.product_submissions TO service_role;
 
 -- Anon grants — these MUST be in the schema, not deferred. Postgres
 -- requires the table privilege too before a policy can allow the anon
