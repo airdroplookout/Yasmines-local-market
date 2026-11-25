@@ -112,13 +112,14 @@ document.getElementById('logoutAllBtn').addEventListener('click', function(){
 });
 
 // --- Section tabs ---
-document.querySelectorAll('.mnav .chip').forEach(function(c){
-  c.addEventListener('click', function(){
-    document.querySelectorAll('.mnav .chip').forEach(function(x){ x.classList.toggle('active', x === c); });
-    ['secVisits', 'secMakers', 'secListings', 'secRes', 'secSettings'].forEach(function(id){
-      document.getElementById(id).style.display = (id === c.getAttribute('data-sec')) ? 'block' : 'none';
-    });
+function activateSection(id){
+  document.querySelectorAll('.mnav .chip').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-sec') === id); });
+  ['secVisits', 'secMakers', 'secListings', 'secRes', 'secSettings'].forEach(function(sid){
+    document.getElementById(sid).style.display = (sid === id) ? 'block' : 'none';
   });
+}
+document.querySelectorAll('.mnav .chip').forEach(function(c){
+  c.addEventListener('click', function(){ activateSection(c.getAttribute('data-sec')); });
 });
 
 // --- Overview ---
@@ -137,6 +138,7 @@ function loadOverview(){
       (j.live_listings != null ? j.live_listings : 0) + ' live listings · ' +
       (j.new_reservations != null ? j.new_reservations : 0) + ' new reservations';
     fillMakerSelect(j.makers || []);
+    fillMakerFilter(j.makers || []);
     renderMakers(j.makers || []);
     renderListings(j.listings || [], j.makers || []);
     renderRes(j.reservations || [], j.listings || [], j.makers || []);
@@ -190,6 +192,7 @@ function renderMakers(list){
       : '<button class="mini" data-restore-mk="' + m.id + '">Restore</button>';
     return '<tr><td><strong>' + esc(m.name) + '</strong></td><td>' + esc(m.shop_name || '') + '</td><td>' + esc(m.email) + '</td><td>' + pill + '</td><td>' +
       '<button class="mini" data-edit-mk="' + m.id + '">Edit</button>' + archBtn +
+      '<button class="mini" data-view-li-mk="' + m.id + '">View listings</button>' +
       '<button class="mini danger" data-delete-mk="' + m.id + '" data-label="' + esc(m.name) + '">Delete</button></td></tr>';
   }).join('');
 }
@@ -226,7 +229,18 @@ document.getElementById('makersBody').addEventListener('click', function(e){
   var edit = e.target.closest('[data-edit-mk]');
   var arch = e.target.closest('[data-archive-mk]');
   var rest = e.target.closest('[data-restore-mk]');
+  var viewLi = e.target.closest('[data-view-li-mk]');
   var del = e.target.closest('[data-delete-mk]');
+  if(viewLi){
+    var mkId = viewLi.getAttribute('data-view-li-mk');
+    listingFilter.maker = mkId;
+    var fsel = document.getElementById('liFilterMaker');
+    if(fsel) fsel.value = mkId;
+    activateSection('secListings');
+    renderListings(overview ? overview.listings : [], overview ? overview.makers : []);
+    document.getElementById('secListings').scrollIntoView({behavior: 'smooth'});
+    return;
+  }
   if(edit){
     var m = (overview && overview.makers || []).find(function(x){ return x.id === edit.getAttribute('data-edit-mk'); });
     if(!m) return;
@@ -264,14 +278,58 @@ document.getElementById('makersBody').addEventListener('click', function(e){
 });
 
 // --- Listings ---
+// Search / filter / sort. Default sort ("oldest") keeps the order the
+// API returns (position, then creation date) — exactly as before.
+var listingFilter = { q: '', maker: '', sort: 'oldest' };
+function fillMakerFilter(makers){
+  var sel = document.getElementById('liFilterMaker');
+  var keep = listingFilter.maker;
+  sel.innerHTML = '<option value="">All makers</option>' + (makers || []).map(function(m){
+    return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>';
+  }).join('');
+  sel.value = (makers || []).some(function(m){ return String(m.id) === String(keep); }) ? keep : '';
+  listingFilter.maker = sel.value;
+}
+function applyListingFilter(list){
+  var q = listingFilter.q.trim().toLowerCase();
+  var out = (list || []).filter(function(l){
+    if(listingFilter.maker && String(l.maker_id) !== String(listingFilter.maker)) return false;
+    if(q && String(l.name || '').toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  if(listingFilter.sort === 'newest'){
+    out = out.slice().sort(function(a, b){ return String(b.created_at || '').localeCompare(String(a.created_at || '')); });
+  } else if(listingFilter.sort === 'name'){
+    out = out.slice().sort(function(a, b){ return String(a.name || '').localeCompare(String(b.name || '')); });
+  }
+  return out;
+}
+function rerenderListings(){
+  renderListings(overview ? overview.listings : [], overview ? overview.makers : []);
+}
+document.getElementById('liSearch').addEventListener('input', function(){
+  listingFilter.q = this.value;
+  rerenderListings();
+});
+document.getElementById('liFilterMaker').addEventListener('change', function(){
+  listingFilter.maker = this.value;
+  rerenderListings();
+});
+document.getElementById('liSort').addEventListener('change', function(){
+  listingFilter.sort = this.value;
+  rerenderListings();
+});
+
 function renderListings(list, makers){
   var body = document.getElementById('listingsBody');
-  if(!list.length){
-    body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No listings yet.</td></tr>';
+  var rows = applyListingFilter(list);
+  if(!rows.length){
+    var filtering = listingFilter.q || listingFilter.maker;
+    body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">' + (filtering ? 'No listings match that search.' : 'No listings yet.') + '</td></tr>';
     return;
   }
   var labels = {pottery: 'Pottery', knitting: 'Knitting', jewelry: 'Jewelry', candles: 'Candles', food: 'Food & Honey', sewing: 'Sewing', other: 'Other crafts'};
-  body.innerHTML = list.map(function(l){
+  body.innerHTML = rows.map(function(l){
     var pill = l.status === 'live' ? '<span class="pill">Live</span>' : '<span class="pill arch">Archived</span>';
     var archBtn = l.status === 'live'
       ? '<button class="mini" data-archive-li="' + l.id + '">Archive</button>'
@@ -281,33 +339,90 @@ function renderListings(list, makers){
       '<button class="mini danger" data-delete-li="' + l.id + '" data-label="' + esc(l.name) + '">Delete</button></td></tr>';
   }).join('');
 }
+// --- Listing photo: file upload (replaces the old text path) ---
+// The hidden #liPhoto carries the photo value that gets saved. The
+// preview shows it as-is: old relative paths (images/...) and new full
+// storage URLs both work as an <img> src.
+function showPhotoPreview(photo){
+  var wrap = document.getElementById('liPhotoPreview');
+  var img = document.getElementById('liPhotoImg');
+  var pathEl = document.getElementById('liPhotoPath');
+  var noneEl = document.getElementById('liPhotoNone');
+  if(photo){
+    img.src = photo;
+    pathEl.textContent = photo;
+    wrap.style.display = 'block';
+    noneEl.style.display = 'none';
+  } else {
+    img.removeAttribute('src');
+    pathEl.textContent = '';
+    wrap.style.display = 'none';
+    noneEl.style.display = 'block';
+  }
+}
+// Picking a file previews it right away; the upload itself happens when
+// the listing is saved.
+document.getElementById('liPhotoFile').addEventListener('change', function(){
+  var f = this.files && this.files[0];
+  if(!f){ showPhotoPreview(document.getElementById('liPhoto').value.trim()); return; }
+  document.getElementById('liPhotoImg').src = URL.createObjectURL(f);
+  document.getElementById('liPhotoPath').textContent = 'New picture: ' + f.name + ' — uploads when you save the listing.';
+  document.getElementById('liPhotoPreview').style.display = 'block';
+  document.getElementById('liPhotoNone').style.display = 'none';
+});
+
 var editingListingId = null;
 function resetListingForm(){
   editingListingId = null;
   document.getElementById('liId').value = '';
   document.getElementById('listingForm').reset();
+  document.getElementById('liPhoto').value = '';
+  showPhotoPreview('');
   document.getElementById('liSubmit').textContent = 'Add listing';
   document.getElementById('liCancel').style.display = 'none';
 }
 document.getElementById('listingForm').addEventListener('submit', function(e){
   e.preventDefault();
-  var data = {
-    maker_id: document.getElementById('liMaker').value,
-    name: document.getElementById('liName').value.trim(),
-    price: document.getElementById('liPrice').value.trim(),
-    category: document.getElementById('liCat').value,
-    description: document.getElementById('liDesc').value.trim(),
-    photo: document.getElementById('liPhoto').value.trim()
-  };
-  if(!data.maker_id || !data.name || !data.price){ showToast('Pick a maker, then fill in the product name and price.'); return; }
-  var call = editingListingId
-    ? api('/api/admin/listings?id=' + encodeURIComponent(editingListingId), 'PATCH', data)
-    : api('/api/admin/listings', 'POST', data);
-  call.then(function(){
-    showToast(editingListingId ? 'Listing updated.' : 'Listing added — it is live on the site now.');
-    resetListingForm();
-    loadOverview();
-  }).catch(function(ex){ showToast(ex.message); });
+  var fileInput = document.getElementById('liPhotoFile');
+  var file = fileInput.files && fileInput.files[0];
+  var photo = document.getElementById('liPhoto').value.trim();
+  // Save the listing with the photo value we have. When a new picture
+  // was picked, it is uploaded first and the returned URL is saved
+  // instead. With no new file, the existing photo is left untouched.
+  function saveListing(){
+    var data = {
+      maker_id: document.getElementById('liMaker').value,
+      name: document.getElementById('liName').value.trim(),
+      price: document.getElementById('liPrice').value.trim(),
+      category: document.getElementById('liCat').value,
+      description: document.getElementById('liDesc').value.trim(),
+      photo: photo
+    };
+    if(!data.maker_id || !data.name || !data.price){ showToast('Pick a maker, then fill in the product name and price.'); return; }
+    var call = editingListingId
+      ? api('/api/admin/listings?id=' + encodeURIComponent(editingListingId), 'PATCH', data)
+      : api('/api/admin/listings', 'POST', data);
+    call.then(function(){
+      showToast(editingListingId ? 'Listing updated.' : 'Listing added — it is live on the site now.');
+      resetListingForm();
+      loadOverview();
+    }).catch(function(ex){ showToast(ex.message); });
+  }
+  if(!file){ saveListing(); return; }
+  if(file.size > 5 * 1024 * 1024){ showToast('That picture is over 5 MB — pick a smaller one.'); return; }
+  if(file.type.indexOf('image/') !== 0){ showToast('Only pictures can be uploaded.'); return; }
+  var fd = new FormData();
+  fd.append('photo', file);
+  var makerSel = document.getElementById('liMaker');
+  fd.append('maker', makerSel.options[makerSel.selectedIndex] ? makerSel.options[makerSel.selectedIndex].text : 'maker');
+  fd.append('listing', document.getElementById('liName').value.trim());
+  showToast('Uploading picture…');
+  var headers = {};
+  if(token) headers['x-admin-session'] = token;
+  fetch('/api/admin/upload-photo', {method: 'POST', headers: headers, body: fd})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
+    .then(function(j){ photo = j.url; saveListing(); })
+    .catch(function(ex){ showToast(ex.message || 'Picture upload failed.'); });
 });
 document.getElementById('liCancel').addEventListener('click', resetListingForm);
 document.getElementById('listingsBody').addEventListener('click', function(e){
@@ -326,6 +441,7 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
     document.getElementById('liCat').value = l.category || 'pottery';
     document.getElementById('liDesc').value = l.description || '';
     document.getElementById('liPhoto').value = l.photo || '';
+    showPhotoPreview(l.photo || '');
     document.getElementById('liSubmit').textContent = 'Save changes';
     document.getElementById('liCancel').style.display = 'inline-block';
     document.getElementById('listingForm').scrollIntoView({behavior: 'smooth'});
