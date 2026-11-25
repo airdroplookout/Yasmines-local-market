@@ -6,8 +6,8 @@
 // GET /api/admin/listings — list ALL listings (live + archived). Owner only.
 // POST /api/admin/listings — create a listing.
 //   Body: { maker_id, name, price, category?, description?, photo?, position? }
-//   category must be one of: pottery, jewelry, textiles, woodwork,
-//   other. price is the SHOPPER price shown on the card
+//   category must be one of: pottery, jewelry, homeware, textiles,
+//   art, other. price is the SHOPPER price shown on the card
 //   (e.g. "$32") — never a commission, payout or owner-only figure.
 // PATCH /api/admin/listings?id=... — update any field; { status: "archived" }
 //   archives it, { status: "live" } restores it.
