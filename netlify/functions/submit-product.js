@@ -2,8 +2,10 @@
 // POST /api/submit-product — a maker submits ONE product for review.
 // Public, no auth. Nothing submitted here ever goes live on its own:
 // the photo is stored, the submission is saved as status 'pending' in
-// the product_submissions table, and the owner is emailed (FormSubmit,
-// by the browser — same proven path as the contact form). The product
+// the product_submissions table, and the owner is emailed server-side
+// via Resend (audit N-M4, Nov 25 2026 — the browser used to email via
+// FormSubmit, which exposed the owner address in public source and
+// could be POSTed to directly). The product
 // only appears on the public site when the owner approves it in
 // Manage > Submissions, which creates the real listing.
 //
@@ -12,7 +14,8 @@
 // email max 50 chars (owner's rule). Photo: exactly ONE file, JPG /
 // PNG / WebP only, max 5 MB, checked by magic bytes as well as MIME
 // type (audit L-3). Rate limit: 5 submissions per hour per IP.
-import { json, sbJson, handlerFor, validEmail, checkPublicRateLimit, LISTING_CATEGORIES, LISTING_CATEGORY_LABELS } from "./_lib.js";
+import { randomBytes, createHash } from "node:crypto";
+import { json, sbJson, handlerFor, validEmail, checkPublicRateLimit, LISTING_CATEGORIES, LISTING_CATEGORY_LABELS, sendOwnerEmail, sendViaResend, escHtml } from "./_lib.js";
 
 const BUCKET = "listing-photos";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -54,7 +57,7 @@ async function onPost(context) {
   // Honeypot (same as the other public forms): bots fill it, we smile
   // and pretend it worked. No row, no photo, no email. The response
   // carries honeypot:true (audit N-M1) so the browser can tell it apart
-  // from a real save and skip the FormSubmit email.
+  // from a real save and skip emailing the owner.
   let form;
   try { form = await context.request.formData(); } catch { return json({ ok: false, error: "Could not read the form." }, 400); }
   if (String(form.get("_honey") || "").trim()) return json({ ok: true, honeypot: true, stored: false, url: null });
@@ -88,6 +91,10 @@ async function onPost(context) {
   if (category === "other" && !other_category) return json({ ok: false, error: "other_category is required when the product type is Other — please tell us what kind of product this is" }, 400);
   if (!description) return json({ ok: false, error: "description is required" }, 400);
   if (!PRICE_RE.test(priceRaw)) return json({ ok: false, error: "price must be a number, like 28 or $28" }, 400);
+  // Audit #3 N-L4: price floor $1 / cap $10,000. $0 (and $0.00) is not
+  // a price — it would render as a "free" listing after approve.
+  const priceNum = parseFloat(priceRaw.replace(/^\$/, ""));
+  if (!Number.isFinite(priceNum) || priceNum < 1 || priceNum > 10000) return json({ ok: false, error: "price must be between $1 and $10,000" }, 400);
   const price = priceRaw.startsWith("$") ? priceRaw : "$" + priceRaw;
 
   // Exactly ONE photo: the form sends a single file input (no multiple),
@@ -107,7 +114,7 @@ async function onPost(context) {
   let url = null;
   try {
     await ensureBucket(context);
-    const name = `submissions/${slugify(maker_name)}-${slugify(product_name)}-${Date.now()}.${ext}`;
+    const name = `submissions/${randomBytes(16).toString("hex")}-${slugify(maker_name)}-${slugify(product_name)}-${Date.now()}.${ext}`;
     const base = context.env.SUPABASE_URL;
     const up = await fetch(`${base}/storage/v1/object/${BUCKET}/${name}`, {
       method: "POST",
@@ -123,8 +130,8 @@ async function onPost(context) {
   // Save the submission as 'pending'. If the product_submissions table
   // does not exist yet (the owner runs its one-time SQL once — see
   // supabase/product-submissions.sql), do NOT fail the submission: the
-  // browser still emails the owner the details + photo link, and the
-  // row appears in Manage once the table exists.
+  // owner email below is the record, and the row appears in Manage
+  // once the table exists.
   let stored = false;
   let submissionId = null;
   try {
@@ -142,7 +149,79 @@ async function onPost(context) {
   } catch (e) {
     console.error("product_submissions insert failed (table may not exist yet):", String(e.message || e));
   }
-  return json({ ok: true, stored, id: submissionId, url, category_label: LISTING_CATEGORY_LABELS[category] || category });
+
+  // Maker email verification (audit #3 N-M6): prove the submitter owns
+  // maker_email before the owner can approve the product. A 256-bit
+  // token is generated; only its SHA-256 hash + a 48-hour expiry are
+  // stored, and the raw token goes out in a one-time confirmation link.
+  // The submission itself is NOT failed if this step fails (the owner
+  // still gets it by email, as before) — but approve refuses any
+  // submission whose email_verified is false, so a failed send just
+  // means that submission can never be approved until re-submitted.
+  // Base URL: SITE_URL when set, else the custom domain. Do NOT use
+  // siteBaseUrl() here — its fallback is the netlify.app address
+  // (audit N-L11), and the confirmation link must go to the live site.
+  let verificationEmailSent = false;
+  if (stored && submissionId) {
+    try {
+      const token = randomBytes(32).toString("hex");
+      const tokenHash = createHash("sha256").update(token).digest("hex");
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      await sbJson(context, `product_submissions?id=eq.${encodeURIComponent(submissionId)}`, {
+        method: "PATCH",
+        body: JSON.stringify({ verify_token_hash: tokenHash, verify_expires_at: expiresAt, email_verified: false }),
+      });
+      const base = String(context.env.SITE_URL || "https://locallycrafted.ca").trim().replace(/\/+$/, "") || "https://locallycrafted.ca";
+      const verifyUrl = `${base}/verify-submission.html?token=${token}`;
+      const html = `<!doctype html><html><body style="font-family:system-ui,Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">`
+        + `<p>Hi ${escHtml(maker_name)},</p>`
+        + `<p>Thanks for submitting <strong>${escHtml(product_name)}</strong> to Locally Crafted CA. Please confirm this email address so we can review your product:</p>`
+        + `<p><a href="${verifyUrl}" style="display:inline-block;background:#BC4A24;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600">Confirm my email</a></p>`
+        + `<p>This link works once and expires in 48 hours. If you did not submit a product, ignore this email — nothing will be listed.</p>`
+        + `</body></html>`;
+      await sendViaResend(context, {
+        to: maker_email,
+        subject: "Confirm your email — Locally Crafted CA",
+        html,
+      });
+      verificationEmailSent = true;
+    } catch (e) {
+      // Token store or Resend failed (e.g. verification columns not
+      // run yet, or RESEND_API_KEY not set). Logged server-side; the
+      // submission itself still stands, but approve will refuse it
+      // until the maker re-submits after the fix.
+      console.error("submission verification email NOT sent:", String(e.message || e));
+    }
+  }
+
+  // Owner notification, server-side via Resend (audit N-M4). Sent
+  // whether or not the row was stored: when the table does not exist
+  // yet this email is the only record, as the browser email used to
+  // be. A failed send never fails the submission — the row (when
+  // stored) is the record, and emailed:false tells the browser the
+  // notification did not go through.
+  let emailed = false;
+  try {
+    const categoryLabel = LISTING_CATEGORY_LABELS[category] || category;
+    const html = `<!doctype html><html><body style="font-family:system-ui,Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">
+<p>New product submission on Locally Crafted CA${submissionId ? ` (ID ${escHtml(submissionId)})` : ""}.</p>
+<table style="border-collapse:collapse">
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Maker</td><td>${escHtml(maker_name)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Business</td><td>${escHtml(business_name)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Maker email</td><td>${escHtml(maker_email)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Product</td><td>${escHtml(product_name)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Type</td><td>${escHtml(categoryLabel)}${category === "other" ? ` (${escHtml(other_category)})` : ""}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Price</td><td>${escHtml(price)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Description</td><td>${escHtml(description)}</td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Photo</td><td><a href="${escHtml(url || "")}">${escHtml(url || "(photo upload failed)")}</a></td></tr>
+<tr><td style="padding:4px 12px 4px 0;font-weight:600">Saved in Manage</td><td>${stored ? "Yes (pending review)" : "No — table not set up yet, this email is the record"}</td></tr>
+</table></body></html>`;
+    await sendOwnerEmail(context, `New product submission — ${product_name} (${price})`, html);
+    emailed = true;
+  } catch (e) {
+    console.error("SUBMIT_EMAIL_FAIL:", String(e.message || e));
+  }
+  return json({ ok: true, stored, id: submissionId, url, emailed, category_label: LISTING_CATEGORY_LABELS[category] || category, verification_email_sent: verificationEmailSent });
 }
 
 export const handler = handlerFor({ POST: onPost });
