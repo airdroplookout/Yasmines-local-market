@@ -114,7 +114,7 @@ document.getElementById('logoutAllBtn').addEventListener('click', function(){
 // --- Section tabs ---
 function activateSection(id){
   document.querySelectorAll('.mnav .chip').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-sec') === id); });
-  ['secVisits', 'secMakers', 'secListings', 'secRes', 'secSettings'].forEach(function(sid){
+  ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secSettings'].forEach(function(sid){
     document.getElementById(sid).style.display = (sid === id) ? 'block' : 'none';
   });
 }
@@ -136,11 +136,13 @@ function loadOverview(){
     document.getElementById('dashSummary').textContent =
       (j.live_makers != null ? j.live_makers : 0) + ' live makers · ' +
       (j.live_listings != null ? j.live_listings : 0) + ' live listings · ' +
-      (j.new_reservations != null ? j.new_reservations : 0) + ' new reservations';
+      (j.new_reservations != null ? j.new_reservations : 0) + ' new reservations' +
+      ((j.pending_submissions || 0) > 0 ? ' · ' + j.pending_submissions + ' product submission' + (j.pending_submissions === 1 ? '' : 's') + ' to review' : '');
     fillMakerSelect(j.makers || []);
     fillMakerFilter(j.makers || []);
     renderMakers(j.makers || []);
     renderListings(j.listings || [], j.makers || []);
+    renderSubmissions(j.submissions || []);
     renderRes(j.reservations || [], j.listings || [], j.makers || []);
     var s = j.settings || {};
     document.getElementById('setNotif').value = s.notification_email || '';
@@ -554,6 +556,61 @@ document.getElementById('resBody').addEventListener('click', function(e){
     if(!window.confirm('Delete this reservation for good?')) return;
     api('/api/admin/reservations?id=' + encodeURIComponent(del.getAttribute('data-res-del')), 'DELETE')
       .then(function(){ showToast('Reservation deleted.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+  }
+});
+
+// --- Product submissions (Submit a Product form) ---
+// Pending = sent in by a maker, not on the public site yet. Approve
+// creates the live listing (and the maker, if new). Reject keeps it
+// off the site. Everything is escaped on display, like the rest.
+function renderSubmissions(list){
+  var body = document.getElementById('subBody');
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No product submissions yet. Makers send them in from the “Submit a product” button on the front page.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(function(s){
+    var pill = s.status === 'pending' ? '<span class="pill">Pending</span>'
+      : s.status === 'approved' ? '<span class="pill arch">Approved</span>'
+      : '<span class="pill arch">Rejected</span>';
+    var photo = s.photo_url
+      ? '<a href="' + esc(s.photo_url) + '" target="_blank" rel="noopener"><img src="' + esc(s.photo_url) + '" alt="" style="width:64px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a>'
+      : '—';
+    var desc = s.description ? '<br><span style="color:var(--muted)">' + esc(String(s.description).slice(0, 120)) + (String(s.description).length > 120 ? '…' : '') + '</span>' : '';
+    var actions = s.status === 'pending'
+      ? '<button class="mini" data-sub-approve="' + s.id + '">Approve — put it live</button>' +
+        '<button class="mini" data-sub-reject="' + s.id + '">Reject</button>'
+      : '';
+    return '<tr><td><strong>' + esc(s.product_name) + '</strong><br><span style="color:var(--muted)">' + esc(s.category_label || s.category || '') + ' · ' + esc(s.price || '') + '</span>' + desc + '</td>' +
+      '<td><strong>' + esc(s.maker_name) + '</strong><br><span style="color:var(--muted)">' + esc(s.maker_email) + '</span></td>' +
+      '<td>' + photo + '</td>' +
+      '<td>' + fmtDate(s.created_at) + '</td><td>' + pill + '</td><td>' + actions +
+      '<button class="mini danger" data-sub-del="' + s.id + '">Delete</button></td></tr>';
+  }).join('');
+}
+document.getElementById('subBody').addEventListener('click', function(e){
+  var app = e.target.closest('[data-sub-approve]');
+  var rej = e.target.closest('[data-sub-reject]');
+  var del = e.target.closest('[data-sub-del]');
+  if(app){
+    if(!window.confirm('Approve this product? It will go live on the public site right away.')) return;
+    api('/api/admin/submissions?id=' + encodeURIComponent(app.getAttribute('data-sub-approve')), 'POST', {action: 'approve'})
+      .then(function(){ showToast('Approved — the product is live on the site.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
+  if(rej){
+    if(!window.confirm('Reject this product? It will stay off the site.')) return;
+    api('/api/admin/submissions?id=' + encodeURIComponent(rej.getAttribute('data-sub-reject')), 'POST', {action: 'reject'})
+      .then(function(){ showToast('Rejected.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
+  if(del){
+    if(!window.confirm('Delete this submission for good?')) return;
+    api('/api/admin/submissions?id=' + encodeURIComponent(del.getAttribute('data-sub-del')), 'DELETE')
+      .then(function(){ showToast('Submission deleted.'); loadOverview(); })
       .catch(function(ex){ showToast(ex.message); });
   }
 });
