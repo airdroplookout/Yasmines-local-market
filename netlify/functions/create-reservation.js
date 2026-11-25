@@ -14,16 +14,14 @@
 // still attach to the real database listing). Unknown products save
 // with null ids — the buyer and message are still recorded, and Manage
 // shows the buyer even when it cannot resolve the product.
-import { json, sbJson, handlerFor, validEmail } from "./_lib.js";
+import { json, sbJson, handlerFor, validEmail, checkPublicRateLimit } from "./_lib.js";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DELIVERY = ["Pickup", "Delivery by mail"];
 const MAX = { name: 100, phone: 30, message: 1000, product: 120 };
 
-function clean(v, max) {
-  const s = String(v ?? "").trim();
-  return s.length > max ? s.slice(0, max) : s;
-}
+function clean(v) { return String(v ?? "").trim(); }
+function hasMarkup(s) { return /[<>]/.test(s); }
 
 async function resolveListing(context, listingId, productName) {
   // Returns { listing_id, maker_id } — both null when the product is
@@ -31,7 +29,7 @@ async function resolveListing(context, listingId, productName) {
   // rather than losing the reservation.
   try {
     if (listingId && UUID_RE.test(String(listingId))) {
-      const rows = await sbJson(context, `listings?select=id,maker_id&id=eq.${listingId}&limit=1`);
+      const rows = await sbJson(context, `listings?select=id,maker_id&id=eq.${listingId}&status=eq.live&limit=1`);
       if (rows[0]) return { listing_id: rows[0].id, maker_id: rows[0].maker_id || null };
     }
     if (productName) {
@@ -47,15 +45,32 @@ async function onPost(context) {
   try { b = await context.request.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   if (!b || typeof b !== "object" || Array.isArray(b)) return json({ ok: false, error: "invalid body" }, 400);
 
-  const buyer_name = clean(b.buyer_name, MAX.name);
+  // Rate limit: 10 reservations per hour per IP (audit M-1).
+  const allowed = await checkPublicRateLimit(context, "reserve", 10, 60 * 60 * 1000);
+  if (!allowed) return json({ ok: false, error: "Too many reservations — please try again later." }, 429);
+
+  // Reject over-long fields with 400 (never silently truncate) and reject
+  // markup in every free-text field (audit M-2). Email length is capped
+  // at 50 by validEmail() (owner's standing rule).
+  const rawName = String(b.buyer_name ?? "");
+  const rawPhone = String(b.buyer_phone ?? "");
+  const rawMessage = String(b.message ?? "");
+  const rawProduct = String(b.product_name ?? "");
+  if (rawName.trim().length > MAX.name) return json({ ok: false, error: "buyer_name must be at most 100 characters" }, 400);
+  if (rawPhone.trim().length > MAX.phone) return json({ ok: false, error: "buyer_phone must be at most 30 characters" }, 400);
+  if (rawMessage.trim().length > MAX.message) return json({ ok: false, error: "message must be at most 1000 characters" }, 400);
+  if (rawProduct.trim().length > MAX.product) return json({ ok: false, error: "product_name must be at most 120 characters" }, 400);
+  if (hasMarkup(rawName) || hasMarkup(rawPhone) || hasMarkup(rawMessage) || hasMarkup(rawProduct)) {
+    return json({ ok: false, error: "Text fields must not contain < or >" }, 400);
+  }
+  const buyer_name = rawName.trim();
   const buyer_email = String(b.buyer_email || "").trim().toLowerCase();
-  const buyer_phone = clean(b.buyer_phone, MAX.phone);
-  const message = clean(b.message, MAX.message);
-  const product_name = clean(b.product_name, MAX.product);
+  const buyer_phone = rawPhone.trim();
+  const message = rawMessage.trim();
+  const product_name = rawProduct.trim();
   const delivery_method = String(b.delivery_method || "Pickup");
-  let qty = parseInt(b.quantity, 10);
-  if (!Number.isFinite(qty) || qty < 1) qty = 1;
-  if (qty > 99) qty = 99;
+  const qty = parseInt(b.quantity, 10);
+  if (!Number.isFinite(qty) || qty < 1 || qty > 99) return json({ ok: false, error: "quantity must be a whole number from 1 to 99" }, 400);
 
   if (!buyer_name) return json({ ok: false, error: "buyer_name is required" }, 400);
   if (!validEmail(buyer_email)) return json({ ok: false, error: "buyer_email must be a valid email address" }, 400);
