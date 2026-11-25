@@ -15,6 +15,22 @@
     var email = document.getElementById('c-email').value.trim();
     var makes = document.getElementById('c-makes').value.trim();
     var msg = document.getElementById('c-msg').value.trim();
+    /* Honeypot (audit N-M1): bots fill the hidden _honey field. Show the
+       normal thank-you screen and send nothing. */
+    var honey = document.querySelector('#contact-form input[name="_honey"]');
+    if (honey && honey.value.trim()) {
+      document.getElementById('t-email').textContent = email || 'your email';
+      form.style.display = 'none';
+      document.getElementById('contact-thanks').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    /* Markup check (audit N-M2): the same < > rejection the server uses,
+       checked here BEFORE the FormSubmit email — that leg had no check. */
+    if (/[<>]/.test(name) || /[<>]/.test(makes) || /[<>]/.test(msg)) {
+      showError('Text fields must not contain < or >');
+      return;
+    }
     if(!name || !email || !makes || !msg){
       showError('Please fill in your name, your email, what you make, and a short message — those four are needed so we can reply to you.');
       return;
