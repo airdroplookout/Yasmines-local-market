@@ -45,6 +45,12 @@ async function onPost(context) {
   try { b = await context.request.json(); } catch { return json({ ok: false, error: "invalid JSON" }, 400); }
   if (!b || typeof b !== "object" || Array.isArray(b)) return json({ ok: false, error: "invalid body" }, 400);
 
+  // Honeypot (audit N-M1): bots fill the hidden _honey field. Smile and
+  // pretend it worked — fake success, no row stored, nothing emailed.
+  // (The browser checks this before calling, so a filled honeypot
+  // reaching here means a direct API call, not the real form.)
+  if (String(b._honey || "").trim()) return json({ ok: true, id: null });
+
   // Rate limit: 10 reservations per hour per IP (audit M-1).
   const allowed = await checkPublicRateLimit(context, "reserve", 10, 60 * 60 * 1000);
   if (!allowed) return json({ ok: false, error: "Too many reservations — please try again later." }, 429);
