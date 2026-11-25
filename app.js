@@ -25,15 +25,21 @@ var VENDORS = {
 
 /* Tiny vendor-logo badge for a listing card. Links to the vendor's own
    shop page when they have one; otherwise a plain (unlinked) monogram. */
+/* Escape text interpolated into HTML (listing cards). Same five-character
+   map as manage.js esc() — audit H-1. */
+function esc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 function vendorBadge(p) {
   var v = VENDORS[p.vendor];
   if (!v) return "";
-  var inner = '<span class="vendor-mono" aria-hidden="true">' + v.initials + '</span>' +
-    '<img src="' + v.logo + '" alt="" loading="lazy" onerror="this.remove()" />';
+  var inner = '<span class="vendor-mono" aria-hidden="true">' + esc(v.initials) + '</span>' +
+    '<img src="' + esc(v.logo) + '" alt="" loading="lazy" data-remove-on-error />';
   if (v.page) {
-    return '<a class="vendor-badge" href="' + v.page + '" title="See all from ' + v.name + '" aria-label="See all from ' + v.name + '">' + inner + '</a>';
+    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.name) + '" aria-label="See all from ' + esc(v.name) + '">' + inner + '</a>';
   }
-  return '<span class="vendor-badge" title="' + v.shop + '">' + inner + '</span>';
+  return '<span class="vendor-badge" title="' + esc(v.shop) + '">' + inner + '</span>';
 }
 
 var PRODUCTS = {
@@ -87,11 +93,11 @@ function vendorSlugForName(name) {
 function liveBadge(p) {
   var v = p.vendor ? VENDORS[p.vendor] : null;
   var initials = v ? v.initials : initialsFor(p.maker);
-  var inner = '<span class="vendor-mono" aria-hidden="true">' + initials + '</span>';
+  var inner = '<span class="vendor-mono" aria-hidden="true">' + esc(initials) + '</span>';
   if (v && v.page) {
-    return '<a class="vendor-badge" href="' + v.page + '" title="See all from ' + v.name + '" aria-label="See all from ' + v.name + '">' + inner + '</a>';
+    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.name) + '" aria-label="See all from ' + esc(v.name) + '">' + inner + '</a>';
   }
-  return '<span class="vendor-badge" title="' + p.shop + '">' + inner + '</span>';
+  return '<span class="vendor-badge" title="' + esc(p.shop) + '">' + inner + '</span>';
 }
 
 /* Small inline placeholder picture (data URI) for listings with no photo,
@@ -140,20 +146,24 @@ function mapListing(l) {
     card.className = "card";
     var badge = p.live ? liveBadge(p) : vendorBadge(p);
     var photo = p.img
-      ? '<img src="' + p.img + '" alt="' + p.alt + '" loading="lazy" />'
-      : '<div class="card-photo-ph" aria-hidden="true"><span>' + initialsFor(p.maker) + '</span></div>';
-    var title = p.name;
+      ? '<img src="' + esc(p.img) + '" alt="' + esc(p.alt) + '" loading="lazy" />'
+      : '<div class="card-photo-ph" aria-hidden="true"><span>' + esc(initialsFor(p.maker)) + '</span></div>';
+    var title = esc(p.name);
     var vendorPage = p.vendor && VENDORS[p.vendor] && VENDORS[p.vendor].page;
     card.innerHTML =
       badge + photo +
       '<div class="card-body">' +
         '<h3>' + title + '</h3>' +
-        '<p class="maker">by ' + p.maker + ' — ' + p.shop + '</p>' +
-        (vendorPage ? '<p class="vendor-link"><a href="' + VENDORS[p.vendor].page + '">See all from ' + VENDORS[p.vendor].name + ' →</a></p>' : '') +
-        '<p class="desc">' + p.desc + '</p>' +
-        '<div class="card-row"><p class="price-sm">' + p.price + '</p>' +
-        '<button class="btn btn-primary" data-reserve="' + id + '">Reserve this item</button></div>' +
+        '<p class="maker">by ' + esc(p.maker) + ' — ' + esc(p.shop) + '</p>' +
+        (vendorPage ? '<p class="vendor-link"><a href="' + esc(VENDORS[p.vendor].page) + '">See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
+        '<p class="desc">' + esc(p.desc) + '</p>' +
+        '<div class="card-row"><p class="price-sm">' + esc(p.price) + '</p>' +
+        '<button class="btn btn-primary" data-reserve="' + esc(id) + '">Reserve this item</button></div>' +
       '</div>';
+    /* Broken vendor-logo images remove themselves (was inline onerror). */
+    card.querySelectorAll("img[data-remove-on-error]").forEach(function (img) {
+      img.addEventListener("error", function () { img.remove(); });
+    });
     grid.appendChild(card);
   }
 
@@ -252,6 +262,31 @@ function selectProduct(id) {
   document.getElementById("h-subject").value = "New reservation — " + p.name + " (" + p.price + ")";
   showView(2);
 }
+
+/* Buttons/links with data-showview="n" switch views (replaces inline
+   onclick="showView(n)" so an enforced CSP can run — audit M-3). */
+document.addEventListener("click", function (e) {
+  var t = e.target && e.target.closest ? e.target.closest("[data-showview]") : null;
+  if (!t) return;
+  e.preventDefault();
+  showView(parseInt(t.getAttribute("data-showview"), 10) || 1);
+});
+
+/* Remove broken vendor-logo images in static HTML (was inline onerror). */
+document.querySelectorAll("img[data-remove-on-error]").forEach(function (img) {
+  img.addEventListener("error", function () { img.remove(); });
+});
+
+/* Visits counter (audit M-4): once per browser session, skipped when this
+   device opted out with "Don't count my visits" in Manage. */
+(function trackVisit() {
+  try {
+    if (window.localStorage.getItem("ylm_exclude_visits") === "1") return;
+    if (window.sessionStorage.getItem("ylm_visit_tracked")) return;
+    window.sessionStorage.setItem("ylm_visit_tracked", "1");
+    fetch("/api/track", { method: "POST" }).catch(function () {});
+  } catch (e) { /* tracking must never break the shop */ }
+})();
 
 function showError(msg) {
   var err = document.getElementById("form-error");
