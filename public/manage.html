@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manage — Locally Crafted CA</title>
+<meta name="description" content="Manage area for the Locally Crafted CA team.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{--rose:var(--accent);--rose2:#A03F1E;--goldbg:var(--gold-soft);--bg2:var(--surface2);--text:var(--ink)}
+.manage{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+.manage h1{font-size:clamp(28px,3.4vw,38px)}
+.manage h2{font-size:24px;margin:0 0 6px}
+.manage .sub{color:var(--muted);margin:6px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;margin-top:22px}
+.banner{background:var(--goldbg);border:1px dashed var(--gold);border-radius:12px;padding:14px 18px;font-size:15px;margin-top:22px}
+.banner b{color:var(--rose)}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+.mstat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.mstat strong{display:block;font-family:"Fraunces",Georgia,serif;font-size:26px}
+.mstat span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mfield{margin:0 0 14px}
+.mfield label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.mfield input,.mfield select,.mfield textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;background:var(--bg);color:var(--ink);min-height:48px}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{outline:2px solid var(--rose);outline-offset:1px}
+.mfield textarea{min-height:90px;resize:vertical}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mbtn{background:var(--rose);color:#fff;border:0;border-radius:999px;padding:13px 24px;font-weight:800;font-size:15px;min-height:48px;cursor:pointer}
+.mbtn:hover{filter:brightness(1.06)}
+.mbtn-ghost{background:transparent;color:var(--text);border:1px solid var(--rose)}
+.mlink{background:none;border:0;color:var(--rose);font-weight:700;padding:12px 4px;min-height:44px;font-size:14px;cursor:pointer}
+.mtable{width:100%;border-collapse:collapse;font-size:14px;margin-top:14px}
+.mtable th,.mtable td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mtable th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mtable .pill{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--rose);border-radius:999px;padding:3px 9px;font-weight:700;white-space:nowrap}
+.mtable .pill.arch{background:var(--goldbg);color:#7a5a17}
+.mini{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;min-height:44px;margin:2px 2px 2px 0;cursor:pointer}
+.mini.danger{color:var(--rose);border-color:#e3b7ac}
+.note{color:var(--muted);font-size:14px;margin:12px 0 0}
+.err{display:none;color:#a34d4d;font-weight:700;margin-top:10px}
+.switchrow{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.switchrow input{width:20px;height:20px;margin-top:2px;flex:none}
+.switchrow b{display:block;font-size:15px}
+.switchrow span{font-size:13px;color:var(--muted)}
+.mnav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.mnav .chip{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;color:var(--ink)}
+.mnav .chip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tablewrap{overflow-x:auto}
+.backlink{display:inline-block;margin-top:26px;color:var(--rose);font-weight:700;padding:12px 0;min-height:44px;text-decoration:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#2b1d16;color:#ffe9d6;padding:13px 22px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:700px){.mgrid{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:1fr}.card{padding:20px 16px}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <a class="brand" href="index.html">Locally <span>Crafted CA</span></a>
+  <span class="topbar-tag">Manage</span>
+</div></header>
+
+<main class="manage">
+  <!-- Login screen -->
+  <div id="loginCard">
+    <h1>Manage — Locally Crafted CA</h1>
+    <p class="sub">This area is for the market team only. Sign in to see makers, listings, reservations and visits.</p>
+    <div class="card" style="max-width:480px">
+      <form id="loginForm">
+        <div class="mfield">
+          <label for="mgmtPass">Password</label>
+          <input type="password" id="mgmtPass" autocomplete="current-password" placeholder="Enter the Manage password" required>
+        </div>
+        <p class="err" id="loginError"></p>
+        <button class="mbtn" type="submit" style="width:100%">Sign in</button>
+      </form>
+      <button class="mlink" id="forgotLink" type="button">Forgot password?</button>
+      <p class="note">Five wrong passwords in 15 minutes locks sign-in for 15 minutes. One good sign-in clears it.</p>
+    </div>
+  </div>
+
+  <!-- Password reset (opened by the link in the reset email) -->
+  <div id="resetCard" style="display:none">
+    <h1>Choose a new Manage password</h1>
+    <p class="sub">This link works once and expires in 30 minutes.</p>
+    <div class="card" style="max-width:480px">
+      <form id="resetForm">
+        <div class="mfield">
+          <label for="resetPass">New password</label>
+          <input type="password" id="resetPass" autocomplete="new-password" placeholder="At least 8 characters" required minlength="8">
+        </div>
+        <p class="err" id="resetError"></p>
+        <button class="mbtn" type="submit" style="width:100%">Set new password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard shell (hidden until sign-in) -->
+  <div id="dash" style="display:none">
+    <h1>Manage — Locally Crafted CA</h1>
+    <p class="sub">Market team area. <span id="dashSummary">Loading…</span></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+      <button class="mbtn mbtn-ghost" id="logoutBtn" type="button">Sign out</button>
+      <button class="mbtn mbtn-ghost" id="logoutAllBtn" type="button">Sign out everywhere</button>
+    </div>
+
+    <nav class="mnav" aria-label="Manage sections">
+      <button class="chip active" data-sec="secVisits">Visits</button>
+      <button class="chip" data-sec="secMakers">Makers</button>
+      <button class="chip" data-sec="secListings">Listings</button>
+      <button class="chip" data-sec="secRes">Reservations</button>
+      <button class="chip" data-sec="secSettings">Settings</button>
+    </nav>
+
+    <section class="card" id="secVisits">
+      <h2>Visits</h2>
+      <p class="sub">How many people visit the market. Numbers live here only — never on the public site.</p>
+      <div class="mgrid">
+        <div class="mstat"><strong id="vToday">—</strong><span>Today</span></div>
+        <div class="mstat"><strong id="vWeek">—</strong><span>This week</span></div>
+        <div class="mstat"><strong id="vMonth">—</strong><span>This month</span></div>
+        <div class="mstat"><strong id="vYear">—</strong><span>This year</span></div>
+      </div>
+      <label class="switchrow"><input type="checkbox" id="excludeVisits"><span><b>Don&rsquo;t count my visits on this device</b><span>Turn this on on your phone and your tablet so your own visits don&rsquo;t inflate the numbers. It only affects this device.</span></span></label>
+      <p class="note">Counts start the day the backend went live. Bots are not counted.</p>
+    </section>
+
+    <section class="card" id="secMakers" style="display:none">
+      <h2>Makers</h2>
+      <p class="sub">The local makers in the market. Archive hides a maker (and their listings) from the site, restorable. Delete removes the maker and all of their listings for good.</p>
+      <form id="makerForm" style="margin-top:16px">
+        <input type="hidden" id="makerId" value="">
+        <div class="mrow">
+          <div class="mfield"><label for="mkName">Maker name</label><input id="mkName" type="text" placeholder="e.g. Mary Stones" required></div>
+          <div class="mfield"><label for="mkShop">Shop name</label><input id="mkShop" type="text" placeholder="e.g. Mary's Pottery"></div>
+        </div>
+        <div class="mrow">
+          <div class="mfield"><label for="mkEmail">Email</label><input id="mkEmail" type="email" placeholder="maker@example.com" maxlength="50" required></div>
+          <div class="mfield"><label for="mkPhone">Phone (optional)</label><input id="mkPhone" type="tel" placeholder="Only if the maker shares one"></div>
+        </div>
+        <div class="mfield"><label for="mkBio">About the maker (one or two lines)</label><textarea id="mkBio" placeholder="e.g. Mary throws every piece by hand on her wheel."></textarea></div>
+        <button class="mbtn" type="submit" id="mkSubmit">Add maker</button>
+        <button class="mbtn mbtn-ghost" type="button" id="mkCancel" style="display:none">Cancel edit</button>
+      </form>
+      <div class="tablewrap"><table class="mtable">
+        <thead><tr><th>Maker</th><th>Shop</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="makersBody"></tbody>
+      </table></div>
+    </section>
+
+    <section class="card" id="secListings" style="display:none">
+      <h2>Listings</h2>
+      <p class="sub">The products shown on the market site. Archive hides a listing from the site, restorable. Delete removes it for good.</p>
+      <form id="listingForm" style="margin-top:16px">
+        <input type="hidden" id="liId" value="">
+        <div class="mrow">
+          <div class="mfield"><label for="liMaker">Maker</label>
+            <div class="mrow"><input id="liMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liMaker" aria-label="Maker"></select></div>
+          </div>
+          <div class="mfield"><label for="liName">Product name</label><input id="liName" type="text" placeholder="e.g. Speckled Stoneware Mug" required></div>
+        </div>
+        <div class="mrow">
+          <div class="mfield"><label for="liPrice">Price</label><input id="liPrice" type="text" placeholder="e.g. $32" required></div>
+          <div class="mfield"><label for="liCat">Category</label><select id="liCat"><option value="pottery">Pottery</option><option value="knitting">Knitting</option><option value="jewelry">Jewelry</option><option value="candles">Candles</option><option value="food">Food &amp; Honey</option><option value="sewing">Sewing</option><option value="other">Other crafts</option></select></div>
+        </div>
+        <div class="mfield"><label for="liDesc">Description</label><textarea id="liDesc" placeholder="One or two lines about the piece."></textarea></div>
+        <div class="mfield"><label for="liPhotoFile">Photo — upload pictures</label>
+          <input id="liPhotoFile" type="file" accept="image/*">
+          <input type="hidden" id="liPhoto" value="">
+          <div id="liPhotoPreview" style="display:none;margin-top:10px">
+            <img id="liPhotoImg" src="" alt="Listing photo" style="max-width:220px;max-height:160px;border-radius:12px;border:1px solid var(--line)">
+            <p class="note" id="liPhotoPath" style="word-break:break-all"></p>
+          </div>
+          <p class="note" id="liPhotoNone">No photo yet — pick a picture above (JPG, PNG or WebP, up to 5 MB). It uploads when you save the listing.</p>
+        </div>
+        <button class="mbtn" type="submit" id="liSubmit">Add listing</button>
+        <button class="mbtn mbtn-ghost" type="button" id="liCancel" style="display:none">Cancel edit</button>
+      </form>
+      <div class="mrow" style="margin-top:18px">
+        <div class="mfield"><label for="liSearch">Search listings</label><input id="liSearch" type="search" placeholder="Search by product name…" autocomplete="off"></div>
+        <div class="mfield"><label for="liFilterMaker">Maker</label>
+          <div class="mrow"><input id="liFilterMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liFilterMaker" aria-label="Maker"><option value="">All makers</option></select></div>
+        </div>
+      </div>
+      <div class="mfield" style="max-width:280px"><label for="liSort">Sort</label><select id="liSort"><option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="name">Name A–Z</option></select></div>
+      <div class="tablewrap"><table class="mtable">
+        <thead><tr><th>Product</th><th>Maker</th><th>Price</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="listingsBody"></tbody>
+      </table></div>
+      <p class="note">Prices here are the prices shoppers see on the cards.</p>
+    </section>
+
+    <section class="card" id="secRes" style="display:none">
+      <h2>Reservations</h2>
+      <p class="sub">Reservations buyers send through the site. New = just arrived, Contacted = the maker replied, Done = the exchange happened.</p>
+      <div class="tablewrap"><table class="mtable">
+        <thead><tr><th>Buyer</th><th>Product</th><th>Qty</th><th>Pickup / delivery</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody id="resBody"></tbody>
+      </table></div>
+      <p class="note">The reserve form still sends reservations by email (FormSubmit) until it is switched to save here — see the backend README. This list fills in once that switch is made.</p>
+    </section>
+
+    <section class="card" id="secSettings" style="display:none">
+      <h2>Settings</h2>
+      <p class="sub">Market settings. Saved in the database.</p>
+      <form id="settingsForm" style="margin-top:16px">
+        <div class="mfield"><label for="setNotif">Notification email (where Manage notices go)</label><input id="setNotif" type="email" placeholder="taradil@gmail.com" maxlength="50"></div>
+        <div class="mfield"><label for="setSender">Sender email</label><input id="setSender" type="email" placeholder="Used for Manage emails once a domain is set up" maxlength="50"></div>
+        <button class="mbtn" type="submit">Save settings</button>
+      </form>
+    </section>
+
+    <a class="backlink" href="index.html">&larr; Back to the market</a>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+<script src="manage.js"></script>
+</body></html>
