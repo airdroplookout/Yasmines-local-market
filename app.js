@@ -126,7 +126,7 @@ function mapListing(l) {
   var currentItems = []; /* [{id, product}] currently loaded (live or fallback) */
 
   function categoryLabel(cat) {
-    var labels = {pottery: "Pottery", jewelry: "Jewelry", homeware: "Homeware", textiles: "Textiles", art: "Art", "cards-stationery": "Cards & Stationery", "clothing-accessories": "Clothing & Accessories", weddings: "Weddings", other: "Other"};
+    var labels = {pottery: "Pottery", jewelry: "Jewelry", homeware: "Homeware", textiles: "Textiles", art: "Art", "cards-stationery": "Cards & Stationery", "clothing-accessories": "Clothing & Accessories", weddings: "Weddings", "craft-supplies": "Craft Supplies", "christmas-gifts": "Christmas Gifts", other: "Other"};
     return labels[cat] || cat;
   }
 
