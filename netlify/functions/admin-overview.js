@@ -10,7 +10,9 @@ async function onGet(context) {
       sbJson(context, "makers?order=position.asc,created_at.asc&limit=200"),
       sbJson(context, "listings?order=position.asc,created_at.asc&limit=500"),
       sbJson(context, "reservations?order=created_at.desc&limit=500"),
-      sbJson(context, "settings?select=key,value"),
+      // Only the keys Manage displays — never the password hash, reset-token
+      // hash, lockout state or session version (audit M-5).
+      sbJson(context, "settings?select=key,value&key=in.(notification_email,sender_email,site_domain)"),
       // Visits card: one row per day. Missing table (before it is created)
       // must not break Manage — fall back to an empty list.
       sbJson(context, "page_views?select=day,views&order=day.asc&limit=800").catch(() => []),
