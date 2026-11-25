@@ -19,6 +19,10 @@ import { json, sbJson, requireAdmin, handlerFor, validEmail } from "./_lib.js";
 
 function cleanMaker(b) {
   const patch = {};
+  // Defence in depth for H-1: markup must never be stored in a maker.
+  for (const k of ["name", "shop_name", "bio", "phone"]) {
+    if (b[k] !== undefined && b[k] !== null && /[<>]/.test(String(b[k]))) return { error: `${k} must not contain < or >` };
+  }
   if (b.name !== undefined) patch.name = String(b.name).trim().slice(0, 80);
   if (b.shop_name !== undefined) patch.shop_name = String(b.shop_name).trim().slice(0, 80) || null;
   if (b.email !== undefined) {
@@ -36,6 +40,7 @@ function cleanMaker(b) {
     if (b.status !== "live" && b.status !== "archived") return { error: 'status must be "live" or "archived"' };
     patch.status = b.status;
   }
+  if (patch.name !== undefined && !patch.name) return { error: "name is required" };
   return { patch };
 }
 
