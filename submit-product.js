@@ -1,10 +1,11 @@
 /* Submit-a-product form handler — external script so the site can run
    under an enforced Content-Security-Policy (audit M-3, Nov 25 2026).
    Flow: the form posts (multipart) to /api/submit-product, which
-   validates everything, stores the one photo and saves the submission
-   as 'pending'. Then the browser emails the owner the details + photo
-   link via FormSubmit ajax — the same proven path the contact form
-   uses. Nothing the maker submits ever appears on the public site
+   validates everything, stores the one photo, saves the submission
+   as 'pending' and emails the owner server-side via Resend (audit
+   N-M4, Nov 25 2026 — the browser used to email via FormSubmit).
+   The browser only shows the thank-you screen on a server ok.
+   Nothing the maker submits ever appears on the public site
    until the owner approves it in Manage > Submissions. */
 (function(){
   var form = document.getElementById('submit-form');
@@ -98,6 +99,12 @@
       showError('The price should be a number in dollars, like 28 or $28.');
       return;
     }
+    // Audit #3 N-L4: price floor $1 / cap $10,000 (mirrors the server).
+    var priceNum = parseFloat(price.replace(/^\$/, ''));
+    if(!isFinite(priceNum) || priceNum < 1 || priceNum > 10000){
+      showError('The price should be between $1 and $10,000.');
+      return;
+    }
     if(OK_TYPES.indexOf(file.type) === -1){
       showError('That file is not a JPG, PNG or WebP picture — please pick a photo of your product.');
       return;
@@ -146,52 +153,21 @@
       })
       .then(function(saved){
         if(!saved) return;
-        // Email the owner the submission + photo link (FormSubmit ajax,
-        // the same path the contact form uses). If the row was saved in
-        // Manage, the email is only the notification — a failed email
-        // must not make the maker think the submission was lost.
-        var emailBody = {
-          name: makerName, business_name: businessName, email: makerEmail,
-          product_name: productName, category: saved.category_label || category,
-          other_category: category === 'other' ? otherCategory : '',
-          price: price.startsWith('$') ? price : '$' + price,
-          description: desc,
-          photo_url: saved.url || '(photo upload failed — please ask the maker to re-send it)',
-          saved_in_manage: saved.stored ? 'Yes (pending review)' : 'No — table not set up yet, this email is the record',
-          _subject: 'New product submission — ' + productName + ' (' + price + ')',
-          _template: 'table', _replyto: makerEmail
-        };
-        return fetch('https://formsubmit.co/ajax/taradil@gmail.com', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify(emailBody)
-        })
-        .then(function(res){ return res.json().catch(function(){ return {}; }); })
-        .then(function(emailJson){
-          var emailOk = emailJson && (emailJson.success === 'true' || emailJson.success === true);
-          if(saved.stored || emailOk){
-            document.getElementById('t-product').textContent = productName;
-            document.getElementById('t-email').textContent = makerEmail;
-            form.style.display = 'none';
-            document.getElementById('submit-thanks').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            setBusy(false, 'Send my product for review →');
-            showError('Sorry — that did not send. Please try again, or write to us from the contact page.');
-          }
-        })
-        .catch(function(){
-          if(saved.stored){
-            document.getElementById('t-product').textContent = productName;
-            document.getElementById('t-email').textContent = makerEmail;
-            form.style.display = 'none';
-            document.getElementById('submit-thanks').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            setBusy(false, 'Send my product for review →');
-            showError('Sorry — that did not send. Please try again, or write to us from the contact page.');
-          }
-        });
+        // Server is the whole delivery now (audit N-M4): it saved the
+        // row (when the table exists) and emailed the owner. Show the
+        // thank-you screen on a server ok — unless BOTH the save and
+        // the email failed, in which case nothing reached the owner.
+        if(!saved.stored && !saved.emailed){
+          setBusy(false, 'Send my product for review →');
+          showError('Sorry — that did not send. Please try again, or write to us from the contact page.');
+          return;
+        }
+        document.getElementById('t-product').textContent = productName;
+        document.getElementById('t-email').textContent = makerEmail;
+        if(saved.verification_email_sent){ var v = document.getElementById('t-verify'); if(v) v.style.display = 'block'; }
+        form.style.display = 'none';
+        document.getElementById('submit-thanks').style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       })
       .catch(function(){
         setBusy(false, 'Send my product for review →');
