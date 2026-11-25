@@ -227,9 +227,16 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
 .promo-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 12px}
 .promo-plan{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:14px 10px;display:flex;flex-direction:column;gap:4px;align-items:center}
 .promo-tier{font-size:.78rem;font-weight:800;letter-spacing:.08em;padding:4px 10px;border-radius:999px}
-.promo-tier.silver{background:#E3E3E3;color:#4A4A4A}
-.promo-tier.gold{background:#F6D47C;color:#6B4E00}
-.promo-tier.platinum{background:#DDE7F0;color:#2E4A63}
+.promo-tier.silver{background:rgba(255,255,255,.65);color:#3A454F;border:1px solid #8A939E}
+.promo-tier.gold{background:rgba(255,255,255,.55);color:#6B4E00;border:1px solid #A67C1A}
+.promo-tier.platinum{background:rgba(255,255,255,.7);color:#2E3A44;border:1px solid #AEB8BF}
+/* Metallic plan cards — same real-metal gradients as the vendor flyer */
+.promo-plan.silver{background:linear-gradient(135deg,#C8CDD4 0%,#F5F7F9 28%,#D9DDE3 52%,#F0F2F5 74%,#B4BAC2 100%);border-color:#8A939E;border-top:3px solid #F5F7F9}
+.promo-plan.silver .promo-price,.promo-plan.silver .promo-price small,.promo-plan.silver .promo-per,.promo-plan.silver b{color:#3A454F}
+.promo-plan.gold{background:linear-gradient(135deg,#C9962E 0%,#F2C94C 26%,#E8B923 50%,#F9E08A 72%,#C9962E 100%);border-color:#A67C1A;border-top:3px solid #F9E08A}
+.promo-plan.gold .promo-price,.promo-plan.gold .promo-price small,.promo-plan.gold .promo-per,.promo-plan.gold b{color:#6B4E00}
+.promo-plan.platinum{background:linear-gradient(135deg,#DDE2E6 0%,#FAFBFC 32%,#EDF0F2 58%,#FFFFFF 80%,#D3D8DC 100%);border-color:#AEB8BF;border-top:3px solid #FFFFFF}
+.promo-plan.platinum .promo-price,.promo-plan.platinum .promo-price small,.promo-plan.platinum .promo-per,.promo-plan.platinum b{color:#2E3A44}
 .promo-plan b{font-size:.95rem}
 .promo-price{font-family:"Fraunces",Georgia,serif;font-size:1.25rem;font-weight:700}
 .promo-price small{font-size:.8rem;font-weight:600;color:var(--muted)}
