@@ -54,33 +54,135 @@ var PRODUCTS = {
 };
 var current = window.PAGE_PRODUCTS ? window.PAGE_PRODUCTS[0] : "mug";
 
+/* Live listings from the database (/api/listings). On the front page the
+   grid is built from these real listings; the built-in PRODUCTS above
+   stay as a fallback so the shop never shows empty, and maker pages
+   (window.PAGE_PRODUCTS) keep using them. */
+var LIVE_PRODUCTS = null; /* id -> product-shaped entry, once loaded */
+
+function productById(id) {
+  return (LIVE_PRODUCTS && LIVE_PRODUCTS[id]) || PRODUCTS[id];
+}
+
+function initialsFor(name) {
+  var parts = (name || "?").trim().split(/\s+/);
+  var first = parts[0] ? parts[0].charAt(0) : "?";
+  var last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : "";
+  return (first + last).toUpperCase();
+}
+
+function vendorSlugForName(name) {
+  var key;
+  for (key in VENDORS) {
+    if (VENDORS[key].name.toLowerCase() === (name || "").toLowerCase()) return key;
+  }
+  return null;
+}
+
+/* Badge for a live listing: link to the maker's own page when we know it,
+   otherwise a plain monogram with the maker's initials. */
+function liveBadge(p) {
+  var v = p.vendor ? VENDORS[p.vendor] : null;
+  var initials = v ? v.initials : initialsFor(p.maker);
+  var inner = '<span class="vendor-mono" aria-hidden="true">' + initials + '</span>';
+  if (v && v.page) {
+    return '<a class="vendor-badge" href="' + v.page + '" title="See all from ' + v.name + '" aria-label="See all from ' + v.name + '">' + inner + '</a>';
+  }
+  return '<span class="vendor-badge" title="' + p.shop + '">' + inner + '</span>';
+}
+
+/* Small inline placeholder picture (data URI) for listings with no photo,
+   used in the reserve-form product summary. */
+function photoPlaceholder(initials) {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#FFF7EE"/><text x="200" y="175" font-family="Georgia,serif" font-size="110" font-weight="bold" fill="#4F7A4A" text-anchor="middle">' + initials + '</text></svg>';
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+function mapListing(l) {
+  return {
+    live: true,
+    vendor: vendorSlugForName(l.maker_name),
+    name: l.name,
+    maker: l.maker_name,
+    shop: l.shop_name,
+    price: l.price,
+    img: l.photo || null,
+    alt: l.name,
+    desc: l.description || "",
+    category: l.category || ""
+  };
+}
+
 /* Build the product grid — a page may define window.PAGE_PRODUCTS to show only its own items */
 (function buildGrid() {
   var grid = document.getElementById("product-grid");
-  var order = window.PAGE_PRODUCTS || ["scarf", "necklace", "candle", "tote", "honey", "mug",
+  if (!grid) return;
+  var defaultOrder = ["scarf", "necklace", "candle", "tote", "honey", "mug",
     "mary-mug", "mary-bowl", "mary-vase", "mary-plate", "mary-planter",
     "mary-teapot", "mary-butter", "mary-spoon", "mary-candle", "mary-platter"];
-  order.forEach(function (id) {
-    var p = PRODUCTS[id];
+
+  function renderCard(id, p) {
     var card = document.createElement("article");
     card.className = "card";
+    var badge = p.live ? liveBadge(p) : vendorBadge(p);
+    var photo = p.img
+      ? '<img src="' + p.img + '" alt="' + p.alt + '" loading="lazy" />'
+      : '<div class="card-photo-ph" aria-hidden="true"><span>' + initialsFor(p.maker) + '</span></div>';
+    var title = p.live ? p.name : p.name + ' <span class="example-tag">Example</span>';
+    var vendorPage = p.vendor && VENDORS[p.vendor] && VENDORS[p.vendor].page;
     card.innerHTML =
-      vendorBadge(p) +
-      '<img src="' + p.img + '" alt="' + p.alt + '" loading="lazy" />' +
+      badge + photo +
       '<div class="card-body">' +
-        '<h3>' + p.name + ' <span class="example-tag">Example</span></h3>' +
+        '<h3>' + title + '</h3>' +
         '<p class="maker">by ' + p.maker + ' — ' + p.shop + '</p>' +
-        (VENDORS[p.vendor] && VENDORS[p.vendor].page ? '<p class="vendor-link"><a href="' + VENDORS[p.vendor].page + '">See all from ' + VENDORS[p.vendor].name + ' →</a></p>' : '') +
+        (vendorPage ? '<p class="vendor-link"><a href="' + VENDORS[p.vendor].page + '">See all from ' + VENDORS[p.vendor].name + ' →</a></p>' : '') +
         '<p class="desc">' + p.desc + '</p>' +
         '<div class="card-row"><p class="price-sm">' + p.price + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + id + '">Reserve this item</button></div>' +
       '</div>';
     grid.appendChild(card);
-  });
+  }
+
+  function renderBuiltIn(order) {
+    grid.innerHTML = "";
+    order.forEach(function (id) {
+      var p = PRODUCTS[id];
+      if (p) renderCard(id, p);
+    });
+  }
+
   grid.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-reserve]");
     if (btn) selectProduct(btn.getAttribute("data-reserve"));
   });
+
+  /* Maker pages keep their built-in list. */
+  if (window.PAGE_PRODUCTS) {
+    renderBuiltIn(window.PAGE_PRODUCTS);
+    return;
+  }
+
+  /* Front page: live listings from the database, built-in list as fallback. */
+  fetch("/api/listings")
+    .then(function (res) { return res.json(); })
+    .then(function (json) {
+      var listings = (json && json.listings) || [];
+      if (!json || !json.ok || !listings.length) {
+        renderBuiltIn(defaultOrder);
+        return;
+      }
+      LIVE_PRODUCTS = {};
+      grid.innerHTML = "";
+      listings.forEach(function (l) {
+        var p = mapListing(l);
+        LIVE_PRODUCTS[l.id] = p;
+        renderCard(l.id, p);
+      });
+      current = listings[0].id;
+    })
+    .catch(function () {
+      renderBuiltIn(defaultOrder);
+    });
 })();
 
 function showView(n) {
@@ -92,8 +194,9 @@ function showView(n) {
 
 function selectProduct(id) {
   current = id;
-  var p = PRODUCTS[id];
-  document.getElementById("ps-img").src = id === "mug" ? "images/mug.webp" : p.img;
+  var p = productById(id);
+  if (!p) return;
+  document.getElementById("ps-img").src = id === "mug" ? "images/mug.webp" : (p.img || photoPlaceholder(initialsFor(p.maker)));
   document.getElementById("ps-img").alt = p.alt;
   document.getElementById("ps-name").textContent = p.name;
   document.getElementById("ps-maker").textContent = "by " + p.maker + " — " + p.shop;
@@ -141,7 +244,11 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
   }
   err.classList.remove("show");
 
-  var p = PRODUCTS[current];
+  var p = productById(current);
+  if (!p) {
+    showError("Sorry — that item could not be found. Please pick it again from the shop.");
+    return;
+  }
   document.getElementById("h-replyto").value = email;
 
   btn.disabled = true;
@@ -203,7 +310,8 @@ function showConfirmation(name, email, phone, qty, delivery, msg, p) {
 
 /* Restore the form's default hidden product values after reset */
 function selectProductDefaults() {
-  var p = PRODUCTS[current];
+  var p = productById(current);
+  if (!p) return;
   document.getElementById("h-product").value = p.name;
   document.getElementById("h-maker").value = p.maker + " — " + p.shop;
   document.getElementById("h-price").value = p.price;
