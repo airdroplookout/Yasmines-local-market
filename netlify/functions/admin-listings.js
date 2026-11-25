@@ -7,7 +7,8 @@
 // POST /api/admin/listings — create a listing.
 //   Body: { maker_id, name, price, category?, description?, photo?, position? }
 //   category must be one of: pottery, jewelry, homeware, textiles,
-//   art, cards-stationery, clothing-accessories, weddings, other.
+//   art, cards-stationery, clothing-accessories, weddings, craft-supplies,
+//   christmas-gifts, other.
 //   price is the SHOPPER price shown on the card
 //   (e.g. "$32") — never a commission, payout or owner-only figure.
 // PATCH /api/admin/listings?id=... — update any field; { status: "archived" }
