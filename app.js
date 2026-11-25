@@ -7,7 +7,7 @@
    confirmation screen. */
 
 /* Vendor registry — one entry per maker.
-   page: the vendor's own shop page on this site (null for example makers
+   page: the vendor's own shop page on this site (null for makers
    who don't have one yet — their badge shows but is not a link).
    logo:  logos/<vendor-slug>.png (or .webp). If the file is missing, the
    badge falls back to the monogram (initials in a small circle) — never a
@@ -43,7 +43,7 @@ var PRODUCTS = {
   candle: { category: "other", vendor: "emma", name: "Vanilla & Cedar Soy Candle", maker: "Emma T.", shop: "Emma’s Little Light Co.", price: "$18", img: "images/candle.webp", alt: "Lit soy candle in a clear glass jar", desc: "Hand-poured soy wax with a warm vanilla and cedar scent. About 35 hours of burn time." },
   tote: { category: "textiles", vendor: "grace", name: "Canvas Market Tote", maker: "Grace O.", shop: "Grace Sews", price: "$20", img: "images/tote.webp", alt: "Row of sturdy handmade canvas tote bags in many colours held up outdoors", desc: "Heavy-duty canvas, sewn to carry a full market shop. Pick your colour when you reserve — red, blue, teal, green, natural and more." },
   honey: { category: "other", vendor: "nguyen", name: "Wildflower Honey — Small Jar", maker: "The Nguyen Family", shop: "Nguyen Family Apiary", price: "$9", img: "images/honey.webp", alt: "Small hexagonal glass jar of golden honey with a gold lid on wood", desc: "Raw wildflower honey from hives just outside town. This little jar is perfect for gifts and first tastes." },
-  /* Mary Stones — Mary's Pottery (first real maker; prices are examples until she confirms them) */
+  /* Mary Stones — Mary's Pottery (first real maker) */
   "mary-mug": { category: "pottery", vendor: "mary-stones", name: "Speckled Stoneware Mug", maker: "Mary Stones", shop: "Mary's Pottery", price: "$32", img: "images/mary-mug.webp", alt: "Hand-thrown stoneware mug in a soft sage-green speckled glaze", desc: "Hand-thrown mug in a soft speckled glaze — every one a little different. Holds a generous cup of tea or coffee." },
   "mary-bowl": { category: "pottery", vendor: "mary-stones", name: "Rustic Serving Bowl", maker: "Mary Stones", shop: "Mary's Pottery", price: "$48", img: "images/mary-bowl.webp", alt: "Handmade stoneware serving bowl in muted olive-green and grey glaze", desc: "A generous hand-thrown bowl in warm earth tones, made for salads, pasta, and family dinners." },
   "mary-vase": { category: "pottery", vendor: "mary-stones", name: "Hand-thrown Vase", maker: "Mary Stones", shop: "Mary's Pottery", price: "$65", img: "images/mary-vase.webp", alt: "Tall handmade ceramic vase in creamy white glaze on a wooden table", desc: "A tall, graceful vase in creamy white glaze with a soft matte finish. Made for fresh flowers — or lovely standing on its own." },
@@ -142,7 +142,7 @@ function mapListing(l) {
     var photo = p.img
       ? '<img src="' + p.img + '" alt="' + p.alt + '" loading="lazy" />'
       : '<div class="card-photo-ph" aria-hidden="true"><span>' + initialsFor(p.maker) + '</span></div>';
-    var title = p.live ? p.name : p.name + ' <span class="example-tag">Example</span>';
+    var title = p.name;
     var vendorPage = p.vendor && VENDORS[p.vendor] && VENDORS[p.vendor].page;
     card.innerHTML =
       badge + photo +
