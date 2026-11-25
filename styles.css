@@ -119,6 +119,10 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .card .desc{color:var(--muted);font-size:.94rem;margin:0;flex:1}
 .card-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px}
 .card .price-sm{font-weight:800;font-size:1.1rem;margin:0}
+/* "Sold: N" reservation counter on listing cards and the reserve-form
+   product summary — small sage text, shown only when a listing has at
+   least one reservation. */
+.sold-count{color:var(--sage);font-weight:700;font-size:.92rem;margin:2px 0 0}
 .card .btn{padding:11px 16px;font-size:.95rem}
 
 .note-strip{margin-top:28px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
