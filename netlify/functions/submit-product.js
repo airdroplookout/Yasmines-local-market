@@ -16,7 +16,7 @@ import { json, sbJson, handlerFor, validEmail, checkPublicRateLimit, LISTING_CAT
 
 const BUCKET = "listing-photos";
 const MAX_BYTES = 5 * 1024 * 1024;
-const MAX = { maker_name: 100, product_name: 120, description: 1000, price: 20 };
+const MAX = { maker_name: 100, business_name: 100, product_name: 120, description: 1000, price: 20, other_category: 100 };
 // Magic bytes: JPEG FF D8 FF, PNG 89 50 4E 47, WebP "RIFF" + "WEBP" at offset 8.
 const TYPE_TO_EXT = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/png": "png", "image/webp": "webp" };
 const PRICE_RE = /^\$?\d{1,6}(\.\d{1,2})?$/;
@@ -61,23 +61,29 @@ async function onPost(context) {
   if (!allowed) return json({ ok: false, error: "Too many submissions — please try again later." }, 429);
 
   const maker_name = String(form.get("maker_name") || "").trim();
+  const business_name = String(form.get("business_name") || "").trim();
   const maker_email = String(form.get("maker_email") || "").trim().toLowerCase();
   const product_name = String(form.get("product_name") || "").trim();
   const category = String(form.get("category") || "").trim();
+  const other_category = String(form.get("other_category") || "").trim();
   const description = String(form.get("description") || "").trim();
   const priceRaw = String(form.get("price") || "").trim();
 
   if (maker_name.length > MAX.maker_name) return json({ ok: false, error: "maker_name must be at most 100 characters" }, 400);
+  if (business_name.length > MAX.business_name) return json({ ok: false, error: "business_name must be at most 100 characters" }, 400);
   if (product_name.length > MAX.product_name) return json({ ok: false, error: "product_name must be at most 120 characters" }, 400);
   if (description.length > MAX.description) return json({ ok: false, error: "description must be at most 1000 characters" }, 400);
   if (priceRaw.length > MAX.price) return json({ ok: false, error: "price must be at most 20 characters" }, 400);
-  if (hasMarkup(maker_name) || hasMarkup(product_name) || hasMarkup(description) || hasMarkup(priceRaw)) {
+  if (other_category.length > MAX.other_category) return json({ ok: false, error: "other_category must be at most 100 characters" }, 400);
+  if (hasMarkup(maker_name) || hasMarkup(business_name) || hasMarkup(product_name) || hasMarkup(description) || hasMarkup(priceRaw) || hasMarkup(other_category)) {
     return json({ ok: false, error: "Text fields must not contain < or >" }, 400);
   }
   if (!maker_name) return json({ ok: false, error: "maker_name is required" }, 400);
+  if (!business_name) return json({ ok: false, error: "business_name is required" }, 400);
   if (!validEmail(maker_email)) return json({ ok: false, error: "maker_email must be a valid email address" }, 400);
   if (!product_name) return json({ ok: false, error: "product_name is required" }, 400);
   if (!LISTING_CATEGORIES.includes(category)) return json({ ok: false, error: "category must be one of the listed craft types" }, 400);
+  if (category === "other" && !other_category) return json({ ok: false, error: "other_category is required when the product type is Other — please tell us what kind of product this is" }, 400);
   if (!description) return json({ ok: false, error: "description is required" }, 400);
   if (!PRICE_RE.test(priceRaw)) return json({ ok: false, error: "price must be a number, like 28 or $28" }, 400);
   const price = priceRaw.startsWith("$") ? priceRaw : "$" + priceRaw;
@@ -123,8 +129,9 @@ async function onPost(context) {
     const rows = await sbJson(context, "product_submissions", {
       method: "POST",
       body: JSON.stringify({
-        maker_name, maker_email, product_name,
+        maker_name, business_name, maker_email, product_name,
         category, category_label: LISTING_CATEGORY_LABELS[category] || category,
+        other_category: category === "other" ? other_category : null,
         description, price, photo_url: url, status: "pending",
       }),
     });
