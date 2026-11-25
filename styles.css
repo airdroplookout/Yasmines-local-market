@@ -32,6 +32,8 @@ a{color:var(--accent)}
 .brand{font-family:"Kalam","Nunito Sans",system-ui,sans-serif;font-size:1.6rem;font-weight:700;text-decoration:none;color:var(--ink);border-bottom:2px solid var(--sage);padding-bottom:1px}
 .brand svg{width:1.45em;height:1.45em;vertical-align:-0.28em;margin-right:.2em;color:var(--sage)}
 .brand span{color:var(--accent)}
+.brand-lockup{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.brand-tagline{font-size:.8rem;color:var(--sage);font-weight:600;margin-top:3px}
 .topbar-tag{margin-left:auto;font-size:.88rem;color:var(--muted);font-weight:700}
 .topnav-link{font-weight:800;text-decoration:none;color:var(--ink);padding:10px 4px;min-height:44px;display:inline-flex;align-items:center}
 .topnav-link:hover{color:var(--accent)}
