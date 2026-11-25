@@ -1,10 +1,13 @@
 /* Locally Crafted CA — shop logic.
-   The reserve form posts to FormSubmit (https://formsubmit.co/ajax/taradil@gmail.com)
-   — the email is the owner's notification — AND saves a copy to the
-   database via POST /api/reserve, so the reservation also shows in
-   Manage > Reservations. The database save is best-effort: if it
-   fails, the email still sends and the buyer still sees the
-   confirmation screen. */
+   The reserve form saves to the database via POST /api/reserve, which
+   is the source of truth (audit N-M4/N-M5, Nov 25 2026): the server
+   stores the row in Manage > Reservations AND emails the owner
+   server-side via Resend, and the browser awaits its answer — the
+   confirmation screen shows only when the server says ok. The old
+   design fired the save fire-and-forget and emailed the owner from
+   the browser via FormSubmit, so an email could go out even when the
+   save failed (or was rate-limited), and a reservation could exist
+   in the inbox but not in Manage. That leg is gone. */
 
 /* Vendor registry — one entry per maker.
    page: the vendor's own shop page on this site (null for makers
@@ -444,8 +447,8 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
     return;
   }
   /* Markup check (audit N-M2): the same < > rejection the server uses,
-     checked here BEFORE anything is sent — the FormSubmit email leg
-     had no check at all, so a marked-up message must never reach it. */
+     checked here BEFORE anything is sent — a marked-up message must
+     never reach the server. */
   if (/[<>]/.test(name) || /[<>]/.test(phone) || /[<>]/.test(msg)) {
     showError("Text fields must not contain < or >");
     return;
@@ -472,13 +475,21 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
     showError("Sorry — that item could not be found. Please pick it again from the shop.");
     return;
   }
-  document.getElementById("h-replyto").value = email;
+  /* Save via POST /api/reserve and AWAIT the answer (audit N-M4/N-M5):
+     the server stores the row and emails the owner, and only a server
+     ok shows the confirmation screen. One automatic retry on a network
+     error or a 5xx (a lost response after a successful insert is safe —
+     the server dedups identical reservations from the last 24 hours);
+     a 400 or 429 answer is final and is not retried. Distinct errors:
+     the server could not save → "We could not save your reservation.
+     Please try again."; saved but the owner email failed
+     (emailed:false) → confirmation still shows, with a note that the
+     reservation is saved and the owner will see it in Manage. */
+  btn.disabled = true;
+  btn.textContent = "Sending…";
 
-  /* Also save the reservation in the market database (Manage >
-     Reservations) — fire-and-forget: if this fails, the email below
-     still sends and the buyer still sees the confirmation screen. */
-  try {
-    fetch("/api/reserve", {
+  function postReserve() {
+    return fetch("/api/reserve", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -493,53 +504,51 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
         listing_id: p.listing_id || null,
         maker_id: p.maker_id || null
       })
-    }).catch(function () { /* saved copy is best-effort; the email is the record */ });
-  } catch (e) { /* same — never block the email */ }
-
-  btn.disabled = true;
-  btn.textContent = "Sending…";
-
-  var data = {
-    name: name,
-    email: email,
-    phone: phone || "Not provided",
-    quantity: qty,
-    delivery_method: delivery,
-    message: msg,
-    product: p.name,
-    maker: p.maker + " — " + p.shop,
-    price: p.price,
-    _subject: "New reservation — " + p.name + " (" + p.price + ")",
-    _template: "table",
-    _replyto: email
-  };
-
-  fetch("https://formsubmit.co/ajax/taradil@gmail.com", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify(data)
-  })
-    .then(function (res) { return res.json(); })
-    .then(function (json) {
-      btn.disabled = false;
-      btn.textContent = "Send my reservation to the maker →";
-      if (json && (json.success === "true" || json.success === true)) {
-        showConfirmation(name, email, phone, qty, delivery, msg, p);
-      } else {
-        showError("Sorry — that did not send. Please try again, or check that the market’s email has been activated. (" + (json && json.message ? json.message : "unknown error") + ")");
-      }
-    })
-    .catch(function () {
-      btn.disabled = false;
-      btn.textContent = "Send my reservation to the maker →";
-      showError("Sorry — that did not send. Please check your connection and try again.");
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        return { status: res.status, body: j };
+      });
     });
+  }
+  function resetBtn() {
+    btn.disabled = false;
+    btn.textContent = "Send my reservation to the maker →";
+  }
+  postReserve().then(function (r) {
+    // One retry after a server error (5xx); validation and rate-limit
+    // answers (400/429) are final.
+    if ((!r.body || !r.body.ok) && r.status >= 500) return postReserve();
+    return r;
+  }, function () {
+    // One retry after a network error.
+    return postReserve();
+  }).then(function (r) {
+    resetBtn();
+    if (r && r.body && r.body.ok) {
+      showConfirmation(name, email, phone, qty, delivery, msg, p, r.body.emailed === false);
+    } else if (r && r.status === 429) {
+      showError("Too many reservations — please try again later.");
+    } else if (r && r.status === 400 && r.body && r.body.error) {
+      showError(r.body.error);
+    } else {
+      showError("We could not save your reservation. Please try again.");
+    }
+  }).catch(function () {
+    resetBtn();
+    showError("We could not save your reservation. Please try again.");
+  });
 });
 
-function showConfirmation(name, email, phone, qty, delivery, msg, p) {
+function showConfirmation(name, email, phone, qty, delivery, msg, p, emailFailed) {
   var reservedId = current;
   document.getElementById("c-maker").textContent = p.maker;
   document.getElementById("c-email").textContent = email;
+  /* Saved but the owner email failed (emailed:false): say so plainly —
+     the reservation is in Manage, only the notification missed, so the
+     buyer allows extra time for a reply instead of re-submitting. */
+  if (emailFailed) {
+    document.getElementById("c-maker").parentNode.textContent = "Your reservation is saved — the market owner will see it in Manage and " + p.maker + " will be in touch at " + email + ". The email notification did not go through, so please allow a little extra time for a reply.";
+  }
   document.getElementById("s-product").textContent = p.name + " — " + p.price;
   document.getElementById("s-maker").textContent = p.maker + " — " + p.shop;
   document.getElementById("s-name").textContent = name;
