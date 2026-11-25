@@ -23,7 +23,7 @@ function cleanListing(b) {
   if (b.name !== undefined) patch.name = String(b.name).trim().slice(0, 120);
   if (b.price !== undefined) patch.price = String(b.price).trim().slice(0, 20);
   if (b.description !== undefined) patch.description = String(b.description).trim().slice(0, 500) || null;
-  if (b.photo !== undefined) patch.photo = String(b.photo).trim().slice(0, 200) || null;
+  if (b.photo !== undefined) patch.photo = String(b.photo).trim().slice(0, 500) || null;
   if (b.position !== undefined) {
     const p = parseInt(b.position, 10);
     if (Number.isFinite(p)) patch.position = p;
