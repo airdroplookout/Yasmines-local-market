@@ -1,7 +1,10 @@
 /* Yasmine's Local Market — shop logic.
-   Example listings only (see README.md). The reserve form posts to
-   FormSubmit (https://formsubmit.co/ajax/taradil@gmail.com) — temporary
-   destination until each real maker has their own email. */
+   The reserve form posts to FormSubmit (https://formsubmit.co/ajax/taradil@gmail.com)
+   — the email is the owner's notification — AND saves a copy to the
+   database via POST /api/reserve, so the reservation also shows in
+   Manage > Reservations. The database save is best-effort: if it
+   fails, the email still sends and the buyer still sees the
+   confirmation screen. */
 
 /* Vendor registry — one entry per maker.
    page: the vendor's own shop page on this site (null for example makers
@@ -101,6 +104,8 @@ function photoPlaceholder(initials) {
 function mapListing(l) {
   return {
     live: true,
+    listing_id: l.id,
+    maker_id: l.maker_id || null,
     vendor: vendorSlugForName(l.maker_name),
     name: l.name,
     maker: l.maker_name,
@@ -289,6 +294,28 @@ document.getElementById("reserve-form").addEventListener("submit", function (e) 
     return;
   }
   document.getElementById("h-replyto").value = email;
+
+  /* Also save the reservation in the market database (Manage >
+     Reservations) — fire-and-forget: if this fails, the email below
+     still sends and the buyer still sees the confirmation screen. */
+  try {
+    fetch("/api/reserve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        buyer_name: name,
+        buyer_email: email,
+        buyer_phone: phone || "",
+        quantity: qty,
+        delivery_method: delivery,
+        message: msg,
+        product_name: p.name,
+        maker_name: p.maker,
+        listing_id: p.listing_id || null,
+        maker_id: p.maker_id || null
+      })
+    }).catch(function () { /* saved copy is best-effort; the email is the record */ });
+  } catch (e) { /* same — never block the email */ }
 
   btn.disabled = true;
   btn.textContent = "Sending…";
