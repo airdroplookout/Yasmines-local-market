@@ -1,4 +1,4 @@
-// Manage — Yasmine's Local Market. Wired to the real backend (Nov 2026).
+// Manage — Locally Crafted CA. Wired to the real backend (Nov 2026).
 // Sign-in is enforced: password login (30-day session), 5 wrong passwords
 // in 15 minutes locks the login out for 15 minutes. "Forgot password?"
 // emails a one-time reset link to the owner only.
