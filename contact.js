@@ -26,7 +26,7 @@
       return;
     }
     /* Markup check (audit N-M2): the same < > rejection the server uses,
-       checked here BEFORE the FormSubmit email — that leg had no check. */
+       checked here BEFORE anything is sent. */
     if (/[<>]/.test(name) || /[<>]/.test(makes) || /[<>]/.test(msg)) {
       showError('Text fields must not contain < or >');
       return;
@@ -40,29 +40,32 @@
       return;
     }
     err.classList.remove('show');
-    document.getElementById('h-replyto').value = email;
     btn.disabled = true;
     btn.textContent = 'Sending…';
-    fetch('https://formsubmit.co/ajax/taradil@gmail.com', {
+    /* Server-side send (audit N-M4): POST /api/send-contact validates
+       (honeypot, markup, 5/hour/IP) and emails the owner via Resend.
+       The old browser FormSubmit post is gone — it could be called
+       directly by anyone, skipping every check. */
+    fetch('/api/send-contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify({
-        name: name, email: email, what_you_make: makes, message: msg,
-        _subject: 'New vendor enquiry — Locally Crafted CA',
-        _template: 'table', _replyto: email
+        name: name, email: email, what_you_make: makes, message: msg
       })
     })
-    .then(function(res){ return res.json(); })
-    .then(function(json){
+    .then(function(res){ return res.json().catch(function(){ return {}; }).then(function(json){ return { status: res.status, body: json }; }); })
+    .then(function(r){
       btn.disabled = false;
       btn.textContent = 'Send my message →';
-      if(json && (json.success === 'true' || json.success === true)){
+      if (r.body && r.body.ok) {
         document.getElementById('t-email').textContent = email;
         form.style.display = 'none';
         document.getElementById('contact-thanks').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (r.status === 429) {
+        showError('Too many messages — please try again later.');
       } else {
-        showError('Sorry — that did not send. Please try again, or check that the market\u2019s email has been activated. (' + (json && json.message ? json.message : 'unknown error') + ')');
+        showError('Sorry — that did not send. Please try again.' + (r.body && r.body.error ? ' (' + r.body.error + ')' : ''));
       }
     })
     .catch(function(){
