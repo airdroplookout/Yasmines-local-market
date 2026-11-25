@@ -155,7 +155,9 @@
       <form id="listingForm" style="margin-top:16px">
         <input type="hidden" id="liId" value="">
         <div class="mrow">
-          <div class="mfield"><label for="liMaker">Maker</label><select id="liMaker"></select></div>
+          <div class="mfield"><label for="liMaker">Maker</label>
+            <div class="mrow"><input id="liMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liMaker" aria-label="Maker"></select></div>
+          </div>
           <div class="mfield"><label for="liName">Product name</label><input id="liName" type="text" placeholder="e.g. Speckled Stoneware Mug" required></div>
         </div>
         <div class="mrow">
@@ -177,7 +179,9 @@
       </form>
       <div class="mrow" style="margin-top:18px">
         <div class="mfield"><label for="liSearch">Search listings</label><input id="liSearch" type="search" placeholder="Search by product name…" autocomplete="off"></div>
-        <div class="mfield"><label for="liFilterMaker">Maker</label><select id="liFilterMaker"><option value="">All makers</option></select></div>
+        <div class="mfield"><label for="liFilterMaker">Maker</label>
+          <div class="mrow"><input id="liFilterMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liFilterMaker" aria-label="Maker"><option value="">All makers</option></select></div>
+        </div>
       </div>
       <div class="mfield" style="max-width:280px"><label for="liSort">Sort</label><select id="liSort"><option value="oldest">Oldest first</option><option value="newest">Newest first</option><option value="name">Name A–Z</option></select></div>
       <div class="tablewrap"><table class="mtable">
