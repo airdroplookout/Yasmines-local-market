@@ -11,6 +11,9 @@
   var err = document.getElementById('form-error');
   var btn = document.getElementById('submit-btn');
   var photoInput = document.getElementById('s-photo');
+  var categorySelect = document.getElementById('s-category');
+  var otherWrap = document.getElementById('s-other-wrap');
+  var otherInput = document.getElementById('s-other-category');
   var preview = document.getElementById('photo-preview');
   var previewImg = document.getElementById('photo-img');
   var previewName = document.getElementById('photo-name');
@@ -28,6 +31,17 @@
     btn.disabled = busy;
     btn.textContent = label;
   }
+
+  // "Other" category: show the Specify field only when Other is picked.
+  // It is required only then — otherwise it stays hidden and empty.
+  function syncOther(){
+    var isOther = categorySelect.value === 'other';
+    otherWrap.style.display = isOther ? 'block' : 'none';
+    otherInput.required = isOther;
+    if(!isOther) otherInput.value = '';
+  }
+  categorySelect.addEventListener('change', syncOther);
+  syncOther();
 
   // One-photo preview. The input has no `multiple`, so the browser only
   // ever lets one file be picked; the server counts again anyway.
@@ -55,15 +69,21 @@
   form.addEventListener('submit', function(e){
     e.preventDefault();
     var makerName = document.getElementById('s-maker-name').value.trim();
+    var businessName = document.getElementById('s-business-name').value.trim();
     var makerEmail = document.getElementById('s-maker-email').value.trim();
     var productName = document.getElementById('s-product-name').value.trim();
     var category = document.getElementById('s-category').value;
+    var otherCategory = document.getElementById('s-other-category').value.trim();
     var price = document.getElementById('s-price').value.trim();
     var desc = document.getElementById('s-desc').value.trim();
     var file = photoInput.files && photoInput.files[0];
 
-    if(!makerName || !makerEmail || !productName || !category || !price || !desc || !file){
-      showError('Please fill in your name, your email, the product name, its type, its price and a short description — and add one photo. All of them are needed.');
+    if(!makerName || !businessName || !makerEmail || !productName || !category || !price || !desc || !file){
+      showError('Please fill in your name, your business name, your email, the product name, its type, its price and a short description — and add one photo. All of them are needed.');
+      return;
+    }
+    if(category === 'other' && !otherCategory){
+      showError('You picked “Other” — please tell us what kind of product this is in the Specify box.');
       return;
     }
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(makerEmail) || makerEmail.length > 50){
@@ -108,8 +128,9 @@
         // Manage, the email is only the notification — a failed email
         // must not make the maker think the submission was lost.
         var emailBody = {
-          name: makerName, email: makerEmail,
+          name: makerName, business_name: businessName, email: makerEmail,
           product_name: productName, category: saved.category_label || category,
+          other_category: category === 'other' ? otherCategory : '',
           price: price.startsWith('$') ? price : '$' + price,
           description: desc,
           photo_url: saved.url || '(photo upload failed — please ask the maker to re-send it)',
