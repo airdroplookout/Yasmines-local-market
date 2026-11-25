@@ -301,3 +301,14 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 @media(max-width:700px){.mgrid{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:1fr}.card{padding:20px 16px}}
 
+
+/* Simple text pages (Privacy, Terms) — same card look as the forms. */
+.page-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 24px;box-shadow:var(--shadow)}
+.page-card h2{font-size:1.25rem;margin:24px 0 8px}
+.page-card h2:first-child{margin-top:0}
+.page-card p,.page-card li{color:var(--muted);line-height:1.6}
+.page-card p{margin:0 0 12px}
+.page-card ul{margin:0 0 14px;padding-left:22px}
+.page-card li{margin-bottom:5px}
+.page-card a{color:var(--rose);font-weight:700}
+.page-card .updated{font-size:.88rem}
