@@ -11,17 +11,20 @@
 // signed with ADMIN_API_KEY — see createAdminSession in _lib.js), which
 // the Manage page stores in localStorage and sends as x-admin-session.
 // On failure returns 401 with no hint about what was wrong.
-// Rate limiting: 5 wrong passwords inside 15 minutes locks the admin
-// login out of this endpoint for 15 minutes (429) — a GLOBAL budget
-// shared across all IPs, plus a per-IP limit as a second layer. The
-// check runs before the password is compared, and this endpoint is the
-// only place a password is ever accepted, so the lockout cannot be
-// bypassed by switching endpoints. State lives in the settings table —
-// see checkLoginAllowed / recordFailedLogin in _lib.js. If the lockout
-// state cannot be read or written, login fails closed (500) instead of
-// silently granting more tries.
+// Rate limiting: 5 wrong passwords inside 15 minutes from one IP locks
+// that IP out for 15 minutes (429), plus a looser global budget of 30
+// wrong passwords in 15 minutes across all IPs — so one stranger can no
+// longer lock the owner out with 5 empty POSTs (audit H-3). Counting is
+// atomic via the record_login_attempt() Postgres function once the owner
+// runs supabase/login-attempts.sql; until then the legacy settings-table
+// lockout applies (see checkLoginAllowed / recordFailedLogin in _lib.js).
+// The check runs before the password is compared, and this endpoint is
+// the only place a password is ever accepted, so the lockout cannot be
+// bypassed by switching endpoints. If the lockout state cannot be read
+// or written, login fails closed (500) instead of silently granting
+// more tries.
 // No email is sent here.
-import { json, handlerFor, createAdminSession, getSessionVersion, checkLoginAllowed, recordFailedLogin, clearLoginLockout, LOGIN_MAX_FAILS, adminPasswordConfigured, checkAdminPassword } from "./_lib.js";
+import { json, handlerFor, createAdminSession, getSessionVersion, checkLoginAllowed, recordFailedLogin, clearLoginLockout, LOGIN_MAX_FAILS, LOGIN_GLOBAL_MAX_FAILS, adminPasswordConfigured, checkAdminPassword } from "./_lib.js";
 
 async function onPost(context) {
   if (!context.env.ADMIN_API_KEY) return json({ ok: false, error: "ADMIN_API_KEY is not set — it signs the session token." }, 500);
@@ -69,7 +72,7 @@ async function onPost(context) {
     if (entry && entry.locked_until) {
       return json({ ok: false, error: "Too many wrong passwords — locked out for 15 minutes." }, 429);
     }
-    const remaining = entry ? Math.max(0, LOGIN_MAX_FAILS - entry.fails) : null;
+    const remaining = entry ? Math.max(0, Math.min(LOGIN_MAX_FAILS - entry.fails, LOGIN_GLOBAL_MAX_FAILS - (entry.global_fails || 0))) : null;
     return json({ ok: false, error: remaining !== null ? `Invalid password. ${remaining} attempt${remaining === 1 ? "" : "s"} left before a 15-minute lockout.` : "Invalid password." }, 401);
   }
   await clearLoginLockout(context).catch(() => {});
