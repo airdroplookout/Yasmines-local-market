@@ -249,3 +249,50 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .promo-banner{font-size:.82rem;letter-spacing:.05em;padding:12px 54px 12px 14px;white-space:nowrap}
 }
 @media (prefers-reduced-motion: reduce){ .promo-modal{animation:none} }
+
+/* Manage page styles — moved here from the inline <style> in manage.html
+   (Nov 25, 2026) so the site can run under an enforced CSP (audit M-3). */
+:root{--rose:var(--accent);--rose2:#A03F1E;--goldbg:var(--gold-soft);--bg2:var(--surface2);--text:var(--ink)}
+.manage{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+.manage h1{font-size:clamp(28px,3.4vw,38px)}
+.manage h2{font-size:24px;margin:0 0 6px}
+.manage .sub{color:var(--muted);margin:6px 0 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;margin-top:22px}
+.banner{background:var(--goldbg);border:1px dashed var(--gold);border-radius:12px;padding:14px 18px;font-size:15px;margin-top:22px}
+.banner b{color:var(--rose)}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
+.mstat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.mstat strong{display:block;font-family:"Fraunces",Georgia,serif;font-size:26px}
+.mstat span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mfield{margin:0 0 14px}
+.mfield label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.mfield input,.mfield select,.mfield textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;background:var(--bg);color:var(--ink);min-height:48px}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{outline:2px solid var(--rose);outline-offset:1px}
+.mfield textarea{min-height:90px;resize:vertical}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mbtn{background:var(--rose);color:#fff;border:0;border-radius:999px;padding:13px 24px;font-weight:800;font-size:15px;min-height:48px;cursor:pointer}
+.mbtn:hover{filter:brightness(1.06)}
+.mbtn-ghost{background:transparent;color:var(--text);border:1px solid var(--rose)}
+.mlink{background:none;border:0;color:var(--rose);font-weight:700;padding:12px 4px;min-height:44px;font-size:14px;cursor:pointer}
+.mtable{width:100%;border-collapse:collapse;font-size:14px;margin-top:14px}
+.mtable th,.mtable td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.mtable th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mtable .pill{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--rose);border-radius:999px;padding:3px 9px;font-weight:700;white-space:nowrap}
+.mtable .pill.arch{background:var(--goldbg);color:#7a5a17}
+.mini{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;min-height:44px;margin:2px 2px 2px 0;cursor:pointer}
+.mini.danger{color:var(--rose);border-color:#e3b7ac}
+.note{color:var(--muted);font-size:14px;margin:12px 0 0}
+.err{display:none;color:#a34d4d;font-weight:700;margin-top:10px}
+.switchrow{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
+.switchrow input{width:20px;height:20px;margin-top:2px;flex:none}
+.switchrow b{display:block;font-size:15px}
+.switchrow span{font-size:13px;color:var(--muted)}
+.mnav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.mnav .chip{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;color:var(--ink)}
+.mnav .chip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.tablewrap{overflow-x:auto}
+.backlink{display:inline-block;margin-top:26px;color:var(--rose);font-weight:700;padding:12px 0;min-height:44px;text-decoration:none}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#2b1d16;color:#ffe9d6;padding:13px 22px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:700px){.mgrid{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:1fr}.card{padding:20px 16px}}
+
