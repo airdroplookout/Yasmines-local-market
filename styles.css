@@ -33,7 +33,7 @@ a{color:var(--accent)}
 .brand svg{width:1.45em;height:1.45em;vertical-align:-0.28em;margin-right:.2em;color:var(--sage)}
 .brand span{color:var(--accent)}
 .topbar-inner .brand{justify-self:start;white-space:nowrap}
-.topbar-tagline{justify-self:center;text-align:center;font-size:.85rem;color:var(--sage);font-weight:600;line-height:1.3;min-width:0}
+.topbar-tagline{justify-self:center;text-align:center;font-size:1rem;color:var(--sage);font-weight:600;line-height:1.3;min-width:0}
 .topbar-tag{margin-left:auto;font-size:.88rem;color:var(--muted);font-weight:700}
 .topnav-link{justify-self:end;white-space:nowrap;font-weight:800;text-decoration:none;color:var(--ink);padding:10px 4px;min-height:44px;display:inline-flex;align-items:center}
 .topnav-link:hover{color:var(--accent)}
