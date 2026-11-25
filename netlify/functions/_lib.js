@@ -8,9 +8,9 @@
 //    (no custom domain yet).
 //  - loginClientId() HMAC fallback secret changed to
 //    "yasmines-local-market".
-//  - sendViaResend() is kept for the forgot-password email only; the
-//    reserve form still posts to FormSubmit (see README.md), and no
-//    subscriber sends exist on this site.
+//  - sendViaResend() is used by the forgot-password flow and by the
+//    server-side owner emails (reserve, contact, product submissions),
+//    which replaced the old browser FormSubmit posts (audit N-M4, Nov 25 2026).
 // Server-side only. Secrets come from process.env (Netlify Site settings
 // -> Environment variables), never from the browser.
 //
@@ -74,7 +74,7 @@ export function handlerFor(methods, getParams) {
   return async (event) => {
     const fn = methods[event.httpMethod];
     if (!fn) {
-      return { statusCode: 405, headers: { "content-type": "application/json" }, body: JSON.stringify({ ok: false, error: "Method not allowed" }) };
+      return { statusCode: 405, headers: { "content-type": "application/json", "x-content-type-options": "nosniff", "x-frame-options": "DENY", "referrer-policy": "strict-origin-when-cross-origin", "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()" }, body: JSON.stringify({ ok: false, error: "Method not allowed" }) };
     }
     try {
       const res = await fn(buildContext(event, getParams));
@@ -83,7 +83,8 @@ export function handlerFor(methods, getParams) {
       res.headers.forEach((v, k) => { headers[k] = v; });
       return { statusCode: res.status, headers, body: text };
     } catch (e) {
-      return { statusCode: 500, headers: { "content-type": "application/json" }, body: JSON.stringify({ ok: false, error: String(e.message || e) }) };
+      console.error("function error:", e);
+      return { statusCode: 500, headers: { "content-type": "application/json" }, body: JSON.stringify({ ok: false, error: "Server error" }) };
     }
   };
 }
@@ -161,18 +162,26 @@ export async function verifyAdminSession(context, token) {
 //  - GLOBAL: 30 wrong passwords inside 15 minutes across ALL IPs —
 //    much looser than the old 5, so a single stranger can no longer lock
 //    the owner out with 5 empty POSTs.
-// Counting is ATOMIC: recordLoginAttemptRpc() bumps the counter inside
-// one Postgres transaction (SELECT ... FOR UPDATE in
-// record_login_attempt()), so parallel wrong passwords can no longer
-// undercount the way the old settings-table read-modify-write did.
-// Until the owner runs supabase/login-attempts.sql once, the RPC does
-// not exist and every function below falls back to the legacy
-// settings-table state, so login keeps working — the new path only
-// takes over once the table + function exist (no redeploy needed).
-// State lives in the settings table (key admin_login_lockout) in the
-// legacy path so it survives across lambda invocations. Only the IP is
-// stored, hashed — never the raw address. The lockout is checked before
-// the password is compared, so it cannot be bypassed by switching
+// Counting is ATOMIC: recordLoginAttemptsRpc() bumps BOTH budgets in
+// one Postgres transaction (record_login_attempt_both() in
+// supabase/login-attempts-single-rpc.sql), so parallel wrong passwords
+// can no longer undercount the way the old settings-table
+// read-modify-write did, and a failed attempt can never be
+// half-counted (audit N-M3: the old code made two sequential RPC calls
+// and fell back to a legacy store nothing read when only one failed).
+// Rollout rule — the legacy settings-table state (key
+// admin_login_lockout) applies ONLY while the login_attempts table
+// does not exist yet (owner has not run supabase/login-attempts.sql).
+// Once the table exists, the atomic path is the only path: if the RPC
+// then fails (function dropped, grant revoked), recordFailedLogin
+// throws and login is refused (500) instead of falling back to legacy
+// state nothing reads. Deploy order matters: run
+// supabase/login-attempts-single-rpc.sql BEFORE deploying this code,
+// or wrong-password logins 500 until it is run (correct-password
+// logins are unaffected — only recordFailedLogin needs the RPC).
+// State lives in the settings table in the legacy path so it survives
+// across lambda invocations. Only the IP is stored, hashed — never the
+// raw address. The lockout is checked before the password is compared, so it cannot be bypassed by switching
 // endpoints: /api/admin/login is the only place a password is ever
 // accepted.
 // FAIL CLOSED: if the lockout state cannot be read or written, login is
@@ -190,35 +199,55 @@ function loginClientId(context) {
     || "unknown";
   return createHmac("sha256", context.env.ADMIN_API_KEY || "yasmines-local-market").update(ip).digest("hex").slice(0, 16);
 }
-// One atomic increment via the record_login_attempt() Postgres
-// function. Returns { fails, locked_until } or null when the function
-// does not exist yet (owner has not run login-attempts.sql) or the call
-// fails for any other reason — the caller then uses the legacy path.
-async function recordLoginAttemptRpc(context, clientId, maxFails) {
+// One atomic increment of BOTH budgets via the
+// record_login_attempt_both() Postgres function: a single RPC call
+// bumps the per-IP row and the global row inside one transaction, so
+// an attempt is never half-counted (audit N-M3). Returns
+// { fails, global_fails, locked_until } or null when the call fails —
+// the caller must then FAIL CLOSED (throw), never fall back to legacy
+// state, when the login_attempts table exists.
+// The global row id "__global__" must match GLOBAL_LOCKOUT_ID below
+// and the v_global_id constant inside record_login_attempt_both().
+async function recordLoginAttemptsRpc(context, clientId) {
   try {
-    const rows = await sbJson(context, "rpc/record_login_attempt", {
+    const rows = await sbJson(context, "rpc/record_login_attempt_both", {
       method: "POST",
-      body: JSON.stringify({ p_client_id: clientId, p_max_fails: maxFails, p_window_ms: LOGIN_WINDOW_MS, p_lockout_ms: LOGIN_LOCKOUT_MS }),
+      body: JSON.stringify({ p_client_id: clientId, p_ip_max_fails: LOGIN_MAX_FAILS, p_global_max_fails: LOGIN_GLOBAL_MAX_FAILS, p_window_ms: LOGIN_WINDOW_MS, p_lockout_ms: LOGIN_LOCKOUT_MS }),
     });
-    const row = Array.isArray(rows) ? rows[0] : null;
-    if (!row || typeof row.fails !== "number") return null;
-    return { fails: row.fails, locked_until: row.locked_until ? Date.parse(row.locked_until) : undefined };
+    if (!Array.isArray(rows)) return null;
+    const ip = rows.find((r) => r.client_id === clientId);
+    const global = rows.find((r) => r.client_id === GLOBAL_LOCKOUT_ID);
+    if (!ip || !global || typeof ip.fails !== "number" || typeof global.fails !== "number") return null;
+    const locked_until = Math.max(ip.locked_until ? Date.parse(ip.locked_until) : 0, global.locked_until ? Date.parse(global.locked_until) : 0) || undefined;
+    return { fails: ip.fails, global_fails: global.fails, locked_until };
   } catch { return null; }
 }
-// Read both lockout rows from the new login_attempts table. Returns
-// null when the table does not exist yet — the caller uses the legacy
-// path instead. Only hashed client ids are stored, never raw IPs.
+// True when the login_attempts table exists, false when it does not
+// exist yet (fresh rollout — the legacy fallback is allowed), and
+// throws on any other error (wrong key, Supabase down, ...). A missing
+// table is a 404 from PostgREST; anything else must fail closed rather
+// than silently disabling the lockout.
+async function loginAttemptsTableExists(context) {
+  const r = await sb(context, "login_attempts?select=client_id&limit=1");
+  await r.text();
+  if (r.ok) return true;
+  if (r.status === 404) return false;
+  throw new Error(`Supabase ${r.status} reading login_attempts`);
+}
+// Read both lockout rows from the login_attempts table. Callers check
+// loginAttemptsTableExists() first, so this runs only when the table
+// exists — and a read failure here THROWS (fail closed) instead of
+// returning null and silently falling back to legacy state nothing
+// reads (audit N-M3). Only hashed client ids are stored, never raw IPs.
 async function readLoginAttempts(context) {
-  try {
-    const ids = `${loginClientId(context)},${GLOBAL_LOCKOUT_ID}`;
-    const rows = await sbJson(context, `login_attempts?select=client_id,fails,locked_until&client_id=in.(${ids})`);
-    if (!Array.isArray(rows)) return null;
-    const out = {};
-    for (const r of rows) {
-      out[r.client_id] = { fails: r.fails, locked_until: r.locked_until ? Date.parse(r.locked_until) : undefined };
-    }
-    return out;
-  } catch { return null; }
+  const ids = `${loginClientId(context)},${GLOBAL_LOCKOUT_ID}`;
+  const rows = await sbJson(context, `login_attempts?select=client_id,fails,locked_until&client_id=in.(${ids})`);
+  if (!Array.isArray(rows)) throw new Error("login_attempts read returned no rows");
+  const out = {};
+  for (const r of rows) {
+    out[r.client_id] = { fails: r.fails, locked_until: r.locked_until ? Date.parse(r.locked_until) : undefined };
+  }
+  return out;
 }
 async function readLockoutState(context) {
   // Throws on read failure instead of returning an empty state: a
@@ -237,48 +266,51 @@ async function writeLockoutState(context, state) {
 }
 export async function checkLoginAllowed(context) {
   const now = Date.now();
-  const attempts = await readLoginAttempts(context);
-  if (attempts) {
-    for (const id of [GLOBAL_LOCKOUT_ID, loginClientId(context)]) {
-      const entry = attempts[id];
-      if (entry && entry.locked_until && now < entry.locked_until) {
-        return { allowed: false, retry_after_ms: entry.locked_until - now };
-      }
+  // Legacy fallback ONLY when the table does not exist yet (fresh
+  // rollout). When it exists, readLoginAttempts() throws on failure
+  // and login is refused — never legacy state (audit N-M3).
+  if (!(await loginAttemptsTableExists(context))) {
+    const state = await readLockoutState(context);
+    const global = state[GLOBAL_LOCKOUT_ID];
+    if (global && global.locked_until && now < global.locked_until) {
+      return { allowed: false, retry_after_ms: global.locked_until - now };
+    }
+    const entry = state[loginClientId(context)];
+    if (entry && entry.locked_until && now < entry.locked_until) {
+      return { allowed: false, retry_after_ms: entry.locked_until - now };
     }
     return { allowed: true };
   }
-  // Legacy fallback (login_attempts table not created yet).
-  const state = await readLockoutState(context);
-  const global = state[GLOBAL_LOCKOUT_ID];
-  if (global && global.locked_until && now < global.locked_until) {
-    return { allowed: false, retry_after_ms: global.locked_until - now };
-  }
-  const entry = state[loginClientId(context)];
-  if (entry && entry.locked_until && now < entry.locked_until) {
-    return { allowed: false, retry_after_ms: entry.locked_until - now };
+  const attempts = await readLoginAttempts(context);
+  for (const id of [GLOBAL_LOCKOUT_ID, loginClientId(context)]) {
+    const entry = attempts[id];
+    if (entry && entry.locked_until && now < entry.locked_until) {
+      return { allowed: false, retry_after_ms: entry.locked_until - now };
+    }
   }
   return { allowed: true };
 }
-function bumpLockoutEntry(entry, now) {
+function bumpLockoutEntry(entry, now, maxFails = LOGIN_MAX_FAILS) {
   const e = entry || { fails: 0, first_at: now };
   if (now - (e.first_at || now) > LOGIN_WINDOW_MS) { e.fails = 0; e.first_at = now; delete e.locked_until; }
   e.fails += 1;
-  if (e.fails >= LOGIN_MAX_FAILS) e.locked_until = now + LOGIN_LOCKOUT_MS;
+  if (e.fails >= maxFails) e.locked_until = now + LOGIN_LOCKOUT_MS;
   return e;
 }
 export async function recordFailedLogin(context) {
   const id = loginClientId(context);
-  // Atomic path: one RPC call per budget. Both must succeed, or the
-  // whole attempt falls back to the legacy path (never half-counted).
-  const ip = await recordLoginAttemptRpc(context, id, LOGIN_MAX_FAILS);
-  const global = await recordLoginAttemptRpc(context, GLOBAL_LOCKOUT_ID, LOGIN_GLOBAL_MAX_FAILS);
-  if (ip && global) {
-    const locked_until = Math.max(ip.locked_until || 0, global.locked_until || 0) || undefined;
-    return { fails: ip.fails, global_fails: global.fails, locked_until };
+  // Atomic path: ONE RPC call bumps BOTH budgets in a single
+  // transaction (audit N-M3). If the table exists but the RPC fails,
+  // FAIL CLOSED — throw, so the caller refuses the login (500).
+  // Falling back to the legacy settings state would write to a store
+  // nothing reads while the table exists, silently disabling the
+  // lockout. The legacy path below runs ONLY when the table does not
+  // exist yet (fresh rollout, login-attempts.sql not run).
+  if (await loginAttemptsTableExists(context)) {
+    const result = await recordLoginAttemptsRpc(context, id);
+    if (!result) throw new Error("record_login_attempt_both failed while login_attempts exists");
+    return result;
   }
-  // Legacy fallback (RPC not available yet): settings-table
-  // read-modify-write. Still correct for one-at-a-time attempts; the
-  // atomic path replaces it as soon as login-attempts.sql is run.
   const state = await readLockoutState(context);
   const now = Date.now();
   // Prune per-IP entries older than a day so the row does not grow
@@ -288,23 +320,28 @@ export async function recordFailedLogin(context) {
     if (k === GLOBAL_LOCKOUT_ID) continue;
     if (!v || now - (v.first_at || 0) > 24 * 60 * 60 * 1000) delete state[k];
   }
-  state[id] = bumpLockoutEntry(state[id], now);
-  const legacyGlobal = bumpLockoutEntry(state[GLOBAL_LOCKOUT_ID], now);
+  state[id] = bumpLockoutEntry(state[id], now, LOGIN_MAX_FAILS);
+  const legacyGlobal = bumpLockoutEntry(state[GLOBAL_LOCKOUT_ID], now, LOGIN_GLOBAL_MAX_FAILS);
   state[GLOBAL_LOCKOUT_ID] = legacyGlobal;
   await writeLockoutState(context, state);
-  // Report the stricter of the two budgets, so the "attempts left"
-  // message always reflects the global budget an attacker actually faces.
-  const fails = Math.max(state[id].fails, legacyGlobal.fails);
+  // Per-IP fails and global fails are reported separately, so the
+  // "attempts left" message is min(5 - fails, 30 - global_fails).
   const locked_until = Math.max(state[id].locked_until || 0, legacyGlobal.locked_until || 0) || undefined;
-  return { fails, global_fails: legacyGlobal.fails, locked_until };
+  return { fails: state[id].fails, global_fails: legacyGlobal.fails, locked_until };
 }
 export async function clearLoginLockout(context) {
-  // New table: delete both rows (ignored when the table does not exist
-  // yet — the legacy delete below still runs).
-  try {
+  // Same rollout rule as the rest of the lockout (audit N-M3): the
+  // login_attempts table is the live store once it exists, so a delete
+  // failure there THROWS instead of silently leaving a lockout in
+  // place. The legacy settings state is still cleared too, so a later
+  // rollback to the legacy path cannot resurrect a stale lockout.
+  // Throws propagate to the caller: admin-reset aborts with 500 and
+  // leaves the reset token live (audit L-5); admin-login only calls
+  // this after a successful password check.
+  if (await loginAttemptsTableExists(context)) {
     const ids = `${loginClientId(context)},${GLOBAL_LOCKOUT_ID}`;
     await sbJson(context, `login_attempts?client_id=in.(${ids})`, { method: "DELETE" });
-  } catch { /* legacy path below still clears the old state */ }
+  }
   const state = await readLockoutState(context);
   delete state[loginClientId(context)];
   delete state[GLOBAL_LOCKOUT_ID];
@@ -396,6 +433,19 @@ export async function createAdminResetToken(context) {
   await setSettingValue(context, ADMIN_RESET_TOKEN_KEY, JSON.stringify(record));
   return token;
 }
+// The stored reset record (hash + expiry), or null when none exists
+// or the stored row is corrupt. Exported so admin-forgot can tell a
+// live token from an expired one. The raw token is never stored —
+// only its SHA-256 hash — so a live token cannot be re-sent from
+// here; see admin-forgot.js for why that matters.
+export async function getAdminResetTokenRecord(context) {
+  const raw = await getSettingValue(context, ADMIN_RESET_TOKEN_KEY);
+  if (!raw) return null;
+  try {
+    const record = JSON.parse(raw);
+    return (record && typeof record === "object") ? record : null;
+  } catch { return null; }
+}
 export async function verifyAdminResetToken(context, token) {
   try {
     if (typeof token !== "string" || !token) return false;
@@ -411,20 +461,39 @@ export async function verifyAdminResetToken(context, token) {
 export async function consumeAdminResetToken(context) {
   await deleteSettingValue(context, ADMIN_RESET_TOKEN_KEY);
 }
-// Rolling 1-hour window, max 3 reset requests. Returns true when this
-// request may proceed (and records it); false when rate-limited. The
-// caller answers with the same generic message either way.
-export async function checkResetRequestAllowed(context) {
-  const now = Date.now();
+// Rolling 1-hour window, max 3 reset requests site-wide AND max 1 per
+// IP (audit L-4: one stranger must not burn the owner's only recovery
+// path). Returns true when this request may proceed (and records it
+// on both budgets); false when rate-limited. The caller answers with
+// the same generic message either way.
+// Residual race (same class as audit N-L22): both budgets are
+// read-modify-write in the settings table, so two parallel requests
+// from one IP can both read count 0 and both pass. The window is
+// small and the damage is capped at one extra email per race.
+const ADMIN_RESET_REQUESTS_IP_PREFIX = "admin_reset_requests_ip_";
+export const ADMIN_RESET_MAX_PER_HOUR_PER_IP = 1;
+async function readHourlyCounter(context, key, now) {
   let rec = { window_start: now, count: 0 };
   try {
-    const raw = await getSettingValue(context, ADMIN_RESET_REQUESTS_KEY);
+    const raw = await getSettingValue(context, key);
     if (raw) { const parsed = JSON.parse(raw); if (parsed && typeof parsed === "object") rec = parsed; }
   } catch { /* corrupt row: start a fresh window */ }
   if (now - (rec.window_start || 0) > RESET_WINDOW_MS) rec = { window_start: now, count: 0 };
-  if ((rec.count || 0) >= ADMIN_RESET_MAX_PER_HOUR) return false;
-  rec.count = (rec.count || 0) + 1;
-  await setSettingValue(context, ADMIN_RESET_REQUESTS_KEY, JSON.stringify(rec));
+  return rec;
+}
+export async function checkResetRequestAllowed(context) {
+  const now = Date.now();
+  // Read both budgets before bumping either, so a request blocked by
+  // one budget does not burn a slot on the other.
+  const siteRec = await readHourlyCounter(context, ADMIN_RESET_REQUESTS_KEY, now);
+  const ipKey = `${ADMIN_RESET_REQUESTS_IP_PREFIX}${loginClientId(context)}`;
+  const ipRec = await readHourlyCounter(context, ipKey, now);
+  if ((siteRec.count || 0) >= ADMIN_RESET_MAX_PER_HOUR) return false;
+  if ((ipRec.count || 0) >= ADMIN_RESET_MAX_PER_HOUR_PER_IP) return false;
+  siteRec.count = (siteRec.count || 0) + 1;
+  ipRec.count = (ipRec.count || 0) + 1;
+  await setSettingValue(context, ADMIN_RESET_REQUESTS_KEY, JSON.stringify(siteRec));
+  await setSettingValue(context, ipKey, JSON.stringify(ipRec));
   return true;
 }
 // Revoke every Manage session (bumps admin_session_version, as
@@ -463,7 +532,10 @@ export async function sbJson(context, path, opts = {}) {
   const r = await sb(context, path, opts);
   const text = await r.text();
   let data = null; try { data = JSON.parse(text); } catch { data = text; }
-  if (!r.ok) throw new Error(`Supabase ${r.status}: ${typeof data === "string" ? data : JSON.stringify(data)}`);
+  if (!r.ok) {
+    console.error("Supabase error:", r.status, typeof data === "string" ? data : JSON.stringify(data));
+    throw new Error("Server error");
+  }
   return data;
 }
 // Listing categories — the owner's words for the market.
@@ -482,14 +554,14 @@ export const LISTING_CATEGORY_LABELS = {
   "christmas-gifts": "Christmas Gifts",
   other: "Other",
 };
-// Send one email via the Resend Send Email API. Used only by the
-// forgot-password flow on this site (the reserve form still posts to
-// FormSubmit). Server-side only: RESEND_API_KEY comes from env (Netlify
-// Site settings -> Environment variables). From address defaults to
-// RESEND_SENDER_EMAIL; until a market domain is bought and verified in
-// Resend, the fallback is Resend's test sender (onboarding@resend.dev),
-// which only delivers to the Resend account owner's own address
-// (taradil@gmail.com) — good for a reset email to the owner, not for
+// Send one email via the Resend Send Email API. Used by the
+// forgot-password flow and by the server-side owner emails (reserve,
+// contact, product submissions). Server-side only: RESEND_API_KEY comes
+// from env (Netlify Site settings -> Environment variables). From address
+// defaults to RESEND_SENDER_EMAIL; until a market domain is bought and
+// verified in Resend, the fallback is Resend's test sender
+// (onboarding@resend.dev), which only delivers to the Resend account
+// owner's own address — good for a reset email to the owner, not for
 // sending to anyone else.
 export async function sendViaResend(context, { to, subject, html }) {
   const apiKey = context.env.RESEND_API_KEY;
@@ -499,7 +571,7 @@ export async function sendViaResend(context, { to, subject, html }) {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
     body: JSON.stringify({
-      from: `Yasmine's Local Market <${from}>`,
+      from: `Locally Crafted CA <${from}>`,
       to: [to],
       subject,
       html,
@@ -507,6 +579,12 @@ export async function sendViaResend(context, { to, subject, html }) {
   });
   if (!r.ok) throw new Error(`Resend ${r.status}: ${await r.text()}`);
   return r.json();
+}
+// Owner notification email: same Resend send, always to the owner's
+// address (OWNER_EMAIL) — the caller never supplies a recipient, so a
+// public endpoint cannot be used to send mail to anyone else.
+export async function sendOwnerEmail(context, subject, html) {
+  return sendViaResend(context, { to: OWNER_EMAIL, subject, html });
 }
 // Real email format only, max 50 characters (owner's rule, Nov 23 2026):
 // letters/digits and . _ % + - before the @, a domain with at least one dot.
@@ -527,10 +605,9 @@ export function addDaysIso(iso, n) {
   const d = new Date(iso + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10);
 }
 // Canonical public base URL for links readers see (reset link).
-// No custom domain yet: the live site is yasmines-local-market.netlify.app.
-// Once a domain is bought, set SITE_URL in Netlify to https://<that domain>
-// and this value is used as-is.
+// Custom domain is live: locallycrafted.ca. Set SITE_URL in Netlify
+// to https://locallycrafted.ca and this value is used as-is.
 export function siteBaseUrl(env) {
-  const raw = String((env && env.SITE_URL) || "https://yasmines-local-market.netlify.app").trim().replace(/\/+$/, "");
-  return raw || "https://yasmines-local-market.netlify.app";
+  const raw = String((env && env.SITE_URL) || "https://locallycrafted.ca").trim().replace(/\/+$/, "");
+  return raw || "https://locallycrafted.ca";
 }
