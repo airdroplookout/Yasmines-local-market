@@ -28,7 +28,7 @@ function vendorBadge(p) {
   var inner = '<span class="vendor-mono" aria-hidden="true">' + v.initials + '</span>' +
     '<img src="' + v.logo + '" alt="" loading="lazy" onerror="this.remove()" />';
   if (v.page) {
-    return '<a class="vendor-badge" href="' + v.page + '" title="Visit ' + v.shop + '" aria-label="Visit ' + v.shop + ' — ' + v.name + '">' + inner + '</a>';
+    return '<a class="vendor-badge" href="' + v.page + '" title="See all from ' + v.name + '" aria-label="See all from ' + v.name + '">' + inner + '</a>';
   }
   return '<span class="vendor-badge" title="' + v.shop + '">' + inner + '</span>';
 }
@@ -70,6 +70,7 @@ var current = window.PAGE_PRODUCTS ? window.PAGE_PRODUCTS[0] : "mug";
       '<div class="card-body">' +
         '<h3>' + p.name + ' <span class="example-tag">Example</span></h3>' +
         '<p class="maker">by ' + p.maker + ' — ' + p.shop + '</p>' +
+        (VENDORS[p.vendor] && VENDORS[p.vendor].page ? '<p class="vendor-link"><a href="' + VENDORS[p.vendor].page + '">See all from ' + VENDORS[p.vendor].name + ' →</a></p>' : '') +
         '<p class="desc">' + p.desc + '</p>' +
         '<div class="card-row"><p class="price-sm">' + p.price + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + id + '">Reserve this item</button></div>' +
