@@ -150,9 +150,6 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .product-summary img{width:100%;aspect-ratio:4/3;object-fit:cover}
 .product-summary .ps-body{padding:18px}
 .product-summary h2{font-size:1.4rem;margin:4px 0 4px}
-.email-preview{margin-top:14px;background:var(--gold-soft);border:1px dashed color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:12px;padding:14px;font-size:.92rem}
-.email-preview b{display:block;margin-bottom:6px}
-.email-preview p{margin:0;color:var(--muted)}
 form.reserve{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
 form.reserve h2{font-size:1.5rem;margin-bottom:6px}
 form.reserve .sub{color:var(--muted);margin:0 0 18px}
@@ -162,6 +159,9 @@ label .opt{font-weight:600;color:var(--muted);font-size:.88rem}
 label .req{color:var(--accent)}
 input[type="text"],input[type="email"],input[type="tel"],textarea,select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--bg);color:var(--ink);min-height:48px}
 textarea{min-height:120px;resize:vertical}
+/* Missing mandatory field: terracotta outline/border + light tint, so the
+   buyer can see at a glance which field to go back and fill in. */
+input.field-missing,textarea.field-missing{border-color:var(--accent);background:var(--accent-soft);outline:2px solid var(--accent);outline-offset:1px}
 .hint{font-size:.88rem;color:var(--muted);margin-top:6px}
 .delivery-note{display:none;background:var(--gold-soft);border:1px dashed color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:10px;padding:11px 13px;margin:8px 0 0;font-size:.92rem}
 .delivery-note.show{display:block}
