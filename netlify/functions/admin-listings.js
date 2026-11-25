@@ -27,7 +27,14 @@ function cleanListing(b) {
   }
   if (b.maker_id !== undefined) patch.maker_id = String(b.maker_id).trim();
   if (b.name !== undefined) patch.name = String(b.name).trim().slice(0, 120);
-  if (b.price !== undefined) patch.price = String(b.price).trim().slice(0, 20);
+  if (b.price !== undefined) {
+    patch.price = String(b.price).trim().slice(0, 20);
+    // Audit #3 N-L4: price floor $1 / cap $10,000, same range as the
+    // public submit path — $0 must not become a "free" live listing.
+    if (!/^\$?\d{1,6}(\.\d{1,2})?$/.test(patch.price)) return { error: "price must be a number, like 28 or $28" };
+    const priceNum = parseFloat(patch.price.replace(/^\$/, ""));
+    if (!Number.isFinite(priceNum) || priceNum < 1 || priceNum > 10000) return { error: "price must be between $1 and $10,000" };
+  }
   if (b.description !== undefined) patch.description = String(b.description).trim().slice(0, 500) || null;
   if (b.photo !== undefined) patch.photo = String(b.photo).trim().slice(0, 500) || null;
   if (b.position !== undefined) {
