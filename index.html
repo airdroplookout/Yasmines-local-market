@@ -16,7 +16,7 @@
 
 <header class="topbar">
   <div class="topbar-inner">
-    <a class="brand" href="#" onclick="showView(1);return false;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13C7 13 4 9 4 5c4 0 8 3.5 8 8Z"/><path d="M12 11c0-4.5 3-8 8-8 0 5-3.5 8-8 8Z"/><path d="M11 12 6.5 6.5"/><path d="M13 10l5-5.5"/><path d="M12 21V11"/><path d="M3 21h18"/></svg>locallycrafted<span>.ca</span></a>
+    <a class="brand" href="#" data-showview="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13C7 13 4 9 4 5c4 0 8 3.5 8 8Z"/><path d="M12 11c0-4.5 3-8 8-8 0 5-3.5 8-8 8Z"/><path d="M11 12 6.5 6.5"/><path d="M13 10l5-5.5"/><path d="M12 21V11"/><path d="M3 21h18"/></svg>locallycrafted<span>.ca</span></a>
     <span class="topbar-tagline">Handmade for our community</span>
     <a class="topnav-link" href="contact.html">Contact</a>
   </div>
@@ -59,7 +59,7 @@
     <!-- Spotlight: one featured product -->
     <!-- Featured maker: Mary Stones -->
     <article class="spotlight featured-maker">
-      <a class="vendor-badge vendor-badge-spot" href="mary-stones.html" title="See all from Mary" aria-label="See all from Mary — Mary Stones"><span class="vendor-mono" aria-hidden="true">MS</span><img src="logos/mary-stones.png" alt="" loading="lazy" onerror="this.remove()" /></a>
+      <a class="vendor-badge vendor-badge-spot" href="mary-stones.html" title="See all from Mary" aria-label="See all from Mary — Mary Stones"><span class="vendor-mono" aria-hidden="true">MS</span><img src="logos/mary-stones.png" alt="" loading="lazy" data-remove-on-error /></a>
       <img src="images/mary-vase.webp" alt="Hand-thrown ceramic vase in creamy white glaze by Mary Stones" />
       <div class="spotlight-body">
         <span class="tag">Featured maker</span>
@@ -94,7 +94,7 @@
 
   <!-- ============ PAGE 2 : RESERVE FORM ============ -->
   <section class="view" id="view-2" aria-label="Reserve form page">
-    <button class="backlink" onclick="showView(1)">← Back to the shop</button>
+    <button class="backlink" data-showview="1">← Back to the shop</button>
     <div class="form-layout">
       <div>
         <div class="product-summary">
@@ -196,8 +196,8 @@
       </div>
 
       <div class="confirm-actions">
-        <button class="btn btn-primary" onclick="showView(1)">← Back to the shop</button>
-        <button class="btn btn-ghost" onclick="showView(2)">Reserve another item</button>
+        <button class="btn btn-primary" data-showview="1">← Back to the shop</button>
+        <button class="btn btn-ghost" data-showview="2">Reserve another item</button>
       </div>
       <p class="hint" style="margin-top:14px">Didn’t get a reply within a day or two? Check your spam folder — the maker’s reply comes from their own email.</p>
     </div>
