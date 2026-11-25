@@ -370,15 +370,14 @@ export async function sbJson(context, path, opts = {}) {
   return data;
 }
 // Listing categories — the owner's words for the market.
-export const LISTING_CATEGORIES = ["pottery", "knitting", "jewelry", "candles", "food", "sewing", "other"];
+// Fixed list (Nov 25, 2026): makers pick one of these, no free text.
+export const LISTING_CATEGORIES = ["pottery", "jewelry", "textiles", "woodwork", "other"];
 export const LISTING_CATEGORY_LABELS = {
   pottery: "Pottery",
-  knitting: "Knitting",
   jewelry: "Jewelry",
-  candles: "Candles",
-  food: "Food & Honey",
-  sewing: "Sewing",
-  other: "Other crafts",
+  textiles: "Textiles",
+  woodwork: "Woodwork",
+  other: "Other",
 };
 // Send one email via the Resend Send Email API. Used only by the
 // forgot-password flow on this site (the reserve form still posts to
