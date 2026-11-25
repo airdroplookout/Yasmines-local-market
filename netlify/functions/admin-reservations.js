@@ -8,9 +8,9 @@
 // DELETE /api/admin/reservations?id=... — delete a reservation for good.
 // Owner only (ADMIN_API_KEY) for every method here.
 //
-// NOTE: the reserve form posts to FormSubmit (the owner's email
-// notification) AND saves a copy here via POST /api/reserve, so new
-// reservations appear in this list as well as in the inbox.
+// NOTE: reservations are saved here via POST /api/reserve, which also
+// emails the owner server-side via Resend — new reservations appear in
+// this list as well as in the inbox.
 import { json, sbJson, requireAdmin, handlerFor } from "./_lib.js";
 
 const STATUSES = ["new", "contacted", "done"];
