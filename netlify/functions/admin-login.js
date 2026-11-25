@@ -6,7 +6,9 @@
 // ADMIN_PASSWORD env var (Netlify Site settings -> Environment
 // variables, server-side only, never in code or in the page).
 // The owner picks it himself; Dexter never invents it. If neither is
-// set yet, login refuses with a clear error instead of guessing.
+// set yet, login refuses with a generic server error instead of
+// guessing (audit N-L20: which setting is missing is logged
+// server-side only, never sent to an unauthenticated caller).
 // On success returns a 30-day session token (HMAC-SHA256 over the expiry,
 // signed with ADMIN_API_KEY — see createAdminSession in _lib.js), which
 // the Manage page stores in localStorage and sends as x-admin-session.
@@ -15,8 +17,8 @@
 // that IP out for 15 minutes (429), plus a looser global budget of 30
 // wrong passwords in 15 minutes across all IPs — so one stranger can no
 // longer lock the owner out with 5 empty POSTs (audit H-3). Counting is
-// atomic via the record_login_attempt() Postgres function once the owner
-// runs supabase/login-attempts.sql; until then the legacy settings-table
+// atomic via the record_login_attempt_both() Postgres function once the owner
+// runs supabase/login-attempts-single-rpc.sql; until then the legacy settings-table
 // lockout applies (see checkLoginAllowed / recordFailedLogin in _lib.js).
 // The check runs before the password is compared, and this endpoint is
 // the only place a password is ever accepted, so the lockout cannot be
@@ -27,7 +29,10 @@
 import { json, handlerFor, createAdminSession, getSessionVersion, checkLoginAllowed, recordFailedLogin, clearLoginLockout, LOGIN_MAX_FAILS, LOGIN_GLOBAL_MAX_FAILS, adminPasswordConfigured, checkAdminPassword } from "./_lib.js";
 
 async function onPost(context) {
-  if (!context.env.ADMIN_API_KEY) return json({ ok: false, error: "ADMIN_API_KEY is not set — it signs the session token." }, 500);
+  if (!context.env.ADMIN_API_KEY) {
+    console.error("admin-login: ADMIN_API_KEY is not set — it signs the session token.");
+    return json({ ok: false, error: "Server configuration error — please try again later." }, 500);
+  }
   let configured;
   try {
     configured = await adminPasswordConfigured(context);
@@ -50,7 +55,10 @@ async function onPost(context) {
   }
   const body = await context.request.json().catch(() => ({}));
   const given = typeof body.password === "string" ? body.password : "";
-  if (!configured) return json({ ok: false, error: "ADMIN_PASSWORD is not set — add it in Netlify Site settings -> Environment variables, then redeploy." }, 500);
+  if (!configured) {
+    console.error("admin-login: no Manage password is configured (no database hash and ADMIN_PASSWORD is not set).");
+    return json({ ok: false, error: "Server configuration error — please try again later." }, 500);
+  }
   let result;
   try {
     result = await checkAdminPassword(context, given);
@@ -59,7 +67,10 @@ async function onPost(context) {
     // refused rather than letting attempts continue unchecked.
     return json({ ok: false, error: "Login is temporarily unavailable — please try again in a few minutes." }, 500);
   }
-  if (result === "not-set") return json({ ok: false, error: "ADMIN_PASSWORD is not set — add it in Netlify Site settings -> Environment variables, then redeploy." }, 500);
+  if (result === "not-set") {
+    console.error("admin-login: ADMIN_PASSWORD is not set and no database password hash exists.");
+    return json({ ok: false, error: "Server configuration error — please try again later." }, 500);
+  }
   if (!given || result !== "ok") {
     let entry;
     try {
