@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Submit a product to Locally Crafted CA — share one handmade piece with the market. We check every product before it goes on the site." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E" />
+<title>Submit a product — Locally Crafted CA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Kalam:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13C7 13 4 9 4 5c4 0 8 3.5 8 8Z"/><path d="M12 11c0-4.5 3-8 8-8 0 5-3.5 8-8 8Z"/><path d="M11 12 6.5 6.5"/><path d="M13 10l5-5.5"/><path d="M12 21V11"/><path d="M3 21h18"/></svg>locallycrafted<span>.ca</span></a>
+    <span class="topbar-tagline">Handmade for our community</span>
+    <a class="topnav-link" href="contact.html">Contact</a>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <span class="hero-badge">✿ For makers</span>
+    <h1>Submit a product</h1>
+    <p class="lead">Share one handmade piece with the market. Tell us about it, add one photo, and we will check it before it goes on the site — nothing you submit appears in the shop until we have approved it.</p>
+  </div>
+
+  <div class="form-layout" style="grid-template-columns:1fr">
+    <form class="reserve" id="submit-form" action="/api/submit-product" method="POST" enctype="multipart/form-data" novalidate>
+      <h2>Your product</h2>
+      <p class="sub">All fields marked * are needed. One product per form — one picture per product.</p>
+      <div class="error" id="form-error" role="alert"></div>
+
+      <div class="field">
+        <label for="s-maker-name">Your name <span class="req">*</span></label>
+        <input type="text" id="s-maker-name" name="maker_name" placeholder="e.g. Sarah L." autocomplete="name" maxlength="100" required />
+      </div>
+      <div class="field">
+        <label for="s-maker-email">Your email <span class="req">*</span></label>
+        <input type="email" id="s-maker-email" name="maker_email" placeholder="you@example.com" autocomplete="email" maxlength="50" required />
+        <p class="hint">We will reply to this address about your product.</p>
+      </div>
+      <div class="field">
+        <label for="s-product-name">Product name <span class="req">*</span></label>
+        <input type="text" id="s-product-name" name="product_name" placeholder="e.g. Speckled Stoneware Mug" maxlength="120" required />
+      </div>
+      <div class="field">
+        <label for="s-category">Product type <span class="req">*</span></label>
+        <select id="s-category" name="category" required>
+          <option value="" selected>Choose the type of product…</option>
+          <option value="christmas-gifts">Christmas Gifts</option>
+          <option value="pottery">Pottery</option>
+          <option value="jewelry">Jewelry</option>
+          <option value="homeware">Homeware</option>
+          <option value="textiles">Textiles</option>
+          <option value="art">Art</option>
+          <option value="cards-stationery">Cards &amp; Stationery</option>
+          <option value="clothing-accessories">Clothing &amp; Accessories</option>
+          <option value="weddings">Weddings</option>
+          <option value="craft-supplies">Craft Supplies</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="s-price">Price ($) <span class="req">*</span></label>
+        <input type="text" id="s-price" name="price" placeholder="e.g. $28" inputmode="decimal" maxlength="20" required />
+        <p class="hint">What the item sells for, in dollars.</p>
+      </div>
+      <div class="field">
+        <label for="s-desc">About the product <span class="req">*</span></label>
+        <textarea id="s-desc" name="description" placeholder="Tell shoppers about your piece — what it is made of, how it is made, what makes it special. This is the text that will appear on the listing." maxlength="1000" required></textarea>
+      </div>
+      <div class="field">
+        <label for="s-photo">One photo of your product <span class="req">*</span></label>
+        <input type="file" id="s-photo" name="photo" accept="image/jpeg,image/png,image/webp" required />
+        <p class="hint">One picture only — JPG, PNG or WebP, up to 5 MB. Pick your best shot.</p>
+        <div class="photo-preview" id="photo-preview" style="display:none">
+          <img id="photo-img" src="" alt="Your product photo preview" />
+          <p class="note" id="photo-name"></p>
+        </div>
+      </div>
+
+      <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <button type="submit" class="btn btn-primary btn-block" id="submit-btn">Send my product for review →</button>
+      <p class="hint" style="text-align:center;margin-top:10px">We check every product first — it will not appear on the site until we approve it.</p>
+    </form>
+  </div>
+
+  <div class="confirm" id="submit-thanks" style="display:none">
+    <div class="check" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h2>Thank you — your product is in for review!</h2>
+    <p class="lead">We have your <strong id="t-product">product</strong> and we will look at it shortly. If we approve it, it will appear on the site — and we will let you know at <strong id="t-email">your email</strong>.</p>
+    <div class="confirm-actions" style="margin-top:20px">
+      <a class="btn btn-primary" href="index.html">← Back to the shop</a>
+      <a class="btn btn-ghost" href="submit-product.html">Submit another product</a>
+    </div>
+  </div>
+
+  <footer>
+    <span><strong>Locally Crafted CA</strong> — a community boutique.</span>
+    <span>Browse → Reserve → The maker contacts you. No online checkout.</span>
+    <span><a href="contact.html">Contact us</a> — for makers who want a spot in the market.</span>
+  </footer>
+</div>
+
+<script src="submit-product.js"></script>
+</body>
+</html>
