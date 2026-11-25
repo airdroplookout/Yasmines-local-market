@@ -82,6 +82,15 @@ a{color:var(--accent)}
 .section-head h2{font-size:1.7rem}
 .section-head p{color:var(--muted);margin:4px 0 0}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+
+/* Category pills — filter the shop grid by craft type (front page).
+   All is filled terracotta when selected; the rest are sage-outline pills. */
+.cat-pills{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 4px}
+.cat-pill{border:1.5px solid var(--sage);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 20px;font-weight:800;font-size:.98rem;cursor:pointer}
+.cat-pill:hover{border-color:var(--accent);color:var(--accent)}
+.cat-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Shown in the grid when the picked category has no listings yet. */
+.grid-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:1.05rem;padding:34px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;position:relative}
 .card img{width:100%;aspect-ratio:4/3;object-fit:cover}
 /* Placeholder block for listings with no photo yet: same 4/3 shape as a
