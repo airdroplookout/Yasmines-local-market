@@ -126,7 +126,7 @@ function mapListing(l) {
   var currentItems = []; /* [{id, product}] currently loaded (live or fallback) */
 
   function categoryLabel(cat) {
-    var labels = {pottery: "Pottery", jewelry: "Jewelry", textiles: "Textiles", woodwork: "Woodwork", other: "Other"};
+    var labels = {pottery: "Pottery", jewelry: "Jewelry", homeware: "Homeware", textiles: "Textiles", art: "Art", other: "Other"};
     return labels[cat] || cat;
   }
 
