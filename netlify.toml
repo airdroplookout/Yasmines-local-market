@@ -1,0 +1,93 @@
+# Yasmine's Local Market — Netlify config.
+# Hosting: Netlify. Static front-end in the market repo
+# (yasmines-local-market), server code in netlify/functions/. No build step.
+# Env vars are set in the Netlify dashboard (Site settings -> Environment
+# variables), never in this file.
+# Deploy: merge this folder into the market repo (see README.md) and
+# deploy to the EXISTING Netlify site yasmines-local-market
+# (https://yasmines-local-market.netlify.app). Do NOT create a second site
+# and do NOT re-point DNS — same site, same address. Until the repo is
+# linked, the same files deploy with Netlify Drop (zip including
+# netlify/functions).
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Hidden owner route: /manage serves the Manage page (no public menu link
+# points to it). ?reset=<token> on /manage opens the password-reset card.
+[[redirects]]
+  from = "/manage"
+  to = "/manage.html"
+  status = 200
+[[redirects]]
+  from = "/manage/*"
+  to = "/manage.html"
+  status = 200
+
+# /api/* rewrites: the front-end keeps calling the same /api/* URLs;
+# Netlify rewrites each one (200, invisible to the browser) to its
+# function. Query strings pass through, so PATCH
+# /api/admin/listings?id=... still works.
+[[redirects]]
+  from = "/api/listings"
+  to = "/.netlify/functions/listings"
+  status = 200
+[[redirects]]
+  from = "/api/admin/login"
+  to = "/.netlify/functions/admin-login"
+  status = 200
+[[redirects]]
+  from = "/api/admin/forgot"
+  to = "/.netlify/functions/admin-forgot"
+  status = 200
+[[redirects]]
+  from = "/api/admin/reset"
+  to = "/.netlify/functions/admin-reset"
+  status = 200
+[[redirects]]
+  from = "/api/admin/logout-all"
+  to = "/.netlify/functions/admin-logout-all"
+  status = 200
+[[redirects]]
+  from = "/api/ping"
+  to = "/.netlify/functions/ping"
+  status = 200
+[[redirects]]
+  from = "/api/track"
+  to = "/.netlify/functions/track"
+  status = 200
+[[redirects]]
+  from = "/api/admin/makers"
+  to = "/.netlify/functions/admin-makers"
+  status = 200
+[[redirects]]
+  from = "/api/admin/listings"
+  to = "/.netlify/functions/admin-listings"
+  status = 200
+[[redirects]]
+  from = "/api/admin/reservations"
+  to = "/.netlify/functions/admin-reservations"
+  status = 200
+[[redirects]]
+  from = "/api/admin/overview"
+  to = "/.netlify/functions/admin-overview"
+  status = 200
+[[redirects]]
+  from = "/api/admin/settings"
+  to = "/.netlify/functions/admin-settings"
+  status = 200
+
+# Security headers on every page.
+# NOTE — no Content-Security-Policy here, deliberately. manage.html uses an
+# inline <style> block, so an enforced CSP with style-src 'self' would break
+# the Manage page. Do not add an enforced CSP until the inline styles are
+# moved into styles.css.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
