@@ -25,6 +25,32 @@ import { createHmac, timingSafeEqual, scryptSync, randomBytes, createHash } from
 export function escHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+// --- Lightweight per-IP rate limiting for public endpoints (audit M-1) ---
+// State lives in the settings table (same pattern as the login lockout),
+// keyed by a hashed client id so no raw IP is ever stored. Fail-OPEN on
+// DB errors: a broken counter must never block a genuine reservation.
+const RATE_PREFIX = "rate_";
+export function publicClientId(context) {
+  const h = context.request.headers;
+  const ip = h.get("x-nf-client-connection-ip")
+    || (h.get("x-forwarded-for") || "").split(",")[0].trim()
+    || "unknown";
+  return createHmac("sha256", context.env.ADMIN_API_KEY || "yasmines-local-market").update(ip).digest("hex").slice(0, 16);
+}
+export async function checkPublicRateLimit(context, scope, max, windowMs) {
+  const key = `${RATE_PREFIX}${scope}_${publicClientId(context)}`;
+  const now = Date.now();
+  try {
+    let rec = { window_start: now, count: 0 };
+    const rows = await sbJson(context, `settings?select=value&key=eq.${key}&limit=1`);
+    if (rows[0]?.value) { const parsed = JSON.parse(rows[0].value); if (parsed && typeof parsed === "object") rec = parsed; }
+    if (now - (rec.window_start || 0) > windowMs) rec = { window_start: now, count: 0 };
+    if ((rec.count || 0) >= max) return false;
+    rec.count = (rec.count || 0) + 1;
+    await setSettingValue(context, key, JSON.stringify(rec));
+    return true;
+  } catch (e) { console.error("rate-limit check failed (fail-open):", String(e.message || e)); return true; }
+}
 export function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json", "x-content-type-options": "nosniff", "x-frame-options": "DENY", "referrer-policy": "strict-origin-when-cross-origin" } });
 }
@@ -343,10 +369,11 @@ export async function bumpAdminSessionVersion(context) {
 // Constant-time string comparison (for passwords and tokens). Never use
 // === for secrets: it leaks how many leading characters matched.
 export function timingSafeCompare(a, b) {
-  const ba = Buffer.from(String(a ?? ""), "utf8");
-  const bb = Buffer.from(String(b ?? ""), "utf8");
-  if (ba.length !== bb.length) return false;
-  return timingSafeEqual(ba, bb);
+  // Hash both sides first so differing lengths do not short-circuit and
+  // leak the expected value's length via timing (audit I-4).
+  const da = createHash("sha256").update(String(a ?? ""), "utf8").digest();
+  const db = createHash("sha256").update(String(b ?? ""), "utf8").digest();
+  return timingSafeEqual(da, db);
 }
 export function sb(context, path, opts = {}) {
   // Supabase REST via the service-role key (bypasses RLS, server-side only).
