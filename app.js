@@ -34,23 +34,23 @@ function vendorBadge(p) {
 }
 
 var PRODUCTS = {
-  mug:      { vendor: "rosa", name: "Sea-Glass Stoneware Mug", maker: "Rosa M.", shop: "Rosa’s Pottery Corner", price: "$28", img: "images/mug-grid.webp", alt: "Hand-thrown stoneware mug in a soft sea-glass blue glaze", desc: "Hand-thrown and glazed in small batches — every mug a little different. Dishwasher-friendly and made for a generous cup of tea." },
-  scarf:    { vendor: "fatima", name: "Chunky Knit Scarf — Moss Green", maker: "Fatima K.", shop: "Fatima’s Knits", price: "$35", img: "images/scarf.webp", alt: "Thick hand-knitted scarf in moss green draped around a display bust", desc: "Knitted by hand in a soft, chunky yarn. Long enough to wrap twice — made for Brantford winters." },
-  necklace: { vendor: "layla", name: "Rainbow Beaded Choker", maker: "Layla H.", shop: "Layla Beads", price: "$22", img: "images/necklace.webp", alt: "Colourful hand-beaded choker necklace on a black display bust", desc: "Hundreds of tiny seed beads woven by hand into a bright, cheerful choker. Adjustable clasp." },
-  candle:   { vendor: "emma", name: "Vanilla & Cedar Soy Candle", maker: "Emma T.", shop: "Emma’s Little Light Co.", price: "$18", img: "images/candle.webp", alt: "Lit soy candle in a clear glass jar", desc: "Hand-poured soy wax with a warm vanilla and cedar scent. About 35 hours of burn time." },
-  tote:     { vendor: "grace", name: "Canvas Market Tote", maker: "Grace O.", shop: "Grace Sews", price: "$20", img: "images/tote.webp", alt: "Row of sturdy handmade canvas tote bags in many colours held up outdoors", desc: "Heavy-duty canvas, sewn to carry a full market shop. Pick your colour when you reserve — red, blue, teal, green, natural and more." },
-  honey:    { vendor: "nguyen", name: "Wildflower Honey — Small Jar", maker: "The Nguyen Family", shop: "Nguyen Family Apiary", price: "$9", img: "images/honey.webp", alt: "Small hexagonal glass jar of golden honey with a gold lid on wood", desc: "Raw wildflower honey from hives just outside town. This little jar is perfect for gifts and first tastes." },
+  mug: { category: "pottery", vendor: "rosa", name: "Sea-Glass Stoneware Mug", maker: "Rosa M.", shop: "Rosa’s Pottery Corner", price: "$28", img: "images/mug-grid.webp", alt: "Hand-thrown stoneware mug in a soft sea-glass blue glaze", desc: "Hand-thrown and glazed in small batches — every mug a little different. Dishwasher-friendly and made for a generous cup of tea." },
+  scarf: { category: "textiles", vendor: "fatima", name: "Chunky Knit Scarf — Moss Green", maker: "Fatima K.", shop: "Fatima’s Knits", price: "$35", img: "images/scarf.webp", alt: "Thick hand-knitted scarf in moss green draped around a display bust", desc: "Knitted by hand in a soft, chunky yarn. Long enough to wrap twice — made for Brantford winters." },
+  necklace: { category: "jewelry", vendor: "layla", name: "Rainbow Beaded Choker", maker: "Layla H.", shop: "Layla Beads", price: "$22", img: "images/necklace.webp", alt: "Colourful hand-beaded choker necklace on a black display bust", desc: "Hundreds of tiny seed beads woven by hand into a bright, cheerful choker. Adjustable clasp." },
+  candle: { category: "other", vendor: "emma", name: "Vanilla & Cedar Soy Candle", maker: "Emma T.", shop: "Emma’s Little Light Co.", price: "$18", img: "images/candle.webp", alt: "Lit soy candle in a clear glass jar", desc: "Hand-poured soy wax with a warm vanilla and cedar scent. About 35 hours of burn time." },
+  tote: { category: "textiles", vendor: "grace", name: "Canvas Market Tote", maker: "Grace O.", shop: "Grace Sews", price: "$20", img: "images/tote.webp", alt: "Row of sturdy handmade canvas tote bags in many colours held up outdoors", desc: "Heavy-duty canvas, sewn to carry a full market shop. Pick your colour when you reserve — red, blue, teal, green, natural and more." },
+  honey: { category: "other", vendor: "nguyen", name: "Wildflower Honey — Small Jar", maker: "The Nguyen Family", shop: "Nguyen Family Apiary", price: "$9", img: "images/honey.webp", alt: "Small hexagonal glass jar of golden honey with a gold lid on wood", desc: "Raw wildflower honey from hives just outside town. This little jar is perfect for gifts and first tastes." },
   /* Mary Stones — Mary's Pottery (first real maker; prices are examples until she confirms them) */
-  "mary-mug":     { vendor: "mary-stones", name: "Speckled Stoneware Mug", maker: "Mary Stones", shop: "Mary's Pottery", price: "$32", img: "images/mary-mug.webp", alt: "Hand-thrown stoneware mug in a soft sage-green speckled glaze", desc: "Hand-thrown mug in a soft speckled glaze — every one a little different. Holds a generous cup of tea or coffee." },
-  "mary-bowl":    { vendor: "mary-stones", name: "Rustic Serving Bowl", maker: "Mary Stones", shop: "Mary's Pottery", price: "$48", img: "images/mary-bowl.webp", alt: "Handmade stoneware serving bowl in muted olive-green and grey glaze", desc: "A generous hand-thrown bowl in warm earth tones, made for salads, pasta, and family dinners." },
-  "mary-vase":    { vendor: "mary-stones", name: "Hand-thrown Vase", maker: "Mary Stones", shop: "Mary's Pottery", price: "$65", img: "images/mary-vase.webp", alt: "Tall handmade ceramic vase in creamy white glaze on a wooden table", desc: "A tall, graceful vase in creamy white glaze with a soft matte finish. Made for fresh flowers — or lovely standing on its own." },
-  "mary-plate":   { vendor: "mary-stones", name: "Speckled Dinner Plate", maker: "Mary Stones", shop: "Mary's Pottery", price: "$38", img: "images/mary-plate.webp", alt: "Stack of handmade speckled ceramic dinner plates in blue and white", desc: "A sturdy hand-thrown dinner plate with a speckled glaze — no two exactly alike. Dishwasher-friendly." },
-  "mary-planter": { vendor: "mary-stones", name: "Ribbed Stoneware Planter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$42", img: "images/mary-planter.webp", alt: "Handmade ribbed stoneware planter with matching saucer in grey-blue and terracotta", desc: "A ribbed stoneware planter with a matching saucer, glazed in soft grey-blue with a terracotta rim." },
-  "mary-teapot":  { vendor: "mary-stones", name: "Hand-thrown Teapot", maker: "Mary Stones", shop: "Mary's Pottery", price: "$85", img: "images/mary-teapot.webp", alt: "Handmade ceramic teapot in a bold red and amber swirl glaze", desc: "A one-of-a-kind teapot in a bold red and amber glaze with hand-painted swirls. Brews about four cups." },
-  "mary-butter":  { vendor: "mary-stones", name: "Lidded Butter Dish", maker: "Mary Stones", shop: "Mary's Pottery", price: "$36", img: "images/mary-butter.webp", alt: "Handmade stoneware butter dish with a blue-grey domed lid", desc: "A stoneware butter dish with a fitted lid in soft blue-grey glaze. Keeps butter fresh on the counter." },
-  "mary-spoon":   { vendor: "mary-stones", name: "Ceramic Spoon Rest", maker: "Mary Stones", shop: "Mary's Pottery", price: "$28", img: "images/mary-spoon.webp", alt: "Long speckled ceramic spoon rest holding a wooden spoon on a kitchen counter", desc: "A long speckled spoon rest that keeps drips off the counter — fits a wooden spoon or a ladle." },
-  "mary-candle":  { vendor: "mary-stones", name: "Stoneware Candle Holder", maker: "Mary Stones", shop: "Mary's Pottery", price: "$30", img: "images/mary-candle.webp", alt: "Handmade stoneware candle holder with a pillar candle", desc: "A hand-thrown candle holder with a warm brown glaze and a little handle. Fits a standard pillar candle." },
-  "mary-platter": { vendor: "mary-stones", name: "Serving Platter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$58", img: "images/mary-platter.webp", alt: "Wide handmade ceramic serving platter in soft earth tones", desc: "A wide hand-thrown serving platter, perfect for roasts, bread, or a spread of cheese." }
+  "mary-mug": { category: "pottery", vendor: "mary-stones", name: "Speckled Stoneware Mug", maker: "Mary Stones", shop: "Mary's Pottery", price: "$32", img: "images/mary-mug.webp", alt: "Hand-thrown stoneware mug in a soft sage-green speckled glaze", desc: "Hand-thrown mug in a soft speckled glaze — every one a little different. Holds a generous cup of tea or coffee." },
+  "mary-bowl": { category: "pottery", vendor: "mary-stones", name: "Rustic Serving Bowl", maker: "Mary Stones", shop: "Mary's Pottery", price: "$48", img: "images/mary-bowl.webp", alt: "Handmade stoneware serving bowl in muted olive-green and grey glaze", desc: "A generous hand-thrown bowl in warm earth tones, made for salads, pasta, and family dinners." },
+  "mary-vase": { category: "pottery", vendor: "mary-stones", name: "Hand-thrown Vase", maker: "Mary Stones", shop: "Mary's Pottery", price: "$65", img: "images/mary-vase.webp", alt: "Tall handmade ceramic vase in creamy white glaze on a wooden table", desc: "A tall, graceful vase in creamy white glaze with a soft matte finish. Made for fresh flowers — or lovely standing on its own." },
+  "mary-plate": { category: "pottery", vendor: "mary-stones", name: "Speckled Dinner Plate", maker: "Mary Stones", shop: "Mary's Pottery", price: "$38", img: "images/mary-plate.webp", alt: "Stack of handmade speckled ceramic dinner plates in blue and white", desc: "A sturdy hand-thrown dinner plate with a speckled glaze — no two exactly alike. Dishwasher-friendly." },
+  "mary-planter": { category: "pottery", vendor: "mary-stones", name: "Ribbed Stoneware Planter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$42", img: "images/mary-planter.webp", alt: "Handmade ribbed stoneware planter with matching saucer in grey-blue and terracotta", desc: "A ribbed stoneware planter with a matching saucer, glazed in soft grey-blue with a terracotta rim." },
+  "mary-teapot": { category: "pottery", vendor: "mary-stones", name: "Hand-thrown Teapot", maker: "Mary Stones", shop: "Mary's Pottery", price: "$85", img: "images/mary-teapot.webp", alt: "Handmade ceramic teapot in a bold red and amber swirl glaze", desc: "A one-of-a-kind teapot in a bold red and amber glaze with hand-painted swirls. Brews about four cups." },
+  "mary-butter": { category: "pottery", vendor: "mary-stones", name: "Lidded Butter Dish", maker: "Mary Stones", shop: "Mary's Pottery", price: "$36", img: "images/mary-butter.webp", alt: "Handmade stoneware butter dish with a blue-grey domed lid", desc: "A stoneware butter dish with a fitted lid in soft blue-grey glaze. Keeps butter fresh on the counter." },
+  "mary-spoon": { category: "pottery", vendor: "mary-stones", name: "Ceramic Spoon Rest", maker: "Mary Stones", shop: "Mary's Pottery", price: "$28", img: "images/mary-spoon.webp", alt: "Long speckled ceramic spoon rest holding a wooden spoon on a kitchen counter", desc: "A long speckled spoon rest that keeps drips off the counter — fits a wooden spoon or a ladle." },
+  "mary-candle": { category: "pottery", vendor: "mary-stones", name: "Stoneware Candle Holder", maker: "Mary Stones", shop: "Mary's Pottery", price: "$30", img: "images/mary-candle.webp", alt: "Handmade stoneware candle holder with a pillar candle", desc: "A hand-thrown candle holder with a warm brown glaze and a little handle. Fits a standard pillar candle." },
+  "mary-platter": { category: "pottery", vendor: "mary-stones", name: "Serving Platter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$58", img: "images/mary-platter.webp", alt: "Wide handmade ceramic serving platter in soft earth tones", desc: "A wide hand-thrown serving platter, perfect for roasts, bread, or a spread of cheese." }
 };
 var current = window.PAGE_PRODUCTS ? window.PAGE_PRODUCTS[0] : "mug";
 
@@ -113,13 +113,22 @@ function mapListing(l) {
   };
 }
 
-/* Build the product grid — a page may define window.PAGE_PRODUCTS to show only its own items */
+/* Build the product grid — a page may define window.PAGE_PRODUCTS to show only its own items.
+   Front-page category pills (#cat-pills) filter whatever is loaded (live
+   listings or the built-in fallback) by the listing's category slug. */
 (function buildGrid() {
   var grid = document.getElementById("product-grid");
   if (!grid) return;
   var defaultOrder = ["scarf", "necklace", "candle", "tote", "honey", "mug",
     "mary-mug", "mary-bowl", "mary-vase", "mary-plate", "mary-planter",
     "mary-teapot", "mary-butter", "mary-spoon", "mary-candle", "mary-platter"];
+  var activeCategory = "all";
+  var currentItems = []; /* [{id, product}] currently loaded (live or fallback) */
+
+  function categoryLabel(cat) {
+    var labels = {pottery: "Pottery", jewelry: "Jewelry", textiles: "Textiles", woodwork: "Woodwork", other: "Other"};
+    return labels[cat] || cat;
+  }
 
   function renderCard(id, p) {
     var card = document.createElement("article");
@@ -143,17 +152,46 @@ function mapListing(l) {
     grid.appendChild(card);
   }
 
-  function renderBuiltIn(order) {
+  function renderItems(items) {
     grid.innerHTML = "";
-    order.forEach(function (id) {
-      var p = PRODUCTS[id];
-      if (p) renderCard(id, p);
-    });
+    if (!items.length) {
+      var msg = document.createElement("div");
+      msg.className = "grid-empty";
+      msg.textContent = activeCategory === "all"
+        ? "No listings yet — check back soon."
+        : "No " + categoryLabel(activeCategory).toLowerCase() + " listings yet — check back soon.";
+      grid.appendChild(msg);
+      return;
+    }
+    items.forEach(function (it) { renderCard(it.id, it.product); });
+  }
+
+  function applyCategoryFilter() {
+    var items = activeCategory === "all"
+      ? currentItems
+      : currentItems.filter(function (it) { return (it.product.category || "") === activeCategory; });
+    renderItems(items);
+  }
+
+  function renderBuiltIn(order) {
+    currentItems = order.map(function (id) { return {id: id, product: PRODUCTS[id]}; })
+      .filter(function (it) { return !!it.product; });
+    applyCategoryFilter();
   }
 
   grid.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-reserve]");
     if (btn) selectProduct(btn.getAttribute("data-reserve"));
+  });
+
+  /* Category pills (front page only — maker pages have no pill row). */
+  var pills = document.querySelectorAll("#cat-pills [data-cat]");
+  pills.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      activeCategory = btn.getAttribute("data-cat");
+      pills.forEach(function (b) { b.classList.toggle("active", b === btn); });
+      applyCategoryFilter();
+    });
   });
 
   /* Maker pages keep their built-in list. */
@@ -172,13 +210,14 @@ function mapListing(l) {
         return;
       }
       LIVE_PRODUCTS = {};
-      grid.innerHTML = "";
+      currentItems = [];
       listings.forEach(function (l) {
         var p = mapListing(l);
         LIVE_PRODUCTS[l.id] = p;
-        renderCard(l.id, p);
+        currentItems.push({id: l.id, product: p});
       });
       current = listings[0].id;
+      applyCategoryFilter();
     })
     .catch(function () {
       renderBuiltIn(defaultOrder);
