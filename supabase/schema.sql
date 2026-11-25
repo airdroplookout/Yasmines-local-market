@@ -77,11 +77,13 @@ create index if not exists idx_reservations_maker on public.reservations (maker_
 create table if not exists public.product_submissions (
   id uuid primary key default gen_random_uuid(),
   maker_name text not null,
+  business_name text not null,
   maker_email text not null,
   product_name text not null,
   category text not null
     check (category in ('pottery','jewelry','homeware','textiles','art','cards-stationery','clothing-accessories','weddings','craft-supplies','christmas-gifts','other')),
   category_label text,
+  other_category text,
   description text,
   price text not null,
   photo_url text,
@@ -90,6 +92,11 @@ create table if not exists public.product_submissions (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Safety net: if the table was created before business_name /
+-- other_category were added, these two lines add them (does nothing
+-- when the columns are already there).
+alter table public.product_submissions add column if not exists business_name text;
+alter table public.product_submissions add column if not exists other_category text;
 create index if not exists idx_submissions_status on public.product_submissions (status, created_at desc);
 create index if not exists idx_submissions_email on public.product_submissions (maker_email);
 
