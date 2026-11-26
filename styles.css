@@ -43,7 +43,7 @@ a{color:var(--accent)}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--sage-soft);color:var(--sage);font-weight:800;font-size:.85rem;padding:7px 12px;border-radius:999px}
 .hero h1{font-size:clamp(1.3rem,3vw,1.8rem);margin:10px 0 8px;max-width:26ch}
 .hero p.lead{font-size:1.12rem;color:var(--muted);max-width:62ch;margin:0}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 0}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap;margin:22px 0 0;padding:0 24px}
 .hero-actions .btn{padding:13px 24px}
 
 /* Maker invitation band — sits between "How it works" and the Featured maker.
@@ -214,7 +214,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .topnav-link{padding:10px 2px}
   .grid{grid-template-columns:1fr}
   .hero{padding-top:20px}
-  .hero-actions{flex-direction:column}
+  .hero-actions{flex-direction:column;gap:12px;padding:0 16px}
   .hero-actions .btn{width:100%}
   .summary dl{grid-template-columns:1fr}
   .summary dt{margin-top:6px}
