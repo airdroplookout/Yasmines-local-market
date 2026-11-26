@@ -35,8 +35,8 @@ a{color:var(--accent)}
 .topbar-inner .brand{justify-self:start;white-space:nowrap}
 .topbar-tagline{justify-self:center;text-align:center;font-size:1rem;color:var(--sage);font-weight:600;line-height:1.3;min-width:0}
 .topbar-tag{margin-left:auto;font-size:.88rem;color:var(--muted);font-weight:700}
-.topnav-link{justify-self:end;white-space:nowrap;font-weight:800;text-decoration:none;color:var(--ink);padding:10px 4px;min-height:44px;display:inline-flex;align-items:center}
-.topnav-link:hover{color:var(--accent)}
+.topnav-link{justify-self:end;white-space:nowrap;font-weight:800;text-decoration:none;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:10px 18px;min-height:44px;display:inline-flex;align-items:center}
+.topnav-link:hover{filter:brightness(1.06);color:var(--accent-ink)}
 
 /* Hero */
 .hero{padding:28px 0 8px;text-align:left}
@@ -94,12 +94,13 @@ a{color:var(--accent)}
 .cat-pill{border:1.5px solid var(--sage);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 20px;font-weight:800;font-size:.98rem;cursor:pointer}
 .cat-pill:hover{border-color:var(--accent);color:var(--accent)}
 .cat-pill.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-/* Festive decoration for the Christmas Gifts pill only: a small Santa hat
+/* Festive decoration for the Christmas Gifts pill only: a Santa hat
    perched on the pill's top-right corner and a frost snowflake beside the
-   label. Inline SVG, small and tasteful; the hat hangs outside the pill,
-   so it never changes the pill's size or the row's wrapping. */
+   label. Inline SVG; the hat is sized to read clearly as a hat (red cone,
+   white trim and pom-pom) and hangs mostly outside the pill, so it never
+   covers the label or changes the pill's size or the row's wrapping. */
 .cat-pill.xmas{position:relative}
-.cat-pill .xmas-hat{position:absolute;top:-9px;right:-3px;width:20px;height:17px;transform:rotate(14deg);pointer-events:none}
+.cat-pill .xmas-hat{position:absolute;top:-14px;right:-6px;width:32px;height:27px;transform:rotate(14deg);pointer-events:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
 .cat-pill .xmas-snow{width:13px;height:13px;vertical-align:-2px;margin-left:5px}
 /* Shown in the grid when the picked category has no listings yet. */
 .grid-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:1.05rem;padding:34px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius)}
@@ -222,7 +223,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .topbar-inner{padding:10px 12px;gap:8px}
   .brand{font-size:1.2rem}
   .topbar-tagline{font-size:.72rem}
-  .topnav-link{padding:10px 2px}
+  .topnav-link{padding:8px 14px}
   .grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .hero{padding-top:20px}
   .hero-actions{flex-direction:column;gap:12px;padding:0 16px}
