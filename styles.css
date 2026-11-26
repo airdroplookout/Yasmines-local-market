@@ -183,14 +183,14 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .note-strip-top h3{font-weight:800}
 .note-icon{width:26px;height:26px;color:var(--accent);margin-bottom:6px}
 
-.makers-cta{margin-top:36px;background:var(--sage-soft);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:18px;padding:30px 32px;display:flex;align-items:center;gap:32px;box-shadow:var(--shadow)}
+.makers-cta{margin-top:36px;background:var(--sage-soft);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:18px;padding:14px 32px 30px;display:flex;flex-wrap:wrap;align-items:center;gap:32px;box-shadow:var(--shadow)}
 .makers-cta-text{flex:1;min-width:0}
 .makers-cta h2{font-size:clamp(1.4rem,3vw,1.7rem);margin:6px 0 8px}
 .makers-cta p{margin:0;color:var(--muted);font-size:1rem;max-width:56ch}
 .makers-cta-note{margin-top:10px !important;font-weight:700;color:var(--sage) !important;font-size:.95rem}
 .makers-cta-actions{display:flex;flex-direction:column;gap:12px;flex:none;width:280px}
 .makers-cta-actions .btn{width:100%}
-.makers-pay{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 0;color:var(--muted);font-size:1rem;font-weight:700;text-align:center}
+.makers-pay{display:flex;align-items:center;justify-content:center;gap:12px;flex:0 0 100%;margin:6px 0 0;color:var(--muted);font-size:1rem;font-weight:700;text-align:center}
 .makers-pay img{flex:none}
 @media (max-width:700px){
   .makers-cta{flex-direction:column;align-items:stretch;gap:20px;padding:24px 20px}
