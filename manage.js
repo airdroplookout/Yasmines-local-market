@@ -148,6 +148,18 @@ function loadOverview(){
     document.getElementById('vWeek').textContent = v.week != null ? v.week : '—';
     document.getElementById('vMonth').textContent = v.month != null ? v.month : '—';
     document.getElementById('vYear').textContent = v.year != null ? v.year : '—';
+    // Subscriber count on the Visits tab, from the same overview payload
+    // as the Newsletter list. On a load failure it must say so — never a
+    // silent 0.
+    var vSub = document.getElementById('vSubscribers');
+    if(vSub){
+      if(j.subscribers_error || j.subscribers === undefined) vSub.textContent = 'Subscribers: could not be loaded';
+      else {
+        var subs = j.subscribers || [];
+        var subAct = subs.filter(function(s){ return s.status === 'active'; }).length;
+        vSub.textContent = 'Subscribers: ' + subs.length + ' · ' + subAct + ' active';
+      }
+    }
     document.getElementById('dashSummary').textContent =
       (j.live_makers != null ? j.live_makers : 0) + ' live makers · ' +
       (j.live_listings != null ? j.live_listings : 0) + ' live listings · ' +
@@ -927,7 +939,7 @@ document.getElementById('nlSendForm').addEventListener('submit', function(e){
 // creates the live listing (and the maker, if new). Reject keeps it
 // off the site. Everything is escaped on display, like the rest.
 function renderSubmissions(list){
-  var body = document.getElementById('subBody');
+  var body = document.getElementById('submBody');
   if(!list.length){
     body.innerHTML = '<tr><td colspan="6" style="color:var(--muted)">No product submissions yet. Makers send them in from the “Submit a product” button on the front page.</td></tr>';
     return;
@@ -954,7 +966,7 @@ function renderSubmissions(list){
       '<button class="mini danger" data-sub-del="' + s.id + '">Delete</button></td></tr>';
   }).join('');
 }
-document.getElementById('subBody').addEventListener('click', function(e){
+document.getElementById('submBody').addEventListener('click', function(e){
   var app = e.target.closest('[data-sub-approve]');
   var rej = e.target.closest('[data-sub-reject]');
   var del = e.target.closest('[data-sub-del]');

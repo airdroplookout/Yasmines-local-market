@@ -89,6 +89,7 @@
         <div class="mstat"><strong id="vMonth">—</strong><span>This month</span></div>
         <div class="mstat"><strong id="vYear">—</strong><span>This year</span></div>
       </div>
+      <p id="vSubscribers" style="font-size:1.1rem;font-weight:700;margin:12px 0 0">Subscribers: —</p>
       <label class="switchrow"><input type="checkbox" id="excludeVisits"><span><b>Don&rsquo;t count my visits on this device</b><span>Turn this on on your phone and your tablet so your own visits don&rsquo;t inflate the numbers. It only affects this device.</span></span></label>
       <p class="note">Counts start the day the backend went live. Bots are not counted.</p>
     </section>
@@ -177,7 +178,7 @@
       <p class="sub">Products makers sent in through the “Submit a product” form. Nothing here is on the public site yet. Approve puts it live as a real listing (and adds the maker if they are new). Reject keeps it off the site for good.</p>
       <div class="tablewrap"><table class="mtable">
         <thead><tr><th>Product</th><th>Maker</th><th>Photo</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
-        <tbody id="subBody"></tbody>
+        <tbody id="submBody"></tbody>
       </table></div>
       <p class="note">If this list is empty and you know a submission was sent, the product_submissions table has not been created yet — run supabase/product-submissions.sql once in the Supabase SQL Editor. Submissions still arrive by email meanwhile.</p>
     </section>
