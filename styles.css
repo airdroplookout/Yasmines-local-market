@@ -202,7 +202,9 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .newsletter-form{margin-top:6px}
 .newsletter-form label{display:block;font-weight:800;font-size:.95rem;margin-bottom:7px}
 .newsletter-row{display:flex;flex-direction:column;gap:8px}
-.newsletter-row .btn{width:100%}
+.newsletter-row #nl-email{width:100%;padding:12px 14px;border:2px solid var(--sage);border-radius:12px;background:var(--surface);color:var(--ink)}
+.newsletter-row #nl-email:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-soft)}
+.newsletter-row .btn{width:auto;align-self:flex-end;padding:9px 18px;font-size:.9rem;min-height:42px}
 .newsletter-msg{font-size:.9rem;margin:8px 0 0;min-height:1.2em}
 .newsletter-msg.ok{color:var(--sage);font-weight:700}
 .newsletter-msg.err{color:#a34d4d;font-weight:700}
