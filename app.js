@@ -244,7 +244,7 @@ function applySoldCounts() {
         '<h3>' + title + '</h3>' +
         '<p class="maker">by ' + esc(p.maker) + ' — ' + esc(p.shop) + '</p>' +
         soldHtml(p) +
-        (vendorPage ? '<p class="vendor-link"><a href="' + esc(VENDORS[p.vendor].page) + '">See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
+        (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
         '<p class="desc">' + esc(p.desc) + '</p>' +
         '<div class="card-row"><p class="price-sm">' + esc(p.price) + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + esc(id) + '">Reserve this item</button></div>' +
@@ -407,7 +407,19 @@ function applySoldCounts() {
       setTextEl("fm-desc", f.description);
       var btn = document.getElementById("fm-button");
       if (btn) {
-        if (f.button_text) btn.textContent = f.button_text;
+        if (f.button_text) {
+          /* Rebuild the button keeping its monogram chip (same chip as
+             the listing cards): text via textContent, never innerHTML. */
+          while (btn.firstChild) btn.removeChild(btn.firstChild);
+          if (f.badge_initials) {
+            var mono = document.createElement("span");
+            mono.className = "see-all-mono";
+            mono.setAttribute("aria-hidden", "true");
+            mono.textContent = f.badge_initials;
+            btn.appendChild(mono);
+          }
+          btn.appendChild(document.createTextNode(f.button_text));
+        }
         var url = safeUrl(f.button_url);
         if (url) btn.setAttribute("href", url);
       }
