@@ -1,17 +1,15 @@
-/* Yasmine's Local Market — styles. Warm boutique look, light & dark. */
+/* Yasmine's Local Market — styles. Dark by default, on every device
+   (Nov 26, 2026): the dark palette below is the base theme, not a
+   prefers-color-scheme override — a light-mode laptop or phone shows
+   the same dark green/black + cream + orange look. The dark values are
+   unchanged from the old dark-mode palette. color-scheme: dark keeps
+   native controls (inputs, scrollbars, date pickers) dark too. */
 :root{
-  --bg:#FFF7EE; --surface:#FFFFFF; --surface2:#FFF1DF; --ink:#2B2118; --muted:#6F5D4D;
-  --line:#EAD9C3; --accent:#BC4A24; --accent-ink:#FFFFFF; --accent-soft:#FDE8DC;
-  --sage:#4F7A4A; --sage-soft:#E6F0E2; --gold:#B7791F; --gold-soft:#FBEDC8; --price-bg:#E9F1F6;
-  --shadow:0 10px 30px rgba(90,50,20,.10); --radius:18px;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --bg:#1D1712; --surface:#2A211A; --surface2:#33281E; --ink:#F7EDE1; --muted:#C9B6A3;
-    --line:#4A3A2C; --accent:#E67B4F; --accent-ink:#1D130C; --accent-soft:#4A2E1F;
-    --sage:#8FC184; --sage-soft:#2E402A; --gold:#E3B34E; --gold-soft:#453716; --price-bg:#26363F;
-    --shadow:0 10px 30px rgba(0,0,0,.35);
-  }
+  color-scheme: dark;
+  --bg:#1D1712; --surface:#2A211A; --surface2:#33281E; --ink:#F7EDE1; --muted:#C9B6A3;
+  --line:#4A3A2C; --accent:#E67B4F; --accent-ink:#1D130C; --accent-soft:#4A2E1F;
+  --sage:#8FC184; --sage-soft:#2E402A; --gold:#E3B34E; --gold-soft:#453716; --price-bg:#26363F;
+  --shadow:0 10px 30px rgba(0,0,0,.35); --radius:18px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -207,7 +205,7 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .newsletter-row .btn{width:auto;align-self:flex-end;padding:9px 18px;font-size:.9rem;min-height:42px}
 .newsletter-msg{font-size:.9rem;margin:8px 0 0;min-height:1.2em}
 .newsletter-msg.ok{color:var(--sage);font-weight:700}
-.newsletter-msg.err{color:#a34d4d;font-weight:700}
+.newsletter-msg.err{color:#F2A5A5;font-weight:700}
 
 /* Share box (vendor page) */
 .share-box{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
@@ -240,8 +238,7 @@ textarea{min-height:120px;resize:vertical}
 .hint{font-size:.88rem;color:var(--muted);margin-top:6px}
 .delivery-note{display:none;background:var(--gold-soft);border:1px dashed color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:10px;padding:11px 13px;margin:8px 0 0;font-size:.92rem}
 .delivery-note.show{display:block}
-.error{display:none;background:#FDECEC;color:#8B1E1E;border:1px solid #F3B8B8;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-weight:700}
-@media (prefers-color-scheme: dark){ .error{background:#4A2020;color:#FFD7D7;border-color:#7A3A3A} }
+.error{display:none;background:#4A2020;color:#FFD7D7;border:1px solid #7A3A3A;border-radius:10px;padding:11px 13px;margin-bottom:14px;font-weight:700}
 .error.show{display:block}
 .hp{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
 
@@ -387,7 +384,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
 .mbtn-ghost{background:var(--surface);color:var(--ink);border-color:var(--sage)}
 .mbtn-ghost:hover{border-color:var(--accent);color:var(--accent)}
 .mlink{background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;padding:10px 0;min-height:44px;text-decoration:underline}
-.err{display:none;color:#8B1E1E;font-weight:700;margin:8px 0}
+.err{display:none;color:#FFB4B4;font-weight:700;margin:8px 0}
 /* Tables: clean rows, small-caps headers, sideways scroll on phones. */
 .tablewrap{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:12px}
 .mtable{width:100%;border-collapse:collapse;font-size:.93rem;background:var(--surface)}
@@ -403,7 +400,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
 .manage .buyer-name{display:inline-block;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
 .mini{background:var(--surface);border:1.5px solid var(--sage);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:800;cursor:pointer;min-height:36px;margin:2px 4px 2px 0}
 .mini:hover{border-color:var(--accent);color:var(--accent)}
-.mini.danger{border-color:#C0392B;color:#C0392B}
+.mini.danger{border-color:#F0856F;color:#F0856F}
 /* Visits stats: four calm stat cards. */
 .mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
 .mstat{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}

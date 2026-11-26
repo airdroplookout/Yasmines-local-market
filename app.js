@@ -116,7 +116,7 @@ function liveBadge(p) {
 /* Small inline placeholder picture (data URI) for listings with no photo,
    used in the reserve-form product summary. */
 function photoPlaceholder(initials) {
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#FFF7EE"/><text x="200" y="175" font-family="Georgia,serif" font-size="110" font-weight="bold" fill="#4F7A4A" text-anchor="middle">' + initials + '</text></svg>';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="400" height="300" fill="#33281E"/><text x="200" y="175" font-family="Georgia,serif" font-size="110" font-weight="bold" fill="#8FC184" text-anchor="middle">' + initials + '</text></svg>';
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
 }
 
