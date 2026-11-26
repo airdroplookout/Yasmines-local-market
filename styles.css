@@ -197,6 +197,16 @@ a.vendor-badge:hover{transform:scale(1.1)}
   .makers-cta-actions{width:100%}
 }
 
+/* Newsletter signup — in the makers band under "Contact us about a spot".
+   Same Forest/Sage/Terracotta as the rest of the site. */
+.newsletter-form{margin-top:6px}
+.newsletter-form label{display:block;font-weight:800;font-size:.95rem;margin-bottom:7px}
+.newsletter-row{display:flex;flex-direction:column;gap:8px}
+.newsletter-row .btn{width:100%}
+.newsletter-msg{font-size:.9rem;margin:8px 0 0;min-height:1.2em}
+.newsletter-msg.ok{color:var(--sage);font-weight:700}
+.newsletter-msg.err{color:#a34d4d;font-weight:700}
+
 /* Share box (vendor page) */
 .share-box{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
 .share-box h3{font-size:1.2rem;margin-bottom:6px}

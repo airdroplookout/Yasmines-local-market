@@ -125,7 +125,7 @@ document.getElementById('logoutAllBtn').addEventListener('click', function(){
 // --- Section tabs ---
 function activateSection(id){
   document.querySelectorAll('.mnav .chip').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-sec') === id); });
-  ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secFeatured', 'secSettings'].forEach(function(sid){
+  ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secSubscribers', 'secFeatured', 'secSettings'].forEach(function(sid){
     document.getElementById(sid).style.display = (sid === id) ? 'block' : 'none';
   });
 }
@@ -155,6 +155,7 @@ function loadOverview(){
     renderListings(j.listings || [], j.makers || []);
     renderSubmissions(j.submissions || []);
     renderRes(j.reservations || [], j.listings || [], j.makers || []);
+    renderSubscribers(j.subscribers || []);
     var s = j.settings || {};
     document.getElementById('setNotif').value = s.notification_email || '';
     document.getElementById('setSender').value = s.sender_email || '';
@@ -568,6 +569,53 @@ document.getElementById('resBody').addEventListener('click', function(e){
     if(!window.confirm('Delete this reservation for good?')) return;
     api('/api/admin/reservations?id=' + encodeURIComponent(del.getAttribute('data-res-del')), 'DELETE')
       .then(function(){ showToast('Reservation deleted.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+  }
+});
+
+// --- Newsletter subscribers ---
+// Signed up from the home-page form. Archive sets a subscriber aside
+// (no emails, does not count as active); Restore brings them back;
+// Remove deletes the row for good. Emails are shown here only —
+// never on any public page.
+function renderSubscribers(list){
+  var body = document.getElementById('subBody');
+  var count = document.getElementById('subCount');
+  var active = (list || []).filter(function(s){ return s.status === 'active'; }).length;
+  if(count) count.textContent = list.length ? (list.length + ' total · ' + active + ' active') : '';
+  if(!list.length){
+    body.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">No newsletter subscribers yet. People sign up from the home page.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(function(s){
+    var pill = s.status === 'active' ? '<span class="pill">Active</span>' : '<span class="pill arch">Archived</span>';
+    var archBtn = s.status === 'active'
+      ? '<button class="mini" data-sub-archive="' + s.id + '">Archive</button>'
+      : '<button class="mini" data-sub-restore="' + s.id + '">Restore</button>';
+    return '<tr><td><strong>' + esc(s.email) + '</strong></td><td>' + fmtDate(s.created_at) + '</td><td>' + pill + '</td><td>' + archBtn +
+      '<button class="mini danger" data-sub-del="' + s.id + '" data-label="' + esc(s.email) + '">Remove</button></td></tr>';
+  }).join('');
+}
+document.getElementById('subBody').addEventListener('click', function(e){
+  var arch = e.target.closest('[data-sub-archive]');
+  var res = e.target.closest('[data-sub-restore]');
+  var del = e.target.closest('[data-sub-del]');
+  if(arch){
+    api('/api/admin/subscribers?id=' + encodeURIComponent(arch.getAttribute('data-sub-archive')) + '&action=archive', 'PATCH', {})
+      .then(function(){ showToast('Subscriber archived.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
+  if(res){
+    api('/api/admin/subscribers?id=' + encodeURIComponent(res.getAttribute('data-sub-restore')) + '&action=restore', 'PATCH', {})
+      .then(function(){ showToast('Subscriber restored.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
+  if(del){
+    if(!window.confirm('Remove ' + del.getAttribute('data-label') + ' from the newsletter for good?')) return;
+    api('/api/admin/subscribers?id=' + encodeURIComponent(del.getAttribute('data-sub-del')), 'DELETE')
+      .then(function(){ showToast('Subscriber removed.'); loadOverview(); })
       .catch(function(ex){ showToast(ex.message); });
   }
 });

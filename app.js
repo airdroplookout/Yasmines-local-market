@@ -849,3 +849,50 @@ function selectProductDefaults() {
   });
   if (!seen) setTimeout(open, 600);
 })();
+
+/* Newsletter signup — Locally Crafted CA newsletter.
+   POST /api/subscribe { email, _honey }. The server validates the
+   email (real address, max 50 chars), honeypot + rate limit.
+   Success and duplicate both answer { ok: true }, so the message
+   never reveals whether an address was already on the list. */
+(function newsletterSignup() {
+  var form = document.getElementById("newsletter-form");
+  if (!form) return;
+  var emailInput = document.getElementById("nl-email");
+  var msg = document.getElementById("newsletter-msg");
+  var btn = form.querySelector("button[type=submit]");
+  function show(text, ok) {
+    if (!msg) return;
+    msg.textContent = text;
+    msg.className = "newsletter-msg " + (ok ? "ok" : "err");
+  }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = (emailInput.value || "").trim();
+    if (!email || email.indexOf("@") === -1 || email.length > 50) {
+      show("Please enter a real email address (at most 50 characters).", false);
+      return;
+    }
+    if (btn) btn.disabled = true;
+    show("", true);
+    var honey = form.querySelector('input[name="_honey"]');
+    fetch("/api/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email, _honey: honey ? honey.value : "" })
+    }).then(function (r) {
+      return r.json().then(function (j) { return { status: r.status, body: j }; });
+    }).then(function (res) {
+      if (btn) btn.disabled = false;
+      if (res.body && res.body.ok) {
+        form.reset();
+        show("You're in — thanks for subscribing.", true);
+      } else {
+        show((res.body && res.body.error) || "Sorry — that did not send. Please try again.", false);
+      }
+    }).catch(function () {
+      if (btn) btn.disabled = false;
+      show("Sorry — that did not send. Please try again.", false);
+    });
+  });
+})();

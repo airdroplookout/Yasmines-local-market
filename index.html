@@ -95,6 +95,15 @@
       </div>
       <div class="makers-cta-actions">
         <a class="btn btn-primary" href="contact.html">Contact us about a spot →</a>
+        <form id="newsletter-form" class="newsletter-form" novalidate>
+          <label for="nl-email">Get the market newsletter</label>
+          <div class="newsletter-row">
+            <input type="email" id="nl-email" name="email" placeholder="you@example.com" maxlength="50" autocomplete="email" required>
+            <button type="submit" class="btn btn-primary">Subscribe</button>
+          </div>
+          <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <p class="newsletter-msg" id="newsletter-msg" role="status"></p>
+        </form>
       </div>
     </section>
   </section>
