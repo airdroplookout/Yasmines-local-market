@@ -40,19 +40,7 @@ a{color:var(--accent)}
 /* Hero */
 .hero{padding:28px 0 8px;text-align:left}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--sage-soft);color:var(--sage);font-weight:800;font-size:.85rem;padding:7px 12px;border-radius:999px}
-/* Hero H1 stays on ONE line at every width (Nov 26, 2026): nowrap + a
-   viewport-scaled size so the full sentence still fits on a small phone. */
-.hero h1{font-size:clamp(0.7rem,3.6vw,1.8rem);margin:10px 0 8px;white-space:nowrap}
-/* Bigger hero H1 on phones only (Nov 26, 2026): at small sizes the browser
-   auto-applies a small optical size, which makes Fraunces much wider
-   (24.6em at opsz ~14 vs 20.2em at opsz 144, wght 700, measured with the
-   real font). Pinning opsz to 144 narrows the letters, so 4.3vw fits on one
-   line: at 360px wide the text is ~313px vs ~328px content width (.wrap
-   padding 16px each side); at 320px ~278px vs ~288px. Desktop rule above
-   is untouched. */
-@media (max-width:600px){
-  .hero h1{font-size:4.3vw;font-variation-settings:"opsz" 144}
-}
+.hero h1{font-size:clamp(1.3rem,3vw,1.8rem);margin:10px 0 8px;max-width:26ch}
 .hero p.lead{font-size:1.12rem;color:var(--muted);max-width:62ch;margin:0}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap;margin:22px 0 0;padding:0 24px}
 .hero-actions .btn{padding:13px 24px}
@@ -202,6 +190,8 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .makers-cta-note{margin-top:10px !important;font-weight:700;color:var(--sage) !important;font-size:.95rem}
 .makers-cta-actions{display:flex;flex-direction:column;gap:12px;flex:none;width:280px}
 .makers-cta-actions .btn{width:100%}
+.makers-pay{display:flex;align-items:center;justify-content:center;gap:12px;margin:14px 0 0;color:var(--muted);font-size:1rem;font-weight:700;text-align:center}
+.makers-pay img{flex:none}
 @media (max-width:700px){
   .makers-cta{flex-direction:column;align-items:stretch;gap:20px;padding:24px 20px}
   .makers-cta-actions{width:100%}
