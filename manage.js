@@ -189,31 +189,65 @@ function listingName(listings, id){
 // --- Makers ---
 // Searchable maker pickers: type letters and both maker dropdowns narrow
 // to matching makers (name or shop name, case-insensitive, anywhere in
-// the name — "ma" finds "Mary Stones"). The currently picked maker is
-// always kept in the list so an active choice is never lost.
+// the name — "ma" finds "Mary Stones"). The filter is STRICT: the list
+// shows ONLY makers matching what was typed, so "Mary" leaves only
+// Mary. (Earlier bug: the previously picked maker was always forced back
+// into the list, so with Jared picked, typing "Mary" still showed both
+// makers and the search looked dead.)
+// The picked maker is kept separately in pickedMakerId, so filtering
+// never silently changes which maker a listing will be saved under:
+// while the search hides the pick, the select shows no choice and the
+// save uses pickedMakerId; clearing the search puts the pick back.
 var makerSelectSearch = '';
+var pickedMakerId = '';
 function makerMatches(m, q){
   if(!q) return true;
   q = q.trim().toLowerCase();
   return ((m.shop_name || '') + ' ' + (m.name || '')).toLowerCase().indexOf(q) !== -1;
 }
+function pickedMakerLabel(){
+  var m = (overview && overview.makers || []).find(function(x){ return String(x.id) === String(pickedMakerId); });
+  return m ? (m.shop_name || m.name) : '';
+}
+function setMakerCount(total, shown, hiddenLabel){
+  var el = document.getElementById('liMakerCount');
+  if(!el) return;
+  if(!makerSelectSearch){
+    el.textContent = total ? total + (total === 1 ? ' maker' : ' makers') : '';
+    return;
+  }
+  if(!shown.length){
+    el.textContent = 'No makers match "' + makerSelectSearch + '" — clear the search to see all ' + total + '.';
+    return;
+  }
+  el.textContent = 'Showing ' + shown.length + ' of ' + total + ' makers' +
+    (hiddenLabel ? ' · your pick, ' + hiddenLabel + ', is hidden by this search — clear it to see it again.' : '');
+}
 function fillMakerSelect(makers){
   var sel = document.getElementById('liMaker');
-  var keep = sel.value;
   var live = (makers || []).filter(function(m){ return m.status === 'live'; });
-  var shown = live.filter(function(m){
-    return String(m.id) === String(keep) || makerMatches(m, makerSelectSearch);
-  });
+  var shown = live.filter(function(m){ return makerMatches(m, makerSelectSearch); });
+  var pickedShown = pickedMakerId && shown.some(function(m){ return String(m.id) === String(pickedMakerId); });
   sel.innerHTML = !live.length
     ? '<option value="">No live makers yet — add one first</option>'
     : shown.length
       ? shown.map(function(m){ return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>'; }).join('')
       : '<option value="">No makers match that search</option>';
-  if(shown.some(function(m){ return String(m.id) === String(keep); })) sel.value = keep;
+  if(pickedShown){
+    sel.value = pickedMakerId;
+  } else if(pickedMakerId && makerSelectSearch){
+    // Pick is hidden by the search: show no choice rather than silently
+    // switching the listing to the first visible maker.
+    sel.selectedIndex = -1;
+  }
+  setMakerCount(live.length, shown, (pickedMakerId && !pickedShown) ? pickedMakerLabel() : '');
 }
 document.getElementById('liMakerSearch').addEventListener('input', function(){
   makerSelectSearch = this.value;
   fillMakerSelect(overview ? overview.makers : []);
+});
+document.getElementById('liMaker').addEventListener('change', function(){
+  pickedMakerId = this.value;
 });
 function renderMakers(list){
   var body = document.getElementById('makersBody');
@@ -323,14 +357,35 @@ var listingFilter = { q: '', maker: '', cat: '', sort: 'oldest' };
 var makerFilterSearch = '';
 function fillMakerFilter(makers){
   var sel = document.getElementById('liFilterMaker');
-  var keep = listingFilter.maker;
-  sel.innerHTML = '<option value="">All makers</option>' + (makers || []).filter(function(m){
-    return String(m.id) === String(keep) || makerMatches(m, makerFilterSearch);
-  }).map(function(m){
+  var all = makers || [];
+  var shown = all.filter(function(m){ return makerMatches(m, makerFilterSearch); });
+  sel.innerHTML = '<option value="">All makers</option>' + shown.map(function(m){
     return '<option value="' + m.id + '">' + esc(m.shop_name || m.name) + '</option>';
   }).join('');
-  sel.value = (makers || []).some(function(m){ return String(m.id) === String(keep); }) ? keep : '';
-  listingFilter.maker = sel.value;
+  // The active filter is never cleared by the search: if it is in the
+  // shown list, select it again; if the search hides it, the table stays
+  // filtered by it and the select is left on "All makers" until the
+  // search is cleared. (Never assign listingFilter.maker from here —
+  // doing so used to wipe the active filter when its maker was hidden.)
+  if(listingFilter.maker && shown.some(function(m){ return String(m.id) === String(listingFilter.maker); })){
+    sel.value = listingFilter.maker;
+  } else if(!listingFilter.maker){
+    sel.value = '';
+  }
+  var cnt = document.getElementById('liFilterMakerCount');
+  if(cnt){
+    if(!makerFilterSearch){
+      cnt.textContent = all.length ? all.length + (all.length === 1 ? ' maker' : ' makers') : '';
+    } else if(!shown.length){
+      cnt.textContent = 'No makers match "' + makerFilterSearch + '" — clear the search to see all ' + all.length + '.';
+    } else {
+      var hiddenFilter = '';
+      if(listingFilter.maker && !shown.some(function(m){ return String(m.id) === String(listingFilter.maker); })){
+        hiddenFilter = ' · the table is still filtered by ' + makerName(all, listingFilter.maker) + ' — clear the search to see it again.';
+      }
+      cnt.textContent = 'Showing ' + shown.length + ' of ' + all.length + ' makers' + hiddenFilter;
+    }
+  }
 }
 document.getElementById('liFilterMakerSearch').addEventListener('input', function(){
   makerFilterSearch = this.value;
@@ -428,6 +483,7 @@ function resetListingForm(){
   document.getElementById('liId').value = '';
   document.getElementById('listingForm').reset();
   makerSelectSearch = '';
+  pickedMakerId = '';
   fillMakerSelect(overview ? overview.makers : []);
   document.getElementById('liPhoto').value = '';
   showPhotoPreview('');
@@ -444,7 +500,9 @@ document.getElementById('listingForm').addEventListener('submit', function(e){
   // instead. With no new file, the existing photo is left untouched.
   function saveListing(){
     var data = {
-      maker_id: document.getElementById('liMaker').value,
+      // The select may be blank while the search hides the picked maker —
+      // the pick itself is kept in pickedMakerId and still counts.
+      maker_id: document.getElementById('liMaker').value || pickedMakerId,
       name: document.getElementById('liName').value.trim(),
       price: document.getElementById('liPrice').value.trim(),
       category: document.getElementById('liCat').value,
@@ -467,7 +525,7 @@ document.getElementById('listingForm').addEventListener('submit', function(e){
   var fd = new FormData();
   fd.append('photo', file);
   var makerSel = document.getElementById('liMaker');
-  fd.append('maker', makerSel.options[makerSel.selectedIndex] ? makerSel.options[makerSel.selectedIndex].text : 'maker');
+  fd.append('maker', (makerSel.options[makerSel.selectedIndex] ? makerSel.options[makerSel.selectedIndex].text : pickedMakerLabel()) || 'maker');
   fd.append('listing', document.getElementById('liName').value.trim());
   showToast('Uploading picture…');
   var headers = {};
@@ -490,6 +548,7 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
     document.getElementById('liId').value = l.id;
     var ms = document.getElementById('liMakerSearch');
     if(ms){ ms.value = ''; makerSelectSearch = ''; fillMakerSelect(overview ? overview.makers : []); }
+    pickedMakerId = l.maker_id || '';
     document.getElementById('liMaker').value = l.maker_id || '';
     document.getElementById('liName').value = l.name || '';
     document.getElementById('liPrice').value = l.price || '';

@@ -122,6 +122,7 @@
         <div class="mrow">
           <div class="mfield"><label for="liMaker">Maker</label>
             <div class="mrow"><input id="liMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liMaker" aria-label="Maker"></select></div>
+            <p class="note" id="liMakerCount" style="margin-top:6px"></p>
           </div>
           <div class="mfield"><label for="liName">Product name</label><input id="liName" type="text" placeholder="e.g. Speckled Stoneware Mug" required></div>
         </div>
@@ -146,6 +147,7 @@
         <div class="mfield"><label for="liSearch">Search listings</label><input id="liSearch" type="search" placeholder="Search by product name…" autocomplete="off"></div>
         <div class="mfield"><label for="liFilterMaker">Maker</label>
           <div class="mrow"><input id="liFilterMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liFilterMaker" aria-label="Maker"><option value="">All makers</option></select></div>
+          <p class="note" id="liFilterMakerCount" style="margin-top:6px"></p>
         </div>
       </div>
       <div class="mrow">
@@ -251,5 +253,5 @@
 </main>
 
 <div class="toast" id="toast" role="status"></div>
-<script src="manage.js"></script>
+<script src="manage.js?v=2"></script>
 </body></html>
