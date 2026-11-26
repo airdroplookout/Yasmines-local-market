@@ -1076,7 +1076,7 @@ document.getElementById('fmMaker').addEventListener('change', function(){
   document.getElementById('fmHeading').value = shop ? (m.name + ' — ' + shop) : m.name;
   document.getElementById('fmMakerLine').value = shop ? (m.name + ' — ' + shop) : m.name;
   document.getElementById('fmButtonText').value = 'See all from ' + fmFirstName(m.name) + ' →';
-  if(m.name === 'Mary Stones') document.getElementById('fmButtonUrl').value = 'mary-stones.html';
+  if(m.name === 'Mary Stones') document.getElementById('fmButtonUrl').value = '/mary-stones';
   var firstPhoto = (featuredListings || []).find(function(l){ return l.maker_id === m.id && l.status === 'live' && l.photo; });
   if(firstPhoto){
     document.getElementById('fmPhoto').value = firstPhoto.photo;

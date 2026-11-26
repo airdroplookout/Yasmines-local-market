@@ -21,8 +21,8 @@
    broken image. To add a real logo: save the vendor's file as
    logos/<slug>.png and set logo: "logos/<slug>.png" here. */
 var VENDORS = {
-  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", label: "Mary Stones", page: "mary-stones.html", logo: "logos/mary-stones.png" },
-  "pottery-guru": { name: "Jared McDonald", shop: "Pottery Guru", initials: "PG", label: "Pottery Guru", page: "pottery-guru.html", logo: "logos/pottery-guru.png" },
+  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", label: "Mary Stones", page: "/mary-stones", logo: "logos/mary-stones.png" },
+  "pottery-guru": { name: "Jared McDonald", shop: "Pottery Guru", initials: "PG", label: "Pottery Guru", page: "/pottery-guru", logo: "logos/pottery-guru.png" },
   rosa:    { name: "Rosa M.", shop: "Rosa’s Pottery Corner", initials: "RM", page: null, logo: "logos/rosa.png" },
   fatima:  { name: "Fatima K.", shop: "Fatima’s Knits", initials: "FK", page: null, logo: "logos/fatima.png" },
   layla:   { name: "Layla H.", shop: "Layla Beads", initials: "LH", page: null, logo: "logos/layla.png" },

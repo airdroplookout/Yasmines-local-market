@@ -172,7 +172,7 @@ async function onPost(context) {
         body: JSON.stringify({ verify_token_hash: tokenHash, verify_expires_at: expiresAt, email_verified: false }),
       });
       const base = String(context.env.SITE_URL || "https://locallycrafted.ca").trim().replace(/\/+$/, "") || "https://locallycrafted.ca";
-      const verifyUrl = `${base}/verify-submission.html?token=${token}`;
+      const verifyUrl = `${base}/verify-submission?token=${token}`;
       const html = `<!doctype html><html><body style="font-family:system-ui,Arial,sans-serif;max-width:640px;margin:0 auto;padding:16px">`
         + `<p>Hi ${escHtml(maker_name)},</p>`
         + `<p>Thanks for submitting <strong>${escHtml(product_name)}</strong> to Locally Crafted CA. Please confirm this email address so we can review your product:</p>`
