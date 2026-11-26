@@ -19,6 +19,7 @@
 <main class="manage">
   <!-- Login screen -->
   <div id="loginCard">
+    <p class="eyebrow">Locally Crafted CA · Team only</p>
     <h1>Manage — Locally Crafted CA</h1>
     <p class="sub">This area is for the market team only. Sign in to see makers, listings, product submissions, reservations, the featured maker and visits.</p>
     <div class="card" style="max-width:480px">
@@ -54,11 +55,16 @@
 
   <!-- Dashboard shell (hidden until sign-in) -->
   <div id="dash" style="display:none">
-    <h1>Manage — Locally Crafted CA</h1>
-    <p class="sub">Market team area. <span id="dashSummary">Loading…</span></p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-      <button class="mbtn mbtn-ghost" id="logoutBtn" type="button">Sign out</button>
-      <button class="mbtn mbtn-ghost" id="logoutAllBtn" type="button">Sign out everywhere</button>
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Locally Crafted CA · Team only</p>
+        <h1>Manage</h1>
+        <p class="sub">Market team area. <span id="dashSummary">Loading…</span></p>
+      </div>
+      <div class="dash-actions">
+        <button class="mbtn mbtn-ghost" id="logoutBtn" type="button">Sign out</button>
+        <button class="mbtn mbtn-ghost" id="logoutAllBtn" type="button">Sign out everywhere</button>
+      </div>
     </div>
 
     <nav class="mnav" aria-label="Manage sections">

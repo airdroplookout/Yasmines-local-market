@@ -350,3 +350,72 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .promo-banner{font-size:.82rem;letter-spacing:.05em;padding:12px 54px 12px 14px;white-space:nowrap}
 }
 @media (prefers-reduced-motion: reduce){ .promo-modal{animation:none} }
+
+/* Manage admin area — professional redesign (Nov 25, 2026).
+   Visual only: same ids, classes and JS behaviour. Every rule is
+   scoped under .manage (or #toast) so the public pages are untouched.
+   Manage had no styles at all before this — plain browser defaults. */
+.manage{max-width:1080px;margin:0 auto;padding:24px 16px 56px}
+.manage h1{font-size:1.65rem;margin:0 0 6px}
+.manage .sub{color:var(--muted);margin:0 0 4px;font-size:.98rem}
+.manage .note{color:var(--muted);font-size:.9rem;margin:12px 0 0}
+.manage .eyebrow{font-size:.8rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 6px}
+/* Dashboard header: title left, sign-out right, terracotta rule below. */
+.dash-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:2px solid var(--accent);margin-bottom:6px}
+.dash-actions{display:flex;gap:10px;flex-wrap:wrap}
+/* Section navigation: tidy pills, one tap to each section. */
+.mnav{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.manage .chip{border:1.5px solid var(--sage);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 16px;font-weight:800;font-size:.92rem;cursor:pointer;min-height:44px}
+.manage .chip:hover{border-color:var(--accent);color:var(--accent)}
+.manage .chip.active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Sections: soft cards with clear headings. */
+.manage section.card{display:block;padding:22px 24px;margin-top:18px;box-shadow:var(--shadow)}
+.manage section.card h2{font-size:1.35rem;margin:0 0 6px}
+.manage section.card h3{font-size:1.1rem;margin:20px 0 6px}
+.manage #loginCard .card,.manage #resetCard .card{display:block;padding:26px;margin-top:18px;box-shadow:var(--shadow)}
+/* Forms: bold labels, soft bordered inputs, sage focus ring. */
+.mfield{margin-bottom:14px;flex:1;min-width:200px}
+.mfield label{display:block;font-weight:800;font-size:.9rem;margin-bottom:6px}
+.mfield input,.mfield select,.mfield textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.mfield input:focus,.mfield select:focus,.mfield textarea:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px var(--sage-soft)}
+.mfield textarea{min-height:120px;resize:vertical}
+.mrow{display:flex;gap:14px;flex-wrap:wrap}
+/* Buttons: solid terracotta primary, quiet ghost secondary. */
+.mbtn{background:var(--accent);color:var(--accent-ink);border:1.5px solid var(--accent);border-radius:999px;padding:11px 22px;font-weight:800;cursor:pointer}
+.mbtn:hover{filter:brightness(.94)}
+.mbtn:disabled{opacity:.55;cursor:not-allowed}
+.mbtn-ghost{background:var(--surface);color:var(--ink);border-color:var(--sage)}
+.mbtn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.mlink{background:none;border:none;color:var(--accent);font-weight:800;cursor:pointer;padding:10px 0;min-height:44px;text-decoration:underline}
+.err{display:none;color:#8B1E1E;font-weight:700;margin:8px 0}
+/* Tables: clean rows, small-caps headers, sideways scroll on phones. */
+.tablewrap{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:12px}
+.mtable{width:100%;border-collapse:collapse;font-size:.93rem;background:var(--surface)}
+.mtable th{text-align:left;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:12px;border-bottom:2px solid var(--line);white-space:nowrap}
+.mtable td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.mtable tr:last-child td{border-bottom:none}
+.manage .pill{display:inline-block;background:var(--sage-soft);color:var(--sage);border-radius:999px;padding:3px 10px;font-size:.8rem;font-weight:800;white-space:nowrap}
+.manage .pill.arch{background:var(--surface2);color:var(--muted)}
+.mini{background:var(--surface);border:1.5px solid var(--sage);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:800;cursor:pointer;min-height:36px;margin:2px 4px 2px 0}
+.mini:hover{border-color:var(--accent);color:var(--accent)}
+.mini.danger{border-color:#C0392B;color:#C0392B}
+/* Visits stats: four calm stat cards. */
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.mstat{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.mstat strong{display:block;font-family:"Fraunces",Georgia,serif;font-size:1.9rem;line-height:1.1}
+.mstat span{color:var(--muted);font-size:.88rem;font-weight:700}
+.switchrow{display:flex;gap:12px;align-items:flex-start;background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px;cursor:pointer}
+.switchrow input{width:20px;height:20px;margin-top:2px;accent-color:var(--sage);flex:none}
+.switchrow span span{display:block;color:var(--muted);font-size:.9rem;font-weight:400}
+.manage .backlink{display:inline-block;margin-top:22px;font-weight:800}
+/* Toast: dark Forest pill that slides up from the bottom. */
+#toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,80px);background:#243032;color:#FAF7F2;border-radius:999px;padding:12px 22px;font-weight:700;box-shadow:0 12px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:80;max-width:calc(100vw - 32px);text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:700px){
+  .manage{padding:18px 12px 48px}
+  .manage section.card{padding:18px 16px}
+  .mgrid{grid-template-columns:repeat(2,1fr)}
+  .dash-head{flex-direction:column;align-items:flex-start}
+  .mnav{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
+  .manage .chip{white-space:nowrap}
+}
