@@ -244,10 +244,10 @@ function applySoldCounts() {
         '<h3>' + title + '</h3>' +
         '<p class="maker">by ' + esc(p.maker) + ' — ' + esc(p.shop) + '</p>' +
         soldHtml(p) +
-        (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
         '<p class="desc">' + esc(p.desc) + '</p>' +
         '<div class="card-row"><p class="price-sm">' + esc(p.price) + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + esc(id) + '">Reserve this item</button></div>' +
+        (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
       '</div>';
     /* Broken vendor-logo images remove themselves (was inline onerror). */
     card.querySelectorAll("img[data-remove-on-error]").forEach(function (img) {

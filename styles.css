@@ -142,7 +142,7 @@ a{color:var(--accent)}
    monogram chip inside its solid terracotta pill, so the two look
    like one family. Wording stays exactly "See all from <maker> →"
    and the destination never changes. */
-.vendor-link{margin:5px 0 3px}
+.vendor-link{margin:8px 0 0}
 .vendor-link a.see-all-chip{display:flex;align-items:center;gap:8px;min-height:44px;padding:7px 12px 7px 7px;background:var(--sage-soft);border:1px solid var(--sage);border-radius:12px;color:var(--ink);font-size:.85rem;font-weight:800;line-height:1.25;text-decoration:none}
 .vendor-link a.see-all-chip:hover{border-color:var(--accent);background:var(--accent-soft)}
 .see-all-mono{width:28px;height:28px;border-radius:50%;background:var(--surface);color:var(--accent);border:1px solid var(--line);font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:.72rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;flex:none}
