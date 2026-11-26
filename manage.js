@@ -125,7 +125,7 @@ document.getElementById('logoutAllBtn').addEventListener('click', function(){
 // --- Section tabs ---
 function activateSection(id){
   document.querySelectorAll('.mnav .chip').forEach(function(x){ x.classList.toggle('active', x.getAttribute('data-sec') === id); });
-  ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secSettings'].forEach(function(sid){
+  ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secFeatured', 'secSettings'].forEach(function(sid){
     document.getElementById(sid).style.display = (sid === id) ? 'block' : 'none';
   });
 }
@@ -158,6 +158,7 @@ function loadOverview(){
     var s = j.settings || {};
     document.getElementById('setNotif').value = s.notification_email || '';
     document.getElementById('setSender').value = s.sender_email || '';
+    fillFeaturedForm(j.makers || [], j.listings || [], s.featured_maker || '');
   }).catch(function(ex){
     if(/unauthorized/i.test(ex.message || '')){ logout(); return; }
     showToast(ex.message || 'Could not load Manage.');
@@ -656,6 +657,133 @@ document.getElementById('subBody').addEventListener('click', function(e){
       .then(function(){ showToast('Submission deleted.'); loadOverview(); })
       .catch(function(ex){ showToast(ex.message); });
   }
+});
+
+// --- Featured maker ---
+// The home page "Featured maker" box. Saved as one JSON value in the
+// settings table (key "featured_maker") via POST /api/admin/settings —
+// the same save the Settings tab uses — and the home page reads it back
+// from GET /api/featured, so saving here updates the site with no
+// redeploy. Until anything is saved, the home page keeps its hardcoded
+// Mary Stones content. Picking a maker fills in their words and their
+// first listing photo; everything stays editable afterwards.
+var featuredMakers = [];
+var featuredListings = [];
+function fmFirstName(name){
+  var parts = (name || '').trim().split(/\s+/);
+  return parts[0] || 'this maker';
+}
+function fmInitials(name){
+  var parts = (name || '?').trim().split(/\s+/);
+  var first = parts[0] ? parts[0].charAt(0) : '?';
+  var last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+  return (first + last).toUpperCase();
+}
+function showFmPhotoPreview(photo){
+  var wrap = document.getElementById('fmPhotoPreview');
+  var img = document.getElementById('fmPhotoImg');
+  var pathEl = document.getElementById('fmPhotoPath');
+  var noneEl = document.getElementById('fmPhotoNone');
+  if(photo){
+    img.src = photo;
+    pathEl.textContent = photo;
+    wrap.style.display = 'block';
+    noneEl.style.display = 'none';
+  } else {
+    img.removeAttribute('src');
+    pathEl.textContent = '';
+    wrap.style.display = 'none';
+    noneEl.style.display = 'block';
+  }
+}
+function fillFeaturedForm(makers, listings, savedRaw){
+  featuredMakers = (makers || []).filter(function(m){ return m.status === 'live'; });
+  featuredListings = listings || [];
+  var sel = document.getElementById('fmMaker');
+  var keep = sel.value;
+  sel.innerHTML = featuredMakers.map(function(m){
+    return '<option value="' + esc(m.id) + '">' + esc(m.name) + (m.shop_name ? ' — ' + esc(m.shop_name) : '') + '</option>';
+  }).join('');
+  var saved = null;
+  try { saved = savedRaw ? JSON.parse(savedRaw) : null; } catch (e) { saved = null; }
+  if(saved && saved.maker_id && featuredMakers.some(function(m){ return m.id === saved.maker_id; })) {
+    sel.value = saved.maker_id;
+  } else if(keep && featuredMakers.some(function(m){ return m.id === keep; })) {
+    sel.value = keep;
+  }
+  document.getElementById('fmHeading').value = (saved && saved.heading) || '';
+  document.getElementById('fmMakerLine').value = (saved && saved.maker_line) || '';
+  document.getElementById('fmDesc').value = (saved && saved.description) || '';
+  document.getElementById('fmButtonText').value = (saved && saved.button_text) || '';
+  document.getElementById('fmButtonUrl').value = (saved && saved.button_url) || '';
+  document.getElementById('fmPhoto').value = (saved && saved.photo) || '';
+  showFmPhotoPreview((saved && saved.photo) || '');
+}
+document.getElementById('fmMaker').addEventListener('change', function(){
+  var m = featuredMakers.find(function(x){ return x.id === document.getElementById('fmMaker').value; });
+  if(!m) return;
+  var shop = m.shop_name || '';
+  document.getElementById('fmHeading').value = shop ? (m.name + ' — ' + shop) : m.name;
+  document.getElementById('fmMakerLine').value = shop ? (m.name + ' — ' + shop) : m.name;
+  document.getElementById('fmButtonText').value = 'See all from ' + fmFirstName(m.name) + ' →';
+  if(m.name === 'Mary Stones') document.getElementById('fmButtonUrl').value = 'mary-stones.html';
+  var firstPhoto = (featuredListings || []).find(function(l){ return l.maker_id === m.id && l.status === 'live' && l.photo; });
+  if(firstPhoto){
+    document.getElementById('fmPhoto').value = firstPhoto.photo;
+    showFmPhotoPreview(firstPhoto.photo);
+  }
+  if(m.bio) document.getElementById('fmDesc').value = m.bio;
+});
+document.getElementById('fmPhotoFile').addEventListener('change', function(){
+  var f = this.files && this.files[0];
+  if(!f){ showFmPhotoPreview(document.getElementById('fmPhoto').value.trim()); return; }
+  document.getElementById('fmPhotoImg').src = URL.createObjectURL(f);
+  document.getElementById('fmPhotoPath').textContent = 'New picture: ' + f.name + ' — uploads when you save.';
+  document.getElementById('fmPhotoPreview').style.display = 'block';
+  document.getElementById('fmPhotoNone').style.display = 'none';
+});
+document.getElementById('featuredForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var makerId = document.getElementById('fmMaker').value;
+  var m = featuredMakers.find(function(x){ return x.id === makerId; });
+  if(!m){ showToast('Pick a maker first.'); return; }
+  var heading = document.getElementById('fmHeading').value.trim();
+  if(!heading){ showToast('Add a heading for the featured maker.'); return; }
+  var fileInput = document.getElementById('fmPhotoFile');
+  var file = fileInput.files && fileInput.files[0];
+  var photo = document.getElementById('fmPhoto').value.trim();
+  function saveFeatured(){
+    var data = {
+      maker_id: m.id,
+      maker_name: m.name,
+      shop_name: m.shop_name || '',
+      heading: heading,
+      maker_line: document.getElementById('fmMakerLine').value.trim(),
+      description: document.getElementById('fmDesc').value.trim(),
+      button_text: document.getElementById('fmButtonText').value.trim(),
+      button_url: document.getElementById('fmButtonUrl').value.trim(),
+      photo: photo,
+      badge_initials: fmInitials(m.name),
+      badge_logo: ''
+    };
+    api('/api/admin/settings', 'POST', { featured_maker: JSON.stringify(data) })
+      .then(function(){ showToast('Featured maker saved — the home page shows it now.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+  }
+  if(!file){ saveFeatured(); return; }
+  if(file.size > 5 * 1024 * 1024){ showToast('That picture is over 5 MB — pick a smaller one.'); return; }
+  if(file.type.indexOf('image/') !== 0){ showToast('Only pictures can be uploaded.'); return; }
+  var fd = new FormData();
+  fd.append('photo', file);
+  fd.append('maker', m.name);
+  fd.append('listing', 'featured');
+  showToast('Uploading picture…');
+  var headers = {};
+  if(token) headers['x-admin-session'] = token;
+  fetch('/api/admin/upload-photo', {method: 'POST', headers: headers, body: fd})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
+    .then(function(j){ photo = j.url; saveFeatured(); })
+    .catch(function(ex){ showToast(ex.message || 'Picture upload failed.'); });
 });
 
 // --- Settings ---

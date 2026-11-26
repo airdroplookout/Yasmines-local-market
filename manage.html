@@ -20,7 +20,7 @@
   <!-- Login screen -->
   <div id="loginCard">
     <h1>Manage — Locally Crafted CA</h1>
-    <p class="sub">This area is for the market team only. Sign in to see makers, listings, product submissions, reservations and visits.</p>
+    <p class="sub">This area is for the market team only. Sign in to see makers, listings, product submissions, reservations, the featured maker and visits.</p>
     <div class="card" style="max-width:480px">
       <form id="loginForm">
         <div class="mfield">
@@ -67,6 +67,7 @@
       <button class="chip" data-sec="secListings">Listings</button>
       <button class="chip" data-sec="secSubmissions">Submissions</button>
       <button class="chip" data-sec="secRes">Reservations</button>
+      <button class="chip" data-sec="secFeatured">Featured maker</button>
       <button class="chip" data-sec="secSettings">Settings</button>
     </nav>
 
@@ -169,6 +170,31 @@
         <tbody id="resBody"></tbody>
       </table></div>
       <p class="note">The reserve form still sends reservations by email (FormSubmit) until it is switched to save here — see the backend README. This list fills in once that switch is made.</p>
+    </section>
+
+    <section class="card" id="secFeatured" style="display:none">
+      <h2>Featured maker</h2>
+      <p class="sub">The maker shown in the “Featured maker” box on the home page. Pick a maker, check the words and picture, then save — the home page updates straight away, no redeploy needed. Until you save here, the home page keeps showing Mary Stones.</p>
+      <form id="featuredForm" style="margin-top:16px">
+        <div class="mrow">
+          <div class="mfield"><label for="fmMaker">Maker</label><select id="fmMaker" aria-label="Featured maker"></select></div>
+          <div class="mfield"><label for="fmButtonUrl">Button link (where the button goes)</label><input id="fmButtonUrl" type="text" placeholder="e.g. mary-stones.html" maxlength="200"></div>
+        </div>
+        <div class="mfield"><label for="fmHeading">Heading</label><input id="fmHeading" type="text" placeholder="e.g. Mary Stones — Handmade Pottery" maxlength="120"></div>
+        <div class="mfield"><label for="fmMakerLine">Maker line (under the heading)</label><input id="fmMakerLine" type="text" placeholder="e.g. Mary Stones — Mary’s Pottery" maxlength="120"></div>
+        <div class="mfield"><label for="fmDesc">Description</label><textarea id="fmDesc" placeholder="One or two lines about the maker."></textarea></div>
+        <div class="mfield"><label for="fmButtonText">Button text</label><input id="fmButtonText" type="text" placeholder="e.g. See all from Mary →" maxlength="60"></div>
+        <div class="mfield"><label for="fmPhotoFile">Photo — upload pictures</label>
+          <input id="fmPhotoFile" type="file" accept="image/*">
+          <input type="hidden" id="fmPhoto" value="">
+          <div id="fmPhotoPreview" style="display:none;margin-top:10px">
+            <img id="fmPhotoImg" src="" alt="Featured maker photo" style="max-width:220px;max-height:160px;border-radius:12px;border:1px solid var(--line)">
+            <p class="note" id="fmPhotoPath" style="word-break:break-all"></p>
+          </div>
+          <p class="note" id="fmPhotoNone">No photo yet — pick a picture above (JPG, PNG or WebP, up to 5 MB). It uploads when you save. Picking a maker fills in their first listing photo if they have one.</p>
+        </div>
+        <button class="mbtn" type="submit">Save featured maker</button>
+      </form>
     </section>
 
     <section class="card" id="secSettings" style="display:none">

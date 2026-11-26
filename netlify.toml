@@ -110,6 +110,10 @@
   from = "/api/admin/settings"
   to = "/.netlify/functions/admin-settings"
   status = 200
+[[redirects]]
+  from = "/api/featured"
+  to = "/.netlify/functions/featured"
+  status = 200
 
 # Security headers on every page.
 # Content-Security-Policy (audit M-3, enforced Nov 25, 2026): inline

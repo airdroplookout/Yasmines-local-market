@@ -377,6 +377,69 @@ function applySoldCounts() {
     });
 })();
 
+/* Featured maker — data-driven from Manage (Nov 2026). The homepage
+   ships with Mary Stones hardcoded above as the fallback; when the
+   owner saves a Featured maker in Manage, GET /api/featured returns it
+   and this swaps the section in place — no redeploy needed. A missing
+   or failed feed leaves the hardcoded Mary content exactly as it is.
+   Text goes in via textContent and links via setAttribute, never
+   innerHTML, so saved markup can never run here (audit H-1). */
+(function applyFeatured() {
+  var box = document.getElementById("featured-maker");
+  if (!box) return;
+  function safeUrl(u) {
+    var s = String(u || "").trim();
+    if (!s) return null;
+    if (/^(javascript|data|vbscript):/i.test(s)) return null;
+    if (s.indexOf("/") === 0 || s.indexOf("./") === 0 || s.indexOf("#") === 0) return s;
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^[a-z0-9._\-\/]+$/i.test(s) && s.indexOf("..") === -1) return s; /* bare relative path, e.g. mary-stones.html */
+    return null;
+  }
+  function setTextEl(id, val) { var el = document.getElementById(id); if (el && val) el.textContent = val; }
+  fetch("/api/featured")
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      var f = data && data.featured;
+      if (!f || typeof f !== "object") return;
+      setTextEl("fm-heading", f.heading);
+      setTextEl("fm-maker-line", f.maker_line);
+      setTextEl("fm-desc", f.description);
+      var btn = document.getElementById("fm-button");
+      if (btn) {
+        if (f.button_text) btn.textContent = f.button_text;
+        var url = safeUrl(f.button_url);
+        if (url) btn.setAttribute("href", url);
+      }
+      var photo = document.getElementById("fm-photo");
+      if (photo) {
+        var img = safeUrl(f.photo);
+        if (img) {
+          photo.setAttribute("src", img);
+          photo.setAttribute("alt", (f.heading || "Featured maker") + " — featured piece");
+        }
+      }
+      var badge = document.getElementById("fm-badge");
+      var badgeImg = document.getElementById("fm-badge-img");
+      var badgeMono = document.getElementById("fm-badge-mono");
+      if (badge) {
+        var burl = safeUrl(f.button_url);
+        if (burl) {
+          badge.setAttribute("href", burl);
+          badge.setAttribute("title", "See all from " + (f.maker_name || "this maker"));
+          badge.setAttribute("aria-label", "See all from " + (f.maker_name || "this maker"));
+        }
+      }
+      if (badgeImg) {
+        var logo = safeUrl(f.badge_logo);
+        if (logo) { badgeImg.setAttribute("src", logo); badgeImg.style.display = ""; }
+        else badgeImg.remove();
+      }
+      if (badgeMono && f.badge_initials) badgeMono.textContent = f.badge_initials;
+    })
+    .catch(function () { /* keep the hardcoded fallback — never break the shop */ });
+})();
+
 /* Safe element setters — a missing element must never kill Reserve.
    ROOT CAUSE, Nov 25 2026: Audit #3 removed the old FormSubmit
    _subject hidden input (id="h-subject") from index.html and
