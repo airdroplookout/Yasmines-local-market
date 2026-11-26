@@ -154,6 +154,13 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .note-strip p{margin:0;color:var(--muted);font-size:.95rem}
 /* The same strip moved to the top, directly under the H1: tighter top margin so it sits close under the heading. */
 .note-strip-top{margin:18px 0 8px}
+/* Subtle lift for the top strip: a whisper of sage on the strip, a
+   thin terracotta top edge on each card, slightly bolder headings and
+   a soft shadow — noticeable, never loud. */
+.note-strip-top{background:var(--sage-soft);box-shadow:var(--shadow)}
+.note-strip-top>div{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px;padding:14px 16px}
+.note-strip-top h3{font-weight:800}
+.note-icon{width:26px;height:26px;color:var(--accent);margin-bottom:6px}
 
 .makers-cta{margin-top:36px;background:var(--sage-soft);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:18px;padding:30px 32px;display:flex;align-items:center;gap:32px;box-shadow:var(--shadow)}
 .makers-cta-text{flex:1;min-width:0}
