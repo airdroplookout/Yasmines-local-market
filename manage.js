@@ -148,17 +148,19 @@ function loadOverview(){
     document.getElementById('vWeek').textContent = v.week != null ? v.week : '—';
     document.getElementById('vMonth').textContent = v.month != null ? v.month : '—';
     document.getElementById('vYear').textContent = v.year != null ? v.year : '—';
-    // Subscriber count on the Visits tab, from the same overview payload
-    // as the Newsletter list. On a load failure it must say so — never a
-    // silent 0.
-    var vSub = document.getElementById('vSubscribers');
-    if(vSub){
-      if(j.subscribers_error || j.subscribers === undefined) vSub.textContent = 'Subscribers: could not be loaded';
-      else {
-        var subs = j.subscribers || [];
-        var subAct = subs.filter(function(s){ return s.status === 'active'; }).length;
-        vSub.textContent = 'Subscribers: ' + subs.length + ' · ' + subAct + ' active';
-      }
+    // Subscriber counts on the Visits tab, as two stat boxes in the middle
+    // of the visits row (same overview payload as the Newsletter list).
+    // On a load failure both show a dash — never a silent 0.
+    var vSubTotal = document.getElementById('vSubTotal');
+    var vSubActive = document.getElementById('vSubActive');
+    if(j.subscribers_error || j.subscribers === undefined){
+      if(vSubTotal) vSubTotal.textContent = '—';
+      if(vSubActive) vSubActive.textContent = '—';
+    } else {
+      var subs = j.subscribers || [];
+      var subAct = subs.filter(function(s){ return s.status === 'active'; }).length;
+      if(vSubTotal) vSubTotal.textContent = subs.length;
+      if(vSubActive) vSubActive.textContent = subAct;
     }
     document.getElementById('dashSummary').textContent =
       (j.live_makers != null ? j.live_makers : 0) + ' live makers · ' +
