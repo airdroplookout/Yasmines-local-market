@@ -26,34 +26,42 @@
   from = "/index.html"
   to = "/"
   status = 301
+  force = true
 [[redirects]]
   from = "/mary-stones.html"
   to = "/mary-stones"
   status = 301
+  force = true
 [[redirects]]
   from = "/pottery-guru.html"
   to = "/pottery-guru"
   status = 301
+  force = true
 [[redirects]]
   from = "/contact.html"
   to = "/contact"
   status = 301
+  force = true
 [[redirects]]
   from = "/submit-product.html"
   to = "/submit-product"
   status = 301
+  force = true
 [[redirects]]
   from = "/privacy.html"
   to = "/privacy"
   status = 301
+  force = true
 [[redirects]]
   from = "/terms.html"
   to = "/terms"
   status = 301
+  force = true
 [[redirects]]
   from = "/verify-submission.html"
   to = "/verify-submission"
   status = 301
+  force = true
 
 # Hidden owner route: /manage serves the Manage page (no public menu link
 # points to it). ?reset=<token> on /manage opens the password-reset card.
