@@ -12,12 +12,17 @@
 /* Vendor registry — one entry per maker.
    page: the vendor's own shop page on this site (null for makers
    who don't have one yet — their badge shows but is not a link).
+   label: the name shown in the "See all from …" chip on listing cards
+   (Mary's chip says "Mary Stones", Jared's says "Pottery Guru" — the
+   name each maker is known by). Any maker with a page gets their chip
+   automatically from this registry; nothing is hardcoded per maker.
    logo:  logos/<vendor-slug>.png (or .webp). If the file is missing, the
    badge falls back to the monogram (initials in a small circle) — never a
    broken image. To add a real logo: save the vendor's file as
    logos/<slug>.png and set logo: "logos/<slug>.png" here. */
 var VENDORS = {
-  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", page: "mary-stones.html", logo: "logos/mary-stones.png" },
+  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", label: "Mary Stones", page: "mary-stones.html", logo: "logos/mary-stones.png" },
+  "pottery-guru": { name: "Jared McDonald", shop: "Pottery Guru", initials: "PG", label: "Pottery Guru", page: "pottery-guru.html", logo: "logos/pottery-guru.png" },
   rosa:    { name: "Rosa M.", shop: "Rosa’s Pottery Corner", initials: "RM", page: null, logo: "logos/rosa.png" },
   fatima:  { name: "Fatima K.", shop: "Fatima’s Knits", initials: "FK", page: null, logo: "logos/fatima.png" },
   layla:   { name: "Layla H.", shop: "Layla Beads", initials: "LH", page: null, logo: "logos/layla.png" },
@@ -40,7 +45,7 @@ function vendorBadge(p) {
   var inner = '<span class="vendor-mono" aria-hidden="true">' + esc(v.initials) + '</span>' +
     '<img src="' + esc(v.logo) + '" alt="" loading="lazy" data-remove-on-error />';
   if (v.page) {
-    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.name) + '" aria-label="See all from ' + esc(v.name) + '">' + inner + '</a>';
+    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.label || v.name) + '" aria-label="See all from ' + esc(v.label || v.name) + '">' + inner + '</a>';
   }
   return '<span class="vendor-badge" title="' + esc(v.shop) + '">' + inner + '</span>';
 }
@@ -62,7 +67,12 @@ var PRODUCTS = {
   "mary-butter": { category: "pottery", vendor: "mary-stones", name: "Lidded Butter Dish", maker: "Mary Stones", shop: "Mary's Pottery", price: "$36", img: "images/mary-butter.webp", alt: "Handmade stoneware butter dish with a blue-grey domed lid", desc: "A stoneware butter dish with a fitted lid in soft blue-grey glaze. Keeps butter fresh on the counter." },
   "mary-spoon": { category: "pottery", vendor: "mary-stones", name: "Ceramic Spoon Rest", maker: "Mary Stones", shop: "Mary's Pottery", price: "$28", img: "images/mary-spoon.webp", alt: "Long speckled ceramic spoon rest holding a wooden spoon on a kitchen counter", desc: "A long speckled spoon rest that keeps drips off the counter — fits a wooden spoon or a ladle." },
   "mary-candle": { category: "pottery", vendor: "mary-stones", name: "Stoneware Candle Holder", maker: "Mary Stones", shop: "Mary's Pottery", price: "$30", img: "images/mary-candle.webp", alt: "Handmade stoneware candle holder with a pillar candle", desc: "A hand-thrown candle holder with a warm brown glaze and a little handle. Fits a standard pillar candle." },
-  "mary-platter": { category: "pottery", vendor: "mary-stones", name: "Serving Platter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$58", img: "images/mary-platter.webp", alt: "Wide handmade ceramic serving platter in soft earth tones", desc: "A wide hand-thrown serving platter, perfect for roasts, bread, or a spread of cheese." }
+  "mary-platter": { category: "pottery", vendor: "mary-stones", name: "Serving Platter", maker: "Mary Stones", shop: "Mary's Pottery", price: "$58", img: "images/mary-platter.webp", alt: "Wide handmade ceramic serving platter in soft earth tones", desc: "A wide hand-thrown serving platter, perfect for roasts, bread, or a spread of cheese." },
+  /* Jared McDonald — Pottery Guru (second real maker). No photos yet, so
+     img is null and the cards show the initials placeholder, as on the
+     front page. Descriptions and prices are exactly as in the database. */
+  "jared-vase": { category: "pottery", vendor: "pottery-guru", name: "Hand-thrown Flower Vase", maker: "Jared McDonald", shop: "Pottery Guru", price: "$45", img: null, alt: "Hand-thrown flower vase", desc: "Hand-thrown flower vase. Example listing — price to be confirmed by the maker." },
+  "jared-tall-vase": { category: "pottery", vendor: "pottery-guru", name: "Tall Ceramic Flower Vase", maker: "Jared McDonald", shop: "Pottery Guru", price: "$65", img: null, alt: "Tall ceramic flower vase", desc: "Tall ceramic flower vase. Example listing — price to be confirmed by the maker." }
 };
 var current = window.PAGE_PRODUCTS ? window.PAGE_PRODUCTS[0] : "mug";
 
@@ -98,7 +108,7 @@ function liveBadge(p) {
   var initials = v ? v.initials : initialsFor(p.maker);
   var inner = '<span class="vendor-mono" aria-hidden="true">' + esc(initials) + '</span>';
   if (v && v.page) {
-    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.name) + '" aria-label="See all from ' + esc(v.name) + '">' + inner + '</a>';
+    return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.label || v.name) + '" aria-label="See all from ' + esc(v.label || v.name) + '">' + inner + '</a>';
   }
   return '<span class="vendor-badge" title="' + esc(p.shop) + '">' + inner + '</span>';
 }
@@ -247,7 +257,7 @@ function applySoldCounts() {
         '<p class="desc">' + esc(p.desc) + '</p>' +
         '<div class="card-row"><p class="price-sm price-badge">' + esc(p.price) + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + esc(id) + '">Reserve this item</button></div>' +
-        (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
+        (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].label || VENDORS[p.vendor].name) + ' →</a></p>' : '') +
       '</div>';
     /* Broken vendor-logo images remove themselves (was inline onerror). */
     card.querySelectorAll("img[data-remove-on-error]").forEach(function (img) {
