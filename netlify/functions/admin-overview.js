@@ -5,6 +5,10 @@
 import { json, sbJson, requireAdmin, handlerFor, torontoToday, addDaysIso } from "./_lib.js";
 async function onGet(context) {
   const denied = await requireAdmin(context); if (denied) return denied;
+  // If the subscribers query fails, Manage must SAY SO instead of
+  // silently showing an empty list (a failed fetch used to look exactly
+  // like "nobody signed up"). The flag below is surfaced in Manage.
+  let subscribersError = false;
   try {
     const [makers, listings, reservations, submissions, subscribers, settingsRows, pageViews] = await Promise.all([
       sbJson(context, "makers?order=position.asc,created_at.asc&limit=200"),
@@ -14,8 +18,10 @@ async function onGet(context) {
       // (before its one-time SQL is run) must not break Manage.
       sbJson(context, "product_submissions?order=created_at.desc&limit=500").catch(() => []),
       // Newsletter subscribers: missing table (before
-      // supabase/subscribers.sql is run) must not break Manage.
-      sbJson(context, "subscribers?order=created_at.desc&limit=500").catch(() => []),
+      // supabase/subscribers.sql is run) must not break Manage — but a
+      // failed query is flagged (subscribers_error) so Manage can show
+      // "could not load" instead of an empty list.
+      sbJson(context, "subscribers?order=created_at.desc&limit=500").catch(() => { subscribersError = true; return []; }),
       // Only the keys Manage displays — never the password hash, reset-token
       // hash, lockout state or session version (audit M-5).
       sbJson(context, "settings?select=key,value&key=in.(notification_email,sender_email,site_domain,featured_maker)"),
@@ -41,7 +47,7 @@ async function onGet(context) {
       month: sum(r => r.day.startsWith(today.slice(0, 7))),
       year: sum(r => r.day.startsWith(today.slice(0, 4))),
     };
-    return json({ ok: true, makers, listings, reservations, submissions: submissions || [], subscribers: subscribers || [], visits,
+    return json({ ok: true, makers, listings, reservations, submissions: submissions || [], subscribers: subscribers || [], subscribers_error: subscribersError, visits,
       settings: Object.fromEntries(settingsRows.map(r => [r.key, r.value])),
       live_makers: liveMakers,
       live_listings: liveListings,

@@ -128,6 +128,10 @@ function activateSection(id){
   ['secVisits', 'secMakers', 'secListings', 'secSubmissions', 'secRes', 'secSubscribers', 'secFeatured', 'secSettings'].forEach(function(sid){
     document.getElementById(sid).style.display = (sid === id) ? 'block' : 'none';
   });
+  // Newsletter list: re-fetch fresh data every time this tab is opened,
+  // so signups made after login show up without a page refresh.
+  // (Other tabs keep their once-at-login snapshot.)
+  if(id === 'secSubscribers') loadOverview();
 }
 document.querySelectorAll('.mnav .chip').forEach(function(c){
   c.addEventListener('click', function(){ activateSection(c.getAttribute('data-sec')); });
@@ -164,6 +168,11 @@ function loadOverview(){
     renderSubmissions(j.submissions || []);
     renderRes(j.reservations || [], j.listings || [], j.makers || []);
     renderSubscribers(j.subscribers || []);
+    // A failed subscribers query must not look like "nobody signed up":
+    // the overview flags it (subscribers_error) and Manage shows a
+    // warning instead of the empty state, so a load failure is visible.
+    var subErr = document.getElementById('subLoadError');
+    if(subErr) subErr.style.display = (j.subscribers_error || j.subscribers === undefined) ? 'block' : 'none';
     var s = j.settings || {};
     document.getElementById('setNotif').value = s.notification_email || '';
     document.getElementById('setSender').value = s.sender_email || '';
@@ -782,6 +791,10 @@ function renderSubscribers(list){
       '<button class="mini danger" data-sub-del="' + s.id + '" data-label="' + esc(s.email) + '">Remove</button></td></tr>';
   }).join('');
 }
+// Refresh list button: re-fetch fresh data on demand. Opening this
+// tab already re-fetches too (see activateSection above).
+var subRefreshBtn = document.getElementById('subRefreshBtn');
+if(subRefreshBtn) subRefreshBtn.addEventListener('click', function(){ loadOverview(); showToast('Subscriber list refreshed.'); });
 document.getElementById('subBody').addEventListener('click', function(e){
   var arch = e.target.closest('[data-sub-archive]');
   var unsub = e.target.closest('[data-sub-unsubscribe]');
