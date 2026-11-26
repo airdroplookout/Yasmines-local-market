@@ -111,7 +111,7 @@
       <button class="chip" data-sec="secMakers">Makers</button>
       <button class="chip" data-sec="secListings">Listings</button>
       <button class="chip" data-sec="secRes">Reservations</button>
-      <button class="chip" data-sec="secSubscribers">Subscribers</button>
+      <button class="chip" data-sec="secSubscribers">Newsletter Submission</button>
       <button class="chip" data-sec="secSettings">Settings</button>
     </nav>
 
@@ -207,8 +207,17 @@
     </section>
 
     <section class="card" id="secSubscribers" style="display:none">
-      <h2>Newsletter subscribers</h2>
+      <h2>Newsletter Submission</h2>
       <p class="sub">People who signed up for the market newsletter on the home page. <span id="subCount"></span> Archived subscribers get no emails and do not count as active. Remove deletes a subscriber for good.</p>
+      <form id="nlSendForm" style="margin-top:16px">
+        <h3 style="margin:0 0 4px">Send the newsletter</h3>
+        <p class="sub" id="nlSendCount">This will send to 0 active subscribers.</p>
+        <div class="mfield"><label for="nlSubject">Subject</label><input id="nlSubject" type="text" placeholder="e.g. December makers, new pieces and market news" maxlength="200"></div>
+        <div class="mfield"><label for="nlBody">Message</label><textarea id="nlBody" rows="8" placeholder="Write the newsletter here. Plain text is fine — line breaks are kept."></textarea></div>
+        <p class="note">Each subscriber gets their own email — nobody sees anyone else's address. Attachment: none yet — the Issue 1 PDF is not hosted on the site, so it cannot be attached. It can be added once the PDF is on locallycrafted.ca.</p>
+        <button class="mbtn" type="submit" id="nlSendBtn">Send newsletter</button>
+        <p class="note" id="nlSendResult" style="display:none"></p>
+      </form>
       <div class="tablewrap"><table class="mtable">
         <thead><tr><th>Email</th><th>Signed up</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="subBody"></tbody>

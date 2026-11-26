@@ -583,6 +583,10 @@ function renderSubscribers(list){
   var count = document.getElementById('subCount');
   var active = (list || []).filter(function(s){ return s.status === 'active'; }).length;
   if(count) count.textContent = list.length ? (list.length + ' total · ' + active + ' active') : '';
+  var sendCount = document.getElementById('nlSendCount');
+  if(sendCount) sendCount.textContent = 'This will send to ' + active + ' active subscriber' + (active === 1 ? '' : 's') + '.';
+  var sendBtn = document.getElementById('nlSendBtn');
+  if(sendBtn) sendBtn.disabled = active === 0;
   if(!list.length){
     body.innerHTML = '<tr><td colspan="4" style="color:var(--muted)">No newsletter subscribers yet. People sign up from the home page.</td></tr>';
     return;
@@ -618,6 +622,38 @@ document.getElementById('subBody').addEventListener('click', function(e){
       .then(function(){ showToast('Subscriber removed.'); loadOverview(); })
       .catch(function(ex){ showToast(ex.message); });
   }
+});
+
+// --- Send the newsletter ---
+// Sends to every ACTIVE subscriber, one email each. Asks first, with
+// the live count, and shows sent / failed afterwards. Nothing is sent
+// until the owner clicks Send here — building this does not send mail.
+document.getElementById('nlSendForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var subject = document.getElementById('nlSubject').value.trim();
+  var body = document.getElementById('nlBody').value.trim();
+  var result = document.getElementById('nlSendResult');
+  var btn = document.getElementById('nlSendBtn');
+  if(!subject){ showToast('Add a subject first.'); return; }
+  if(!body){ showToast('Write the newsletter message first.'); return; }
+  var countText = (document.getElementById('nlSendCount') || {}).textContent || '';
+  var m = countText.match(/(\d+) active/);
+  var n = m ? parseInt(m[1], 10) : 0;
+  if(!n){ showToast('No active subscribers to send to yet.'); return; }
+  if(!window.confirm('Send this newsletter to ' + n + ' active subscriber' + (n === 1 ? '' : 's') + '?\n\nSubject: ' + subject)) return;
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  result.style.display = 'none';
+  api('/api/admin/send-newsletter', 'POST', {subject: subject, body: body})
+    .then(function(j){
+      var msg = 'Sent to ' + j.sent + ' of ' + j.recipients + ' subscriber' + (j.recipients === 1 ? '' : 's') + '.';
+      if(j.failed) msg += ' Failed: ' + j.failed + '.' + (j.failures && j.failures.length ? ' ' + j.failures.slice(0, 3).join(' ') : '');
+      result.textContent = msg;
+      result.style.display = 'block';
+      showToast(j.failed ? 'Newsletter sent with ' + j.failed + ' failure(s).' : 'Newsletter sent to ' + j.sent + ' subscriber' + (j.sent === 1 ? '' : 's') + '.');
+    })
+    .catch(function(ex){ showToast(ex.message); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Send newsletter'; });
 });
 
 // --- Product submissions (Submit a Product form) ---
