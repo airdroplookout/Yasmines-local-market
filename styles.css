@@ -252,6 +252,20 @@ textarea{min-height:120px;resize:vertical}
 .summary dd{margin:0;word-break:break-word}
 .confirm-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
+/* "More from this maker" on the thank-you page (Nov 25 2026): this section
+   had no layout rule at all, so each card stretched full-width and stacked
+   vertically with a huge photo. Now a row of up to 3 small cards side by
+   side, like the main grid. The 3-item cap lives in renderMoreFrom()
+   (items.slice(0, 3)) and is unchanged — only layout and size change. */
+.more-from{margin-top:24px;text-align:left}
+.more-from h3{margin:0 0 10px}
+.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.more-grid .card-body{padding:8px}
+.more-grid .card h3{font-size:.88rem}
+.more-grid .card .price-badge{min-width:44px;min-height:44px;padding:5px 10px}
+.more-grid .card .btn{padding:7px 9px;font-size:.8rem}
+.more-keep{margin:12px 0 0;text-align:center}
+
 footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.92rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
 @media (max-width:1100px){
@@ -259,6 +273,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
 }
 @media (max-width:820px){
   .grid{grid-template-columns:repeat(2,1fr)}
+  .more-grid{grid-template-columns:repeat(2,1fr)}
   .spotlight{grid-template-columns:1fr}
   .spotlight img{min-height:180px;max-height:240px;object-position:center 35%}
   .form-layout{grid-template-columns:1fr}
@@ -275,6 +290,7 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .topbar-tagline{font-size:.72rem}
   .topnav-link{padding:8px 14px}
   .grid{grid-template-columns:repeat(2,1fr);gap:8px}
+  .more-grid{grid-template-columns:1fr}
   .hero{padding-top:20px}
   .hero-actions{flex-direction:column;gap:12px;padding:0 16px}
   .hero-actions .btn{width:100%}
