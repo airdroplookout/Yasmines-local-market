@@ -167,7 +167,7 @@ function loadOverview(){
     renderListings(j.listings || [], j.makers || []);
     renderSubmissions(j.submissions || []);
     renderRes(j.reservations || [], j.listings || [], j.makers || []);
-    renderSubscribers(j.subscribers || []);
+    renderSubscribers(j.subscribers || [], j.subscribers_error || j.subscribers === undefined);
     // A failed subscribers query must not look like "nobody signed up":
     // the overview flags it (subscribers_error) and Manage shows a
     // warning instead of the empty state, so a load failure is visible.
@@ -768,13 +768,19 @@ if(archBodyEl){
 // (no emails, does not count as active); Restore brings them back;
 // Remove deletes the row for good. Emails are shown here only —
 // never on any public page.
-function renderSubscribers(list){
+function renderSubscribers(list, loadFailed){
   var body = document.getElementById('subBody');
   var count = document.getElementById('subCount');
+  var big = document.getElementById('subBigCount');
   var active = (list || []).filter(function(s){ return s.status === 'active'; }).length;
-  if(count) count.textContent = list.length ? (list.length + ' total · ' + active + ' active') : '';
+  // Prominent count at the top of the section: the real fetched numbers.
+  // On a load failure it must say so — never a silent 0.
+  if(big) big.textContent = loadFailed ? 'Subscriber count could not be loaded — tap Refresh list to try again.'
+    : (list.length + (list.length === 1 ? ' subscriber' : ' subscribers') + ' · ' + active + ' active');
+  if(count) count.textContent = loadFailed ? 'Could not load.' : (list.length ? (list.length + ' total · ' + active + ' active') : '');
   var sendCount = document.getElementById('nlSendCount');
-  if(sendCount) sendCount.textContent = 'This will send to ' + active + ' active subscriber' + (active === 1 ? '' : 's') + '.';
+  if(sendCount) sendCount.textContent = loadFailed ? 'Could not load the subscriber list.'
+    : 'This will send to ' + active + ' active subscriber' + (active === 1 ? '' : 's') + '.';
   var sendBtn = document.getElementById('nlSendBtn');
   if(sendBtn) sendBtn.disabled = active === 0;
   if(!list.length){
