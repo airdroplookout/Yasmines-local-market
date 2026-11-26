@@ -21,14 +21,14 @@
    broken image. To add a real logo: save the vendor's file as
    logos/<slug>.png and set logo: "logos/<slug>.png" here. */
 var VENDORS = {
-  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", label: "Mary Stones", page: "/mary-stones", logo: "logos/mary-stones.png" },
-  "pottery-guru": { name: "Jared McDonald", shop: "Pottery Guru", initials: "PG", label: "Pottery Guru", page: "/pottery-guru", logo: "logos/pottery-guru.png" },
-  rosa:    { name: "Rosa M.", shop: "Rosa’s Pottery Corner", initials: "RM", page: null, logo: "logos/rosa.png" },
-  fatima:  { name: "Fatima K.", shop: "Fatima’s Knits", initials: "FK", page: null, logo: "logos/fatima.png" },
-  layla:   { name: "Layla H.", shop: "Layla Beads", initials: "LH", page: null, logo: "logos/layla.png" },
-  emma:    { name: "Emma T.", shop: "Emma’s Little Light Co.", initials: "ET", page: null, logo: "logos/emma.png" },
-  grace:   { name: "Grace O.", shop: "Grace Sews", initials: "GO", page: null, logo: "logos/grace.png" },
-  nguyen:  { name: "The Nguyen Family", shop: "Nguyen Family Apiary", initials: "NF", page: null, logo: "logos/nguyen.png" }
+  "mary-stones": { name: "Mary Stones", shop: "Mary's Pottery", initials: "MS", label: "Mary Stones", page: "/mary-stones" },
+  "pottery-guru": { name: "Jared McDonald", shop: "Pottery Guru", initials: "PG", label: "Pottery Guru", page: "/pottery-guru" },
+  rosa:    { name: "Rosa M.", shop: "Rosa’s Pottery Corner", initials: "RM", page: null },
+  fatima:  { name: "Fatima K.", shop: "Fatima’s Knits", initials: "FK", page: null },
+  layla:   { name: "Layla H.", shop: "Layla Beads", initials: "LH", page: null },
+  emma:    { name: "Emma T.", shop: "Emma’s Little Light Co.", initials: "ET", page: null },
+  grace:   { name: "Grace O.", shop: "Grace Sews", initials: "GO", page: null },
+  nguyen:  { name: "The Nguyen Family", shop: "Nguyen Family Apiary", initials: "NF", page: null }
 };
 
 /* Tiny vendor-logo badge for a listing card. Links to the vendor's own
@@ -43,7 +43,7 @@ function vendorBadge(p) {
   var v = VENDORS[p.vendor];
   if (!v) return "";
   var inner = '<span class="vendor-mono" aria-hidden="true">' + esc(v.initials) + '</span>' +
-    '<img src="' + esc(v.logo) + '" alt="" loading="lazy" data-remove-on-error />';
+    (v.logo ? '<img src="' + esc(v.logo) + '" alt="" loading="lazy" data-remove-on-error />' : '');
   if (v.page) {
     return '<a class="vendor-badge" href="' + esc(v.page) + '" title="See all from ' + esc(v.label || v.name) + '" aria-label="See all from ' + esc(v.label || v.name) + '">' + inner + '</a>';
   }
