@@ -134,9 +134,17 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .note-strip h3{font-size:1.05rem;margin-bottom:6px}
 .note-strip p{margin:0;color:var(--muted);font-size:.95rem}
 
-.makers-cta{margin-top:28px;background:var(--sage-soft);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
-.makers-cta h3{font-size:1.2rem;margin-bottom:6px}
-.makers-cta p{margin:0;color:var(--muted);font-size:.97rem}
+.makers-cta{margin-top:36px;background:var(--sage-soft);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:18px;padding:30px 32px;display:flex;align-items:center;gap:32px;box-shadow:var(--shadow)}
+.makers-cta-text{flex:1;min-width:0}
+.makers-cta h2{font-size:clamp(1.4rem,3vw,1.7rem);margin:6px 0 8px}
+.makers-cta p{margin:0;color:var(--muted);font-size:1rem;max-width:56ch}
+.makers-cta-note{margin-top:10px !important;font-weight:700;color:var(--sage) !important;font-size:.95rem}
+.makers-cta-actions{display:flex;flex-direction:column;gap:12px;flex:none;width:280px}
+.makers-cta-actions .btn{width:100%}
+@media (max-width:700px){
+  .makers-cta{flex-direction:column;align-items:stretch;gap:20px;padding:24px 20px}
+  .makers-cta-actions{width:100%}
+}
 
 /* Share box (vendor page) */
 .share-box{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
