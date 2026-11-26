@@ -2,9 +2,13 @@
 // GET /api/admin/reservations — list all reservations, newest first.
 //   Owner only.
 // PATCH /api/admin/reservations?id=... — update status only:
-//   { status: "new" | "contacted" | "done" }.
+//   { status: "new" | "contacted" | "done" | "archived" }.
 //   "new" = just arrived, "contacted" = the maker replied, "done" = the
-//   exchange happened.
+//   exchange happened, "archived" = set aside by the owner (hidden from
+//   the main list, never counts toward "Sold", restorable to "new").
+//   NOTE: "archived" needs supabase/reservations-archived-status.sql
+//   run once in the Supabase SQL Editor — the reservations table's
+//   CHECK constraint only allowed new/contacted/done until then.
 // DELETE /api/admin/reservations?id=... — delete a reservation for good.
 // Owner only (ADMIN_API_KEY) for every method here.
 //
@@ -13,7 +17,7 @@
 // this list as well as in the inbox.
 import { json, sbJson, requireAdmin, handlerFor } from "./_lib.js";
 
-const STATUSES = ["new", "contacted", "done"];
+const STATUSES = ["new", "contacted", "done", "archived"];
 
 async function onGet(context) {
   const denied = await requireAdmin(context); if (denied) return denied;
@@ -31,7 +35,7 @@ async function onPatch(context) {
     if (!id) return json({ ok: false, error: "id is required" }, 400);
     const b = await context.request.json().catch(() => ({}));
     const status = String(b.status || "");
-    if (!STATUSES.includes(status)) return json({ ok: false, error: 'status must be one of: new, contacted, done' }, 400);
+    if (!STATUSES.includes(status)) return json({ ok: false, error: 'status must be one of: new, contacted, done, archived' }, 400);
     const rows = await sbJson(context, `reservations?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ status }) });
     return json({ ok: true, reservation: rows[0] || null });
   } catch (e) { return json({ ok: false, error: String(e.message || e) }, 500); }

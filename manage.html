@@ -7,12 +7,12 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23BC4A24'/%3E%3Ctext x='32' y='42' font-family='Georgia,serif' font-size='32' font-weight='bold' fill='%23FFF7EE' text-anchor='middle'%3EY%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Kalam:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header class="topbar"><div class="topbar-inner">
-  <a class="brand" href="index.html">Locally <span>Crafted CA</span></a>
+  <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13C7 13 4 9 4 5c4 0 8 3.5 8 8Z"/><path d="M12 11c0-4.5 3-8 8-8 0 5-3.5 8-8 8Z"/><path d="M11 12 6.5 6.5"/><path d="M13 10l5-5.5"/><path d="M12 21V11"/><path d="M3 21h18"/></svg>locallycrafted<span>.ca</span></a>
   <span class="topbar-tag">Manage</span>
 </div></header>
 
@@ -171,23 +171,36 @@
 
     <section class="card" id="secRes" style="display:none">
       <h2>Reservations</h2>
-      <p class="sub">Reservations buyers send through the site. New = just arrived, Contacted = the maker replied, Done = the exchange happened.</p>
+      <p class="sub">Reservations buyers send through the site. New = just arrived, Contacted = the maker replied, Done = the exchange happened. Archive sets one aside (it no longer counts toward “Sold”); Restore brings it back as New.</p>
       <div class="tablewrap"><table class="mtable">
         <thead><tr><th>Buyer</th><th>Product</th><th>Qty</th><th>Pickup / delivery</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="resBody"></tbody>
       </table></div>
+      <div id="resArchived" style="display:none">
+        <h3 style="margin:20px 0 6px">Archived reservations</h3>
+        <p class="sub">Set aside — they do not count toward “Sold” and no longer show above. Restore brings one back as New.</p>
+        <div class="tablewrap"><table class="mtable">
+          <thead><tr><th>Buyer</th><th>Product</th><th>Qty</th><th>Pickup / delivery</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="resArchBody"></tbody>
+        </table></div>
+      </div>
       <p class="note">The reserve form still sends reservations by email (FormSubmit) until it is switched to save here — see the backend README. This list fills in once that switch is made.</p>
     </section>
 
     <section class="card" id="secSubscribers" style="display:none">
       <h2>Newsletter Submission</h2>
-      <p class="sub">People who signed up for the market newsletter on the home page. <span id="subCount"></span> Archived subscribers get no emails and do not count as active. Remove deletes a subscriber for good.</p>
+      <p class="sub">People who signed up for the market newsletter on the home page. <span id="subCount"></span> Archived subscribers get no emails and do not count as active. Unsubscribe archives someone who asked to be removed (restorable). Remove deletes a subscriber for good.</p>
       <form id="nlSendForm" style="margin-top:16px">
         <h3 style="margin:0 0 4px">Send the newsletter</h3>
         <p class="sub" id="nlSendCount">This will send to 0 active subscribers.</p>
         <div class="mfield"><label for="nlSubject">Subject</label><input id="nlSubject" type="text" placeholder="e.g. December makers, new pieces and market news" maxlength="200"></div>
         <div class="mfield"><label for="nlBody">Message</label><textarea id="nlBody" rows="8" placeholder="Write the newsletter here. Plain text is fine — line breaks are kept."></textarea></div>
-        <p class="note">Each subscriber gets their own email — nobody sees anyone else's address. Attachment: none yet — the Issue 1 PDF is not hosted on the site, so it cannot be attached. It can be added once the PDF is on locallycrafted.ca.</p>
+        <div class="mfield"><label for="nlPdf">Attach PDF (optional)</label>
+          <input id="nlPdf" type="file" accept="application/pdf,.pdf">
+          <p class="note" id="nlPdfCurrent">Attached: <strong id="nlPdfName">locally-crafted-newsletter-issue-1.pdf</strong> <button class="mlink" id="nlPdfRemove" type="button">Remove</button></p>
+          <p class="note" id="nlPdfNone" style="display:none">No PDF attached — the newsletter will send without one. Pick a PDF above to attach one (PDF only, up to 10 MB).</p>
+        </div>
+        <p class="note">Each subscriber gets their own email — nobody sees anyone else's address. The attached PDF goes to every subscriber; every email also carries a one-click unsubscribe link.</p>
         <button class="mbtn" type="submit" id="nlSendBtn">Send newsletter</button>
         <p class="note" id="nlSendResult" style="display:none"></p>
       </form>

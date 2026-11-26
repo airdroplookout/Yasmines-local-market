@@ -527,31 +527,57 @@ document.getElementById('listingsBody').addEventListener('click', function(e){
 });
 
 // --- Reservations ---
+// Archive sets a reservation aside: it leaves the main list, appears
+// under "Archived reservations" below, never counts toward "Sold"
+// (only status='done' counts, server-side), and Restore brings it back
+// as New. Delete still removes it for good, with a confirm.
+// Buyer names are shown truncated with an ellipsis (CSS .buyer-name)
+// so a very long name already in the database can never stretch the
+// table — new names are capped at 20 characters at the reserve form
+// and server-side. The full name is on hover (title).
+function resRow(r, listings, makers, archived){
+  var pill = r.status === 'new' ? '<span class="pill">New</span>'
+    : r.status === 'contacted' ? '<span class="pill">Contacted</span>'
+    : r.status === 'archived' ? '<span class="pill arch">Archived</span>'
+    : '<span class="pill arch">Done</span>';
+  var nextBtn = !archived && r.status === 'new'
+    ? '<button class="mini" data-res-contacted="' + r.id + '">Mark contacted</button>'
+    : !archived && r.status === 'contacted'
+    ? '<button class="mini" data-res-done="' + r.id + '">Mark done</button>'
+    : '';
+  var archBtn = archived
+    ? '<button class="mini" data-res-restore="' + r.id + '">Restore</button>'
+    : '<button class="mini" data-res-archive="' + r.id + '">Archive</button>';
+  return '<tr><td><strong class="buyer-name" title="' + esc(r.buyer_name) + '">' + esc(r.buyer_name) + '</strong><br><span style="color:var(--muted)">' + esc(r.buyer_email) + '</span></td>' +
+    '<td>' + esc(listingName(listings, r.listing_id)) + '<br><span style="color:var(--muted)">' + esc(makerName(makers, r.maker_id)) + '</span></td>' +
+    '<td>' + esc(r.quantity || '1') + '</td><td>' + esc(r.delivery_method || 'Pickup') + '</td>' +
+    '<td>' + fmtDate(r.created_at) + '</td><td>' + pill + '</td><td>' + nextBtn + archBtn +
+    '<button class="mini danger" data-res-del="' + r.id + '">Delete</button></td></tr>';
+}
 function renderRes(list, listings, makers){
   var body = document.getElementById('resBody');
-  if(!list.length){
+  var archBody = document.getElementById('resArchBody');
+  var archWrap = document.getElementById('resArchived');
+  var active = (list || []).filter(function(r){ return r.status !== 'archived'; });
+  var archived = (list || []).filter(function(r){ return r.status === 'archived'; });
+  if(!active.length){
     body.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">No reservations saved yet. The reserve form still sends them by email — this list fills in once the form is switched to save here.</td></tr>';
-    return;
+  } else {
+    body.innerHTML = active.map(function(r){ return resRow(r, listings, makers, false); }).join('');
   }
-  body.innerHTML = list.map(function(r){
-    var pill = r.status === 'new' ? '<span class="pill">New</span>'
-      : r.status === 'contacted' ? '<span class="pill">Contacted</span>'
-      : '<span class="pill arch">Done</span>';
-    var nextBtn = r.status === 'new'
-      ? '<button class="mini" data-res-contacted="' + r.id + '">Mark contacted</button>'
-      : r.status === 'contacted'
-      ? '<button class="mini" data-res-done="' + r.id + '">Mark done</button>'
-      : '';
-    return '<tr><td><strong>' + esc(r.buyer_name) + '</strong><br><span style="color:var(--muted)">' + esc(r.buyer_email) + '</span></td>' +
-      '<td>' + esc(listingName(listings, r.listing_id)) + '<br><span style="color:var(--muted)">' + esc(makerName(makers, r.maker_id)) + '</span></td>' +
-      '<td>' + esc(r.quantity || '1') + '</td><td>' + esc(r.delivery_method || 'Pickup') + '</td>' +
-      '<td>' + fmtDate(r.created_at) + '</td><td>' + pill + '</td><td>' + nextBtn +
-      '<button class="mini danger" data-res-del="' + r.id + '">Delete</button></td></tr>';
-  }).join('');
+  if(archBody){
+    if(!archived.length){
+      archBody.innerHTML = '<tr><td colspan="7" style="color:var(--muted)">No archived reservations.</td></tr>';
+    } else {
+      archBody.innerHTML = archived.map(function(r){ return resRow(r, listings, makers, true); }).join('');
+    }
+  }
+  if(archWrap) archWrap.style.display = archived.length ? 'block' : 'none';
 }
 document.getElementById('resBody').addEventListener('click', function(e){
   var con = e.target.closest('[data-res-contacted]');
   var done = e.target.closest('[data-res-done]');
+  var arc = e.target.closest('[data-res-archive]');
   var del = e.target.closest('[data-res-del]');
   if(con){
     api('/api/admin/reservations?id=' + encodeURIComponent(con.getAttribute('data-res-contacted')), 'PATCH', {status: 'contacted'})
@@ -565,6 +591,12 @@ document.getElementById('resBody').addEventListener('click', function(e){
       .catch(function(ex){ showToast(ex.message); });
     return;
   }
+  if(arc){
+    api('/api/admin/reservations?id=' + encodeURIComponent(arc.getAttribute('data-res-archive')), 'PATCH', {status: 'archived'})
+      .then(function(){ showToast('Reservation archived.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
   if(del){
     if(!window.confirm('Delete this reservation for good?')) return;
     api('/api/admin/reservations?id=' + encodeURIComponent(del.getAttribute('data-res-del')), 'DELETE')
@@ -572,6 +604,25 @@ document.getElementById('resBody').addEventListener('click', function(e){
       .catch(function(ex){ showToast(ex.message); });
   }
 });
+var archBodyEl = document.getElementById('resArchBody');
+if(archBodyEl){
+  archBodyEl.addEventListener('click', function(e){
+    var res = e.target.closest('[data-res-restore]');
+    var del = e.target.closest('[data-res-del]');
+    if(res){
+      api('/api/admin/reservations?id=' + encodeURIComponent(res.getAttribute('data-res-restore')), 'PATCH', {status: 'new'})
+        .then(function(){ showToast('Reservation restored.'); loadOverview(); })
+        .catch(function(ex){ showToast(ex.message); });
+      return;
+    }
+    if(del){
+      if(!window.confirm('Delete this reservation for good?')) return;
+      api('/api/admin/reservations?id=' + encodeURIComponent(del.getAttribute('data-res-del')), 'DELETE')
+        .then(function(){ showToast('Reservation deleted.'); loadOverview(); })
+        .catch(function(ex){ showToast(ex.message); });
+    }
+  });
+}
 
 // --- Newsletter subscribers ---
 // Signed up from the home-page form. Archive sets a subscriber aside
@@ -594,7 +645,8 @@ function renderSubscribers(list){
   body.innerHTML = list.map(function(s){
     var pill = s.status === 'active' ? '<span class="pill">Active</span>' : '<span class="pill arch">Archived</span>';
     var archBtn = s.status === 'active'
-      ? '<button class="mini" data-sub-archive="' + s.id + '">Archive</button>'
+      ? '<button class="mini" data-sub-archive="' + s.id + '">Archive</button>' +
+        '<button class="mini" data-sub-unsubscribe="' + s.id + '" data-label="' + esc(s.email) + '">Unsubscribe</button>'
       : '<button class="mini" data-sub-restore="' + s.id + '">Restore</button>';
     return '<tr><td><strong>' + esc(s.email) + '</strong></td><td>' + fmtDate(s.created_at) + '</td><td>' + pill + '</td><td>' + archBtn +
       '<button class="mini danger" data-sub-del="' + s.id + '" data-label="' + esc(s.email) + '">Remove</button></td></tr>';
@@ -602,11 +654,22 @@ function renderSubscribers(list){
 }
 document.getElementById('subBody').addEventListener('click', function(e){
   var arch = e.target.closest('[data-sub-archive]');
+  var unsub = e.target.closest('[data-sub-unsubscribe]');
   var res = e.target.closest('[data-sub-restore]');
   var del = e.target.closest('[data-sub-del]');
   if(arch){
     api('/api/admin/subscribers?id=' + encodeURIComponent(arch.getAttribute('data-sub-archive')) + '&action=archive', 'PATCH', {})
       .then(function(){ showToast('Subscriber archived.'); loadOverview(); })
+      .catch(function(ex){ showToast(ex.message); });
+    return;
+  }
+  if(unsub){
+    // Unsubscribe = archive, with a confirm and plain wording: the row
+    // is kept (archived) so they stay off future sends and can be
+    // restored if they change their mind. Same endpoint as Archive.
+    if(!window.confirm('Unsubscribe ' + unsub.getAttribute('data-label') + ' from the newsletter? They will get no more emails, and you can restore them later.')) return;
+    api('/api/admin/subscribers?id=' + encodeURIComponent(unsub.getAttribute('data-sub-unsubscribe')) + '&action=archive', 'PATCH', {})
+      .then(function(){ showToast('Subscriber unsubscribed.'); loadOverview(); })
       .catch(function(ex){ showToast(ex.message); });
     return;
   }
@@ -624,6 +687,58 @@ document.getElementById('subBody').addEventListener('click', function(e){
   }
 });
 
+// --- Newsletter PDF attachment ---
+// Default attachment: the hosted Newsletter Issue 1 PDF (approved by
+// the owner). Picking a PDF uploads it to Supabase Storage (same bucket
+// as the listing photos, under "newsletter/") and replaces the
+// attachment; Remove sends with no attachment at all.
+var DEFAULT_NL_ATTACHMENT = { kind: 'hosted', path: 'issues/issue-1.pdf', name: 'locally-crafted-newsletter-issue-1.pdf' };
+var nlAttachment = DEFAULT_NL_ATTACHMENT;
+function updateNlPdfUI(){
+  var cur = document.getElementById('nlPdfCurrent');
+  var none = document.getElementById('nlPdfNone');
+  var nameEl = document.getElementById('nlPdfName');
+  if(!cur || !none) return;
+  if(nlAttachment){
+    if(nameEl) nameEl.textContent = nlAttachment.name;
+    cur.style.display = 'block';
+    none.style.display = 'none';
+  } else {
+    cur.style.display = 'none';
+    none.style.display = 'block';
+  }
+}
+document.getElementById('nlPdfRemove').addEventListener('click', function(){
+  nlAttachment = null;
+  document.getElementById('nlPdf').value = '';
+  updateNlPdfUI();
+  showToast('PDF removed — the newsletter will send without an attachment.');
+});
+document.getElementById('nlPdf').addEventListener('change', function(){
+  var f = this.files && this.files[0];
+  if(!f) return;
+  if(f.type && f.type !== 'application/pdf' && f.name.slice(-4).toLowerCase() !== '.pdf'){
+    showToast('Only PDF files can be attached.');
+    this.value = '';
+    return;
+  }
+  if(f.size > 10 * 1024 * 1024){ showToast('That PDF is over 10 MB — pick a smaller one.'); this.value = ''; return; }
+  var fd = new FormData();
+  fd.append('pdf', f);
+  var headers = {};
+  if(token) headers['x-admin-session'] = token;
+  showToast('Uploading PDF…');
+  fetch('/api/admin/upload-newsletter-pdf', {method: 'POST', headers: headers, body: fd})
+    .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
+    .then(function(j){
+      nlAttachment = { kind: 'storage', path: j.path, name: j.name || f.name };
+      updateNlPdfUI();
+      showToast('PDF attached: ' + nlAttachment.name);
+    })
+    .catch(function(ex){ showToast(ex.message || 'PDF upload failed.'); });
+});
+updateNlPdfUI();
+
 // --- Send the newsletter ---
 // Sends to every ACTIVE subscriber, one email each. Asks first, with
 // the live count, and shows sent / failed afterwards. Nothing is sent
@@ -640,13 +755,15 @@ document.getElementById('nlSendForm').addEventListener('submit', function(e){
   var m = countText.match(/(\d+) active/);
   var n = m ? parseInt(m[1], 10) : 0;
   if(!n){ showToast('No active subscribers to send to yet.'); return; }
-  if(!window.confirm('Send this newsletter to ' + n + ' active subscriber' + (n === 1 ? '' : 's') + '?\n\nSubject: ' + subject)) return;
+  var attachNote = nlAttachment ? '\n\nAttachment: ' + nlAttachment.name : '\n\nNo PDF attached.';
+  if(!window.confirm('Send this newsletter to ' + n + ' active subscriber' + (n === 1 ? '' : 's') + '?\n\nSubject: ' + subject + attachNote)) return;
   btn.disabled = true;
   btn.textContent = 'Sending…';
   result.style.display = 'none';
-  api('/api/admin/send-newsletter', 'POST', {subject: subject, body: body})
+  api('/api/admin/send-newsletter', 'POST', {subject: subject, body: body, attachment: nlAttachment})
     .then(function(j){
       var msg = 'Sent to ' + j.sent + ' of ' + j.recipients + ' subscriber' + (j.recipients === 1 ? '' : 's') + '.';
+      if(j.attached) msg += ' Attached: ' + j.attached + '.';
       if(j.failed) msg += ' Failed: ' + j.failed + '.' + (j.failures && j.failures.length ? ' ' + j.failures.slice(0, 3).join(' ') : '');
       result.textContent = msg;
       result.style.display = 'block';

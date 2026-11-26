@@ -27,7 +27,7 @@ import { json, sbJson, handlerFor, validEmail, checkPublicRateLimit, sendOwnerEm
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DELIVERY = ["Pickup", "Delivery by mail"];
-const MAX = { name: 100, phone: 30, message: 1000, product: 120 };
+const MAX = { name: 20, phone: 30, message: 1000, product: 120 };
 
 function clean(v) { return String(v ?? "").trim(); }
 function hasMarkup(s) { return /[<>]/.test(s); }
@@ -82,7 +82,7 @@ async function onPost(context) {
   const rawPhone = String(b.buyer_phone ?? "");
   const rawMessage = String(b.message ?? "");
   const rawProduct = String(b.product_name ?? "");
-  if (rawName.trim().length > MAX.name) return json({ ok: false, error: "buyer_name must be at most 100 characters" }, 400);
+  if (rawName.trim().length > MAX.name) return json({ ok: false, error: "buyer_name must be at most 20 characters" }, 400);
   if (rawPhone.trim().length > MAX.phone) return json({ ok: false, error: "buyer_phone must be at most 30 characters" }, 400);
   if (rawMessage.trim().length > MAX.message) return json({ ok: false, error: "message must be at most 1000 characters" }, 400);
   if (rawProduct.trim().length > MAX.product) return json({ ok: false, error: "product_name must be at most 120 characters" }, 400);

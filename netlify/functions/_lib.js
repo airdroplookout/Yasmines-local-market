@@ -155,6 +155,37 @@ export async function verifyAdminSession(context, token) {
     return version === current;
   } catch { return false; }
 }
+// --- Unsubscribe tokens (newsletter, Nov 26 2026) ---
+// One signed link per subscriber, put in every newsletter email. The
+// token proves the clicker owns that email address (it was sent to it),
+// so GET /unsubscribe accepts a token — never a bare email, which
+// anyone could submit for anyone else. No expiry: links in old issues
+// must keep working. The HMAC is keyed by ADMIN_API_KEY, server-side
+// only (same secret the admin sessions use). No database column is
+// needed: the email is inside the signed payload. Mirrors the
+// createUnsubscribeToken / verifyUnsubscribeToken pair on AI Outlet
+// Plus. If ADMIN_API_KEY is ever rotated, links sent before the
+// rotation stop working and the next issue's links replace them.
+const UNSUB_PREFIX = "unsub";
+export function createUnsubscribeToken(env, email) {
+  const clean = String(email || "").trim().toLowerCase();
+  const payloadB64 = b64url(`${UNSUB_PREFIX}:${clean}`);
+  const sig = createHmac("sha256", env.ADMIN_API_KEY).update(payloadB64).digest("hex");
+  return `${payloadB64}.${sig}`;
+}
+export function verifyUnsubscribeToken(env, token) {
+  try {
+    if (!env.ADMIN_API_KEY || typeof token !== "string") return null;
+    const [payloadB64, sig] = token.split(".");
+    if (!payloadB64 || !sig) return null;
+    const expected = createHmac("sha256", env.ADMIN_API_KEY).update(payloadB64).digest("hex");
+    if (!timingSafeCompare(sig, expected)) return null;
+    const payload = Buffer.from(payloadB64, "base64url").toString("utf8");
+    const [kind, email] = payload.split(":");
+    if (kind !== UNSUB_PREFIX || !validEmail(email)) return null;
+    return email;
+  } catch { return null; }
+}
 // --- Manage login rate limiting ---
 // Two budgets (audit H-3, Nov 25 2026):
 //  - PER-IP: 5 wrong passwords inside 15 minutes locks that IP out for
@@ -563,7 +594,7 @@ export const LISTING_CATEGORY_LABELS = {
 // (onboarding@resend.dev), which only delivers to the Resend account
 // owner's own address — good for a reset email to the owner, not for
 // sending to anyone else.
-export async function sendViaResend(context, { to, subject, html }) {
+export async function sendViaResend(context, { to, subject, html, attachments }) {
   const apiKey = context.env.RESEND_API_KEY;
   if (!apiKey) throw new Error("RESEND_API_KEY is not set — add it in Netlify Site settings -> Environment variables, then redeploy.");
   const from = context.env.RESEND_SENDER_EMAIL || "onboarding@resend.dev";
@@ -575,6 +606,7 @@ export async function sendViaResend(context, { to, subject, html }) {
       to: [to],
       subject,
       html,
+      ...(attachments && attachments.length ? { attachments } : {}),
     }),
   });
   if (!r.ok) throw new Error(`Resend ${r.status}: ${await r.text()}`);
