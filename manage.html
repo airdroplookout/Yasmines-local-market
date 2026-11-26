@@ -123,6 +123,15 @@
           <div class="mfield"><label for="liMaker">Maker</label>
             <div class="mrow"><input id="liMakerSearch" type="search" placeholder="Search makers…" autocomplete="off" aria-label="Search makers"><select id="liMaker" aria-label="Maker"></select></div>
             <p class="note" id="liMakerCount" style="margin-top:6px"></p>
+            <div id="liAddMakerBox" style="display:none;margin-top:10px;padding:12px;border:1px dashed var(--line);border-radius:10px">
+              <p class="note" style="margin:0 0 8px">No maker matches "<span id="liAddMakerNameLabel"></span>". Add them as a new maker:</p>
+              <div class="mrow">
+                <div class="mfield"><label for="liNewMakerName">Maker name</label><input id="liNewMakerName" type="text" placeholder="e.g. Ken" maxlength="80" autocomplete="off"></div>
+                <div class="mfield"><label for="liNewMakerEmail">Maker email (needed)</label><input id="liNewMakerEmail" type="email" placeholder="maker@example.com" maxlength="50" autocomplete="off"></div>
+              </div>
+              <button class="mbtn" type="button" id="liAddMakerBtn">Add as a new maker</button>
+              <p class="note" style="margin:8px 0 0">A maker needs a real email address — it is never shown on the public site. They will also appear in the Makers tab.</p>
+            </div>
           </div>
           <div class="mfield"><label for="liName">Product name</label><input id="liName" type="text" placeholder="e.g. Speckled Stoneware Mug" required></div>
         </div>
@@ -253,5 +262,5 @@
 </main>
 
 <div class="toast" id="toast" role="status"></div>
-<script src="manage.js?v=2"></script>
+<script src="manage.js?v=3"></script>
 </body></html>

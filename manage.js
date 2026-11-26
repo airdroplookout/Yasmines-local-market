@@ -151,6 +151,14 @@ function loadOverview(){
       ((j.pending_submissions || 0) > 0 ? ' · ' + j.pending_submissions + ' product submission' + (j.pending_submissions === 1 ? '' : 's') + ' to review' : '');
     fillMakerSelect(j.makers || []);
     fillMakerFilter(j.makers || []);
+    if(selectMakerAfterLoad){
+      // A maker was just added from the listing form: select them so
+      // the listing can be finished in one flow.
+      pickedMakerId = selectMakerAfterLoad;
+      var sel = document.getElementById('liMaker');
+      if(sel) sel.value = selectMakerAfterLoad;
+      selectMakerAfterLoad = '';
+    }
     renderMakers(j.makers || []);
     renderListings(j.listings || [], j.makers || []);
     renderSubmissions(j.submissions || []);
@@ -200,10 +208,22 @@ function listingName(listings, id){
 // save uses pickedMakerId; clearing the search puts the pick back.
 var makerSelectSearch = '';
 var pickedMakerId = '';
+// Maker search rule (Adil, Nov 26): a maker matches on their FIRST
+// name (first word of the maker name, e.g. "Mary", "Jared") or their
+// SHOP name (e.g. "Mary's Pottery", "Pottery Guru") — NEVER on the last
+// name or any later word of the maker name. So "M" shows Mary but not
+// Jared McDonald / Pottery Guru (no M in "Jared" or "Pottery Guru"),
+// and "McDonald" / "Stones" match nobody.
+function firstNameOf(name){
+  return String(name || '').trim().split(/\s+/)[0] || '';
+}
 function makerMatches(m, q){
   if(!q) return true;
   q = q.trim().toLowerCase();
-  return ((m.shop_name || '') + ' ' + (m.name || '')).toLowerCase().indexOf(q) !== -1;
+  if(!q) return true;
+  var first = firstNameOf(m.name).toLowerCase();
+  var shop = String(m.shop_name || '').toLowerCase();
+  return first.indexOf(q) !== -1 || shop.indexOf(q) !== -1;
 }
 function pickedMakerLabel(){
   var m = (overview && overview.makers || []).find(function(x){ return String(x.id) === String(pickedMakerId); });
@@ -217,11 +237,33 @@ function setMakerCount(total, shown, hiddenLabel){
     return;
   }
   if(!shown.length){
-    el.textContent = 'No makers match "' + makerSelectSearch + '" — clear the search to see all ' + total + '.';
+    el.textContent = 'No makers match "' + makerSelectSearch + '" — add them as a new maker below, or clear the search to see all ' + total + '.';
     return;
   }
   el.textContent = 'Showing ' + shown.length + ' of ' + total + ' makers' +
     (hiddenLabel ? ' · your pick, ' + hiddenLabel + ', is hidden by this search — clear it to see it again.' : '');
+}
+// Manual add: when the search matches nobody, offer a space right
+// under the search box to type the maker's name + email and add them,
+// so a listing for a brand-new maker (e.g. "Ken") can be finished
+// without leaving this form. A maker needs a real email — the server
+// (POST /api/admin/makers) refuses a maker with no email, and the
+// makers table has email NOT NULL UNIQUE, so no maker is ever created
+// with a made-up or blank email.
+var selectMakerAfterLoad = '';
+function updateAddMakerBox(shownCount){
+  var box = document.getElementById('liAddMakerBox');
+  if(!box) return;
+  var q = (makerSelectSearch || '').trim();
+  var show = !!q && shownCount === 0;
+  box.style.display = show ? 'block' : 'none';
+  if(!show) return;
+  document.getElementById('liAddMakerNameLabel').textContent = q;
+  document.getElementById('liAddMakerBtn').textContent = 'Add "' + q + '" as a new maker';
+  // Keep the name field in step with the search text, unless Adil is
+  // typing in the name field itself right now.
+  var nameInput = document.getElementById('liNewMakerName');
+  if(document.activeElement !== nameInput) nameInput.value = q;
 }
 function fillMakerSelect(makers){
   var sel = document.getElementById('liMaker');
@@ -241,6 +283,7 @@ function fillMakerSelect(makers){
     sel.selectedIndex = -1;
   }
   setMakerCount(live.length, shown, (pickedMakerId && !pickedShown) ? pickedMakerLabel() : '');
+  updateAddMakerBox(shown.length);
 }
 document.getElementById('liMakerSearch').addEventListener('input', function(){
   makerSelectSearch = this.value;
@@ -248,6 +291,32 @@ document.getElementById('liMakerSearch').addEventListener('input', function(){
 });
 document.getElementById('liMaker').addEventListener('change', function(){
   pickedMakerId = this.value;
+});
+document.getElementById('liAddMakerBtn').addEventListener('click', function(){
+  var name = document.getElementById('liNewMakerName').value.trim();
+  var email = document.getElementById('liNewMakerEmail').value.trim();
+  if(!name){ showToast('Type the maker\'s name first.'); return; }
+  if(!email || email.length > 50 || email.indexOf('@') === -1){
+    showToast('Add the maker\'s email too — a maker needs a real email address (at most 50 characters).');
+    return;
+  }
+  var btn = this;
+  btn.disabled = true;
+  api('/api/admin/makers', 'POST', { name: name, email: email }).then(function(j){
+    var maker = (j && j.maker) || null;
+    if(!maker || !maker.id) throw new Error('Maker was added but came back without an id — reload Manage to see it.');
+    showToast('Maker added — now finish the listing below.');
+    // Clear the search and the manual-add fields, then reload and
+    // select the new maker automatically.
+    makerSelectSearch = '';
+    var ms = document.getElementById('liMakerSearch');
+    if(ms) ms.value = '';
+    document.getElementById('liNewMakerName').value = '';
+    document.getElementById('liNewMakerEmail').value = '';
+    selectMakerAfterLoad = maker.id;
+    loadOverview();
+  }).catch(function(ex){ showToast(ex.message || 'Could not add that maker.'); })
+  .then(function(){ btn.disabled = false; });
 });
 function renderMakers(list){
   var body = document.getElementById('makersBody');
@@ -484,6 +553,8 @@ function resetListingForm(){
   document.getElementById('listingForm').reset();
   makerSelectSearch = '';
   pickedMakerId = '';
+  var nm = document.getElementById('liNewMakerName'); if(nm) nm.value = '';
+  var em = document.getElementById('liNewMakerEmail'); if(em) em.value = '';
   fillMakerSelect(overview ? overview.makers : []);
   document.getElementById('liPhoto').value = '';
   showPhotoPreview('');
