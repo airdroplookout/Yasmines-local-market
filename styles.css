@@ -145,6 +145,8 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .note-strip{margin-top:28px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .note-strip h3{font-size:1.05rem;margin-bottom:6px}
 .note-strip p{margin:0;color:var(--muted);font-size:.95rem}
+/* The same strip moved to the top, directly under the H1: tighter top margin so it sits close under the heading. */
+.note-strip-top{margin:18px 0 8px}
 
 .makers-cta{margin-top:36px;background:var(--sage-soft);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:18px;padding:30px 32px;display:flex;align-items:center;gap:32px;box-shadow:var(--shadow)}
 .makers-cta-text{flex:1;min-width:0}
