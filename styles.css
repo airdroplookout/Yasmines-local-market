@@ -105,6 +105,16 @@ a{color:var(--accent)}
 .cat-pill .xmas-snow{width:13px;height:13px;vertical-align:-2px;margin-left:5px}
 /* Shown in the grid when the picked category has no listings yet. */
 .grid-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:1.05rem;padding:34px 16px;background:var(--surface);border:1px dashed var(--line);border-radius:var(--radius)}
+/* Pagination under the product grid — only shown when there is more
+   than one page of listings (15 per page). Same pill look as the
+   category pills; the current page is filled terracotta. */
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:22px 0 4px}
+.pagination[hidden]{display:none}
+.page-btn{min-width:44px;min-height:44px;padding:10px 14px;border:1.5px solid var(--sage);background:var(--surface);color:var(--ink);border-radius:999px;font-weight:800;font-size:.95rem;cursor:pointer}
+.page-btn:hover{border-color:var(--accent);color:var(--accent)}
+.page-btn.current{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);cursor:default}
+.page-btn:disabled{opacity:.45;cursor:not-allowed}
+.page-btn:disabled:hover{border-color:var(--sage);color:var(--ink)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;position:relative}
 .card img{width:100%;aspect-ratio:4/3;object-fit:cover}
 /* Placeholder block for listings with no photo yet: same 4/3 shape as a

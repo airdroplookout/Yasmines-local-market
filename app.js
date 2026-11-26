@@ -220,6 +220,8 @@ function applySoldCounts() {
     "mary-mug", "mary-bowl", "mary-vase", "mary-plate", "mary-planter",
     "mary-teapot", "mary-butter", "mary-spoon", "mary-candle", "mary-platter"];
   var activeCategory = "all";
+  var currentPage = 1;
+  var PAGE_SIZE = 15; /* 5 per row x 3 rows per page */
   var currentItems = []; /* [{id, product}] currently loaded (live or fallback) */
 
   function categoryLabel(cat) {
@@ -254,6 +256,49 @@ function applySoldCounts() {
     grid.appendChild(card);
   }
 
+  /* Pagination — 15 listings per page (5 per row x 3 rows). The bar is
+     only shown when there is more than one page; with 15 or fewer
+     listings the grid looks exactly as it did before. */
+  var pager = document.getElementById("pagination");
+
+  function renderPagination(totalPages) {
+    if (!pager) return;
+    pager.innerHTML = "";
+    if (totalPages <= 1) { pager.hidden = true; return; }
+    pager.hidden = false;
+    function pageBtn(label, page, opts) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "page-btn" + (opts && opts.current ? " current" : "");
+      b.textContent = label;
+      if (opts && opts.label) b.setAttribute("aria-label", opts.label);
+      if (opts && opts.current) b.setAttribute("aria-current", "page");
+      b.disabled = !!(opts && opts.disabled);
+      b.addEventListener("click", function () { goToPage(page); });
+      pager.appendChild(b);
+    }
+    pageBtn("← Previous", currentPage - 1, { disabled: currentPage <= 1, label: "Previous page" });
+    var p;
+    for (p = 1; p <= totalPages; p++) {
+      pageBtn(String(p), p, { current: p === currentPage, label: "Page " + p });
+    }
+    pageBtn("Next →", currentPage + 1, { disabled: currentPage >= totalPages, label: "Next page" });
+  }
+
+  function goToPage(page) {
+    var items = activeCategory === "all"
+      ? currentItems
+      : currentItems.filter(function (it) { return (it.product.category || "") === activeCategory; });
+    var totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+    if (page === currentPage) return;
+    currentPage = page;
+    renderItems(items);
+    var head = document.getElementById("collection");
+    if (head && head.scrollIntoView) head.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function renderItems(items) {
     grid.innerHTML = "";
     if (!items.length) {
@@ -263,9 +308,14 @@ function applySoldCounts() {
         ? "No listings yet — check back soon."
         : "No " + categoryLabel(activeCategory).toLowerCase() + " listings yet — check back soon.";
       grid.appendChild(msg);
+      renderPagination(1);
       return;
     }
-    items.forEach(function (it) { renderCard(it.id, it.product); });
+    var totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    var start = (currentPage - 1) * PAGE_SIZE;
+    items.slice(start, start + PAGE_SIZE).forEach(function (it) { renderCard(it.id, it.product); });
+    renderPagination(totalPages);
   }
 
   function applyCategoryFilter() {
@@ -291,6 +341,7 @@ function applySoldCounts() {
   pills.forEach(function (btn) {
     btn.addEventListener("click", function () {
       activeCategory = btn.getAttribute("data-cat");
+      currentPage = 1;
       pills.forEach(function (b) { b.classList.toggle("active", b === btn); });
       applyCategoryFilter();
     });
