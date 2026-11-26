@@ -1,4 +1,4 @@
-/* Locally Crafted CA — styles. Warm boutique look, light & dark. */
+/* Yasmine's Local Market — styles. Warm boutique look, light & dark. */
 :root{
   --bg:#FFF7EE; --surface:#FFFFFF; --surface2:#FFF1DF; --ink:#2B2118; --muted:#6F5D4D;
   --line:#EAD9C3; --accent:#BC4A24; --accent-ink:#FFFFFF; --accent-soft:#FDE8DC;
@@ -56,15 +56,16 @@ a{color:var(--accent)}
 .how-it-works .how{margin:0}
 
 /* Spotlight */
-.spotlight{margin:26px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:1.1fr 1fr}
-.spotlight img{width:100%;height:100%;object-fit:cover;min-height:300px}
-.spotlight-body{padding:28px}
+.spotlight{margin:20px 0 6px;background:var(--surface);border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-columns:1.1fr 1fr}
+.spotlight img{width:100%;height:100%;object-fit:cover;min-height:225px}
+.spotlight-body{padding:21px}
 .tag{font-size:.78rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
-.spotlight h2{font-size:1.9rem;margin:8px 0 8px}
+.spotlight h2{font-size:1.43rem;margin:6px 0 6px}
+.spotlight .btn{padding:10px 17px;font-size:.92rem}
 .maker{color:var(--muted);font-weight:700}
 .price{font-size:1.5rem;font-weight:800;margin:12px 0}
 .price small{font-size:.9rem;color:var(--muted);font-weight:600}
-.spotlight p.desc{color:var(--muted);margin:0 0 18px}
+.spotlight p.desc{color:var(--muted);margin:0 0 14px;font-size:.95rem}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:13px 22px;font-weight:800;border:1px solid transparent;cursor:pointer;text-decoration:none;font-size:1rem}
 .btn-primary{background:var(--accent);color:var(--accent-ink)}
@@ -119,10 +120,6 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .card .desc{color:var(--muted);font-size:.94rem;margin:0;flex:1}
 .card-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px}
 .card .price-sm{font-weight:800;font-size:1.1rem;margin:0}
-/* "Sold: N" reservation counter on listing cards and the reserve-form
-   product summary — small sage text, shown only when a listing has at
-   least one reservation. */
-.sold-count{color:var(--sage);font-weight:700;font-size:.92rem;margin:2px 0 0}
 .card .btn{padding:11px 16px;font-size:.95rem}
 
 .note-strip{margin-top:28px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
@@ -132,11 +129,6 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .makers-cta{margin-top:28px;background:var(--sage-soft);border:1px solid var(--line);border-radius:16px;padding:20px 22px}
 .makers-cta h3{font-size:1.2rem;margin-bottom:6px}
 .makers-cta p{margin:0;color:var(--muted);font-size:.97rem}
-.makers-cta-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:14px}
-.hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:18px 0 0}
-.hero-cta .hint{color:var(--muted);font-size:.97rem}
-.photo-preview{margin-top:10px}
-.photo-preview img{max-width:220px;max-height:160px;border-radius:12px;border:1px solid var(--line)}
 
 /* Share box (vendor page) */
 .share-box{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:var(--shadow)}
@@ -154,6 +146,9 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .product-summary img{width:100%;aspect-ratio:4/3;object-fit:cover}
 .product-summary .ps-body{padding:18px}
 .product-summary h2{font-size:1.4rem;margin:4px 0 4px}
+.email-preview{margin-top:14px;background:var(--gold-soft);border:1px dashed color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:12px;padding:14px;font-size:.92rem}
+.email-preview b{display:block;margin-bottom:6px}
+.email-preview p{margin:0;color:var(--muted)}
 form.reserve{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
 form.reserve h2{font-size:1.5rem;margin-bottom:6px}
 form.reserve .sub{color:var(--muted);margin:0 0 18px}
@@ -163,9 +158,6 @@ label .opt{font-weight:600;color:var(--muted);font-size:.88rem}
 label .req{color:var(--accent)}
 input[type="text"],input[type="email"],input[type="tel"],textarea,select{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;background:var(--bg);color:var(--ink);min-height:48px}
 textarea{min-height:120px;resize:vertical}
-/* Missing mandatory field: terracotta outline/border + light tint, so the
-   buyer can see at a glance which field to go back and fill in. */
-input.field-missing,textarea.field-missing{border-color:var(--accent);background:var(--accent-soft);outline:2px solid var(--accent);outline-offset:1px}
 .hint{font-size:.88rem;color:var(--muted);margin-top:6px}
 .delivery-note{display:none;background:var(--gold-soft);border:1px dashed color-mix(in srgb, var(--gold) 55%, var(--line));border-radius:10px;padding:11px 13px;margin:8px 0 0;font-size:.92rem}
 .delivery-note.show{display:block}
@@ -193,23 +185,12 @@ input.field-missing,textarea.field-missing{border-color:var(--accent);background
 .summary dd{margin:0;word-break:break-word}
 .confirm-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 
-/* "More from this maker" on the confirmation screen (critic rec. 7) */
-.more-from{margin:0 0 22px;text-align:left}
-.more-from h3{font-size:1.25rem;margin-bottom:12px;text-align:center}
-.more-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.more-card h3{font-size:1rem}
-.more-card .card-body{padding:12px}
-.more-card .card-row{flex-direction:column;align-items:stretch}
-.more-card .btn{width:100%;text-align:center}
-.more-keep{margin:14px 0 0;text-align:center}
-.more-keep a{color:var(--sage);font-weight:700}
-
 footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted);font-size:.92rem;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
 @media (max-width:820px){
   .grid{grid-template-columns:repeat(2,1fr)}
   .spotlight{grid-template-columns:1fr}
-  .spotlight img{min-height:220px;max-height:300px}
+  .spotlight img{min-height:165px;max-height:225px}
   .form-layout{grid-template-columns:1fr}
   .how,.note-strip{grid-template-columns:1fr}
 }
@@ -224,7 +205,6 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .topbar-tagline{font-size:.72rem}
   .topnav-link{padding:10px 2px}
   .grid{grid-template-columns:1fr}
-  .more-grid{grid-template-columns:repeat(2,1fr)}
   .hero{padding-top:20px}
   .summary dl{grid-template-columns:1fr}
   .summary dt{margin-top:6px}
@@ -270,61 +250,3 @@ footer{margin-top:40px;border-top:1px solid var(--line);padding-top:18px;color:v
   .promo-banner{font-size:.82rem;letter-spacing:.05em;padding:12px 54px 12px 14px;white-space:nowrap}
 }
 @media (prefers-reduced-motion: reduce){ .promo-modal{animation:none} }
-
-/* Manage page styles — moved here from the inline <style> in manage.html
-   (Nov 25, 2026) so the site can run under an enforced CSP (audit M-3). */
-:root{--rose:var(--accent);--rose2:#A03F1E;--goldbg:var(--gold-soft);--bg2:var(--surface2);--text:var(--ink)}
-.manage{max-width:980px;margin:0 auto;padding:28px 20px 60px}
-.manage h1{font-size:clamp(28px,3.4vw,38px)}
-.manage h2{font-size:24px;margin:0 0 6px}
-.manage .sub{color:var(--muted);margin:6px 0 0}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px;margin-top:22px}
-.banner{background:var(--goldbg);border:1px dashed var(--gold);border-radius:12px;padding:14px 18px;font-size:15px;margin-top:22px}
-.banner b{color:var(--rose)}
-.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px}
-.mstat{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center}
-.mstat strong{display:block;font-family:"Fraunces",Georgia,serif;font-size:26px}
-.mstat span{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.mfield{margin:0 0 14px}
-.mfield label{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
-.mfield input,.mfield select,.mfield textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font:inherit;font-size:16px;background:var(--bg);color:var(--ink);min-height:48px}
-.mfield input:focus,.mfield select:focus,.mfield textarea:focus{outline:2px solid var(--rose);outline-offset:1px}
-.mfield textarea{min-height:90px;resize:vertical}
-.mrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.mbtn{background:var(--rose);color:#fff;border:0;border-radius:999px;padding:13px 24px;font-weight:800;font-size:15px;min-height:48px;cursor:pointer}
-.mbtn:hover{filter:brightness(1.06)}
-.mbtn-ghost{background:transparent;color:var(--text);border:1px solid var(--rose)}
-.mlink{background:none;border:0;color:var(--rose);font-weight:700;padding:12px 4px;min-height:44px;font-size:14px;cursor:pointer}
-.mtable{width:100%;border-collapse:collapse;font-size:14px;margin-top:14px}
-.mtable th,.mtable td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
-.mtable th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.mtable .pill{display:inline-block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent-soft);color:var(--rose);border-radius:999px;padding:3px 9px;font-weight:700;white-space:nowrap}
-.mtable .pill.arch{background:var(--goldbg);color:#7a5a17}
-.mini{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700;min-height:44px;margin:2px 2px 2px 0;cursor:pointer}
-.mini.danger{color:var(--rose);border-color:#e3b7ac}
-.note{color:var(--muted);font-size:14px;margin:12px 0 0}
-.err{display:none;color:#a34d4d;font-weight:700;margin-top:10px}
-.switchrow{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--bg2)}
-.switchrow input{width:20px;height:20px;margin-top:2px;flex:none}
-.switchrow b{display:block;font-size:15px}
-.switchrow span{font-size:13px;color:var(--muted)}
-.mnav{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-.mnav .chip{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 18px;font-weight:700;cursor:pointer;color:var(--ink)}
-.mnav .chip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.tablewrap{overflow-x:auto}
-.backlink{display:inline-block;margin-top:26px;color:var(--rose);font-weight:700;padding:12px 0;min-height:44px;text-decoration:none}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:#2b1d16;color:#ffe9d6;padding:13px 22px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;z-index:50;pointer-events:none;max-width:90vw;text-align:center}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:700px){.mgrid{grid-template-columns:1fr 1fr}.mrow{grid-template-columns:1fr}.card{padding:20px 16px}}
-
-
-/* Simple text pages (Privacy, Terms) — same card look as the forms. */
-.page-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:26px 24px;box-shadow:var(--shadow)}
-.page-card h2{font-size:1.25rem;margin:24px 0 8px}
-.page-card h2:first-child{margin-top:0}
-.page-card p,.page-card li{color:var(--muted);line-height:1.6}
-.page-card p{margin:0 0 12px}
-.page-card ul{margin:0 0 14px;padding-left:22px}
-.page-card li{margin-bottom:5px}
-.page-card a{color:var(--rose);font-weight:700}
-.page-card .updated{font-size:.88rem}
