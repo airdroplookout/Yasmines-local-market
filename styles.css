@@ -2,14 +2,14 @@
 :root{
   --bg:#FFF7EE; --surface:#FFFFFF; --surface2:#FFF1DF; --ink:#2B2118; --muted:#6F5D4D;
   --line:#EAD9C3; --accent:#BC4A24; --accent-ink:#FFFFFF; --accent-soft:#FDE8DC;
-  --sage:#4F7A4A; --sage-soft:#E6F0E2; --gold:#B7791F; --gold-soft:#FBEDC8;
+  --sage:#4F7A4A; --sage-soft:#E6F0E2; --gold:#B7791F; --gold-soft:#FBEDC8; --price-bg:#E9F1F6;
   --shadow:0 10px 30px rgba(90,50,20,.10); --radius:18px;
 }
 @media (prefers-color-scheme: dark){
   :root{
     --bg:#1D1712; --surface:#2A211A; --surface2:#33281E; --ink:#F7EDE1; --muted:#C9B6A3;
     --line:#4A3A2C; --accent:#E67B4F; --accent-ink:#1D130C; --accent-soft:#4A2E1F;
-    --sage:#8FC184; --sage-soft:#2E402A; --gold:#E3B34E; --gold-soft:#453716;
+    --sage:#8FC184; --sage-soft:#2E402A; --gold:#E3B34E; --gold-soft:#453716; --price-bg:#26363F;
     --shadow:0 10px 30px rgba(0,0,0,.35);
   }
 }
@@ -163,6 +163,13 @@ a.vendor-badge:hover{transform:scale(1.1)}
 .card .desc{color:var(--muted);font-size:.82rem;line-height:1.35;margin:0;flex:none;min-height:4.05em;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .card-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;gap:6px}
 .card .price-sm{font-weight:800;font-size:.92rem;margin:0}
+/* Price badge — the price sits in a round badge, same family as the
+   "See all from …" maker chip: green (sage) border, light bluish
+   interior. A short price ($9–$85) reads as a circle; a longer price
+   stretches the same shape into a pill — nothing is squeezed or cut
+   off, and no price value changes. It stays in the card row beside
+   Reserve, so prices and buttons still line up across the row. */
+.card .price-badge{display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:48px;padding:6px 12px;border:2px solid var(--sage);border-radius:999px;background:var(--price-bg);color:var(--ink);text-align:center;line-height:1;flex:none}
 .card .btn{padding:8px 10px;font-size:.82rem}
 
 .note-strip{margin-top:28px;background:var(--surface2);border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}

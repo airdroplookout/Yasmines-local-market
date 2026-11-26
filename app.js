@@ -245,7 +245,7 @@ function applySoldCounts() {
         '<p class="maker">by ' + esc(p.maker) + ' — ' + esc(p.shop) + '</p>' +
         soldHtml(p) +
         '<p class="desc">' + esc(p.desc) + '</p>' +
-        '<div class="card-row"><p class="price-sm">' + esc(p.price) + '</p>' +
+        '<div class="card-row"><p class="price-sm price-badge">' + esc(p.price) + '</p>' +
         '<button class="btn btn-primary" data-reserve="' + esc(id) + '">Reserve this item</button></div>' +
         (vendorPage ? '<p class="vendor-link"><a class="see-all-chip" href="' + esc(VENDORS[p.vendor].page) + '"><span class="see-all-mono" aria-hidden="true">' + esc(VENDORS[p.vendor].initials || initialsFor(p.maker)) + '</span>See all from ' + esc(VENDORS[p.vendor].name) + ' →</a></p>' : '') +
       '</div>';
@@ -787,7 +787,7 @@ function renderMoreFrom(reservedId, p) {
         '<h3>' + esc(q.name) + '</h3>' +
         '<p class="maker">by ' + esc(q.maker) + '</p>' +
         soldHtml(q) +
-        '<div class="card-row"><p class="price-sm">' + esc(q.price) + '</p>' +
+        '<div class="card-row"><p class="price-sm price-badge">' + esc(q.price) + '</p>' +
         '<button class="btn btn-primary" type="button" data-more-reserve="' + esc(it.id) + '">Reserve this item</button></div>' +
       '</div>';
     grid.appendChild(card);
